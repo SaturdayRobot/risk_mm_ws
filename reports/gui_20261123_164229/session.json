@@ -1,0 +1,16 @@
+{
+  "pid": 4,
+  "pgid": 4,
+  "domain_id": 181,
+  "command": [
+    "/home/ubuntu/risk_mm_ws/scripts/in_env",
+    "ros2",
+    "launch",
+    "rangermini_description",
+    "display.launch.py"
+  ],
+  "report_dir": "/home/ubuntu/risk_mm_ws/reports/gui_20261123_164229",
+  "scope": "RViz2 model display and synthetic joint state GUI; no motion execution",
+  "status": "failed",
+  "reason": "Sandbox could not connect to host WSLg DISPLAY=:0; the detached launch did not survive sandbox exit. The sandbox PID is not a host PID."
+}

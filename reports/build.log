@@ -1,0 +1,57 @@
+Starting >>> mm_utils
+Starting >>> xarm_description
+Finished <<< xarm_description [0.54s]
+Starting >>> rangermini_description
+Finished <<< rangermini_description [0.57s]
+Starting >>> mm_model
+Finished <<< mm_model [0.87s]
+Starting >>> risk_mm
+Finished <<< risk_mm [0.87s]
+Starting >>> rangermini_moveit_config
+Finished <<< rangermini_moveit_config [0.54s]
+Finished <<< mm_utils [3.50s]
+Starting >>> plan_env
+Starting >>> traj_utils
+Finished <<< traj_utils [0.95s]
+--- stderr: plan_env
+CMake Warning (dev) at CMakeLists.txt:18 (find_package):
+  Policy CMP0074 is not set: find_package uses <PackageName>_ROOT variables.
+  Run "cmake --help-policy CMP0074" for policy details.  Use the cmake_policy
+  command to set the policy and suppress this warning.
+
+  CMake variable PCL_ROOT is set to:
+
+    /usr
+
+  For compatibility, CMake is ignoring the variable.
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+---
+Finished <<< plan_env [28.7s]
+Starting >>> mm_config
+--- stderr: mm_config
+CMake Warning (dev) at CMakeLists.txt:13 (find_package):
+  Policy CMP0074 is not set: find_package uses <PackageName>_ROOT variables.
+  Run "cmake --help-policy CMP0074" for policy details.  Use the cmake_policy
+  command to set the policy and suppress this warning.
+
+  CMake variable PCL_ROOT is set to:
+
+    /usr
+
+  For compatibility, CMake is ignoring the variable.
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+---
+Finished <<< mm_config [19.1s]
+Starting >>> path_searching
+Finished <<< path_searching [22.8s]
+Starting >>> traj_opt
+Finished <<< traj_opt [23.3s]
+Starting >>> remani_adapter
+Finished <<< remani_adapter [25.9s]
+Starting >>> mm_bringup
+Finished <<< mm_bringup [0.62s]
+
+Summary: 13 packages finished [2min 4s]
+  2 packages had stderr output: mm_config plan_env

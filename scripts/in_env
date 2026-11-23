@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+set -euo pipefail
+risk_mm_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+exec env -i HOME="$HOME" USER="${USER:-ubuntu}" PATH=/usr/local/bin:/usr/bin:/bin LANG=C.UTF-8 \
+  DISPLAY="${DISPLAY:-}" XAUTHORITY="${XAUTHORITY:-}" TERM="${TERM:-xterm}" \
+  ROS_DOMAIN_ID="${ROS_DOMAIN_ID:-163}" ROS_LOCALHOST_ONLY=1 \
+  ROS_LOG_DIR="${ROS_LOG_DIR:-/tmp/risk_mm_ros_logs}" RISK_MM_ROOT="$risk_mm_root" \
+  GAZEBO_MASTER_URI="${GAZEBO_MASTER_URI:-http://127.0.0.1:11481}" \
+  GAZEBO_MODEL_DATABASE_URI='' \
+  bash --noprofile --norc -c '
+    source /opt/ros/humble/setup.bash
+    if [[ -f "$RISK_MM_ROOT/install/local_setup.bash" ]]; then
+      source "$RISK_MM_ROOT/install/local_setup.bash"
+    fi
+    cd "$RISK_MM_ROOT"
+    exec "$@"
+  ' risk_mm "$@"

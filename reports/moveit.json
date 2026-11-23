@@ -1,0 +1,14 @@
+{
+  "status": "failed",
+  "execution_success": null,
+  "scope": "synthetic static start and scene; real MoveIt services; no motion execution",
+  "stow_valid": true,
+  "contacts": [],
+  "planning_success": true,
+  "trajectory_samples": 6,
+  "duration_s": 0.41403264700000003,
+  "blocked_scene_rejected": true,
+  "planning_status": "passed",
+  "shutdown_success": false,
+  "reason": "MoveIt process failed during teardown; planning result is recorded separately"
+}

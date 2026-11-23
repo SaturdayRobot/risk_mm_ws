@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>xarm_description</name>
+  <version>0.0.0</version>
+  <description>Official xArm6 mesh resources required by the Rangermini whole-robot URDF.</description>
+  <maintainer email="vinman.cub@gmail.com">vm</maintainer>
+  <license>TODO: License declaration</license>
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

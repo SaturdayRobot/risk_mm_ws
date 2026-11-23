@@ -1,0 +1,1149 @@
+--- remani_planner/path_searching/src/rrt.cpp
++++ src/planning/path_searching/src/rrt.cpp
+@@ -11,11 +11,11 @@
+     std::vector<Eigen::VectorXd> path_full;
+     std::vector<double> t_list_full, yaw_list_full;
+     if(start_pt_list.size() < 1){
+-      ROS_ERROR("[RRT plan]: start pt < 1");
++      RCLCPP_ERROR(rclcpp::get_logger("remani"), "[RRT plan]: start pt < 1");
+       return false;
+     }
+     if(end_pt_list.size() < 1){
+-      ROS_ERROR("[RRT plan]: end pt < 1");
++      RCLCPP_ERROR(rclcpp::get_logger("remani"), "[RRT plan]: end pt < 1");
+       return false;
+     }
+     
+@@ -57,13 +57,13 @@
+                           const std::vector<double>& start_g_score_list, const std::vector<int>& start_layer_list, const std::vector<double>& end_g_score_list, const std::vector<int>& end_layer_list,
+                           const std::vector<int>& start_singul_list, const std::vector<int>& end_singul_list){
+     // std::cout << "[sample mani]: Search begin. start: " << start_state.transpose() << " end: " << end_state.transpose() << std::endl;
+-    ros::Time time_1 = ros::Time::now();
++    rclcpp::Time time_1 = rclcpp::Clock(RCL_STEADY_TIME).now();
+     PathNodeRRTPtr start_node, end_node;
+     PathNodeRRTPtr path_node_1 = nullptr, path_node_2 = nullptr;
+ 
+     int start_num = start_pt_list.size();
+     if(start_num < 1){
+-      ROS_ERROR("[RRT]: Fail! Start list size zero!");
++      RCLCPP_ERROR(rclcpp::get_logger("remani"), "[RRT]: Fail! Start list size zero!");
+       return false;
+     }
+     for(int i = 0; i < start_num; ++i){
+@@ -83,7 +83,7 @@
+ 
+     int end_num = end_pt_list.size();
+     if(end_num < 1){
+-      ROS_ERROR("[RRT]: Fail! End list size zero!");
++      RCLCPP_ERROR(rclcpp::get_logger("remani"), "[RRT]: Fail! End list size zero!");
+       return false;
+     }
+     for(int i = 0; i < end_num; ++i){
+@@ -116,7 +116,7 @@
+     while(true){
+       // std::cout << loop << std::endl;
+       // std::cout << loop << std::endl;
+-      if( (have_path_ && (ros::Time::now() - time_1).toSec() > 0.01) || (ros::Time::now() - time_1).toSec() > max_sample_time_){
++      if( (have_path_ && (rclcpp::Clock(RCL_STEADY_TIME).now() - time_1).seconds() > 0.01) || (rclcpp::Clock(RCL_STEADY_TIME).now() - time_1).seconds() > max_sample_time_){
+         break;
+       }
+       if(tree_count_ > anti_tree_count_){
+@@ -154,7 +154,7 @@
+       // std::cout << "new:  " << q_new->state.transpose() << std::endl;
+       // std::cout << "test 4" << std::endl;
+       if((dir && q_new->node_state == PathNodeRRT::IN_ANTI_TREE) || (!dir && q_new->node_state == PathNodeRRT::IN_TREE)){
+-        // ROS_WARN("[RRT Plan]: Success. num_in_tree: %d, num_in_anti_tree: %d, loop num: %d, node expend: %d, time: %lf.", tree_count_, anti_tree_count_, loop, node_pool_.size(), (ros::Time::now() - time_1).toSec() * 1000.0);
++        // RCLCPP_WARN(rclcpp::get_logger("remani"), "[RRT Plan]: Success. num_in_tree: %d, num_in_anti_tree: %d, loop num: %d, node expend: %d, time: %lf.", tree_count_, anti_tree_count_, loop, node_pool_.size(), (rclcpp::Clock(RCL_STEADY_TIME).now() - time_1).seconds() * 1000.0);
+         have_path_ = true;
+               // std::cout << "11111111111$$$$$$$$$$$$$$$$$$$$$$$$" << std::endl;
+               // std::cout << "cost: " << q_near->g_score + q_new->g_score + estimateHeuristic(q_near, q_new) << std::endl;
+@@ -195,7 +195,7 @@
+         }
+ 
+         if((!dir && q_new_1->node_state == PathNodeRRT::IN_ANTI_TREE) || (dir && q_new_1->node_state == PathNodeRRT::IN_TREE)){
+-          // ROS_WARN("[RRT Plan]: Success. num_in_tree: %d, num_in_anti_tree: %d, loop num: %d, node expend: %d, time: %lf.", tree_count_, anti_tree_count_, loop, node_pool_.size(), (ros::Time::now() - time_1).toSec() * 1000.0);
++          // RCLCPP_WARN(rclcpp::get_logger("remani"), "[RRT Plan]: Success. num_in_tree: %d, num_in_anti_tree: %d, loop num: %d, node expend: %d, time: %lf.", tree_count_, anti_tree_count_, loop, node_pool_.size(), (rclcpp::Clock(RCL_STEADY_TIME).now() - time_1).seconds() * 1000.0);
+           have_path_ = true;
+           // std::cout << "222222222222$$$$$$$$$$$$$$$$$$$$$$$$" << std::endl;
+           // std::cout << "cost: " << q_new_1->g_score + q_near_1->g_score + estimateHeuristic(q_new_1, q_near_1) << std::endl;
+@@ -250,7 +250,7 @@
+               q_new_1 = q_new_2;
+             }
+             else if(q_new_2 != nullptr && ((dir && q_new_2->node_state == PathNodeRRT::IN_TREE) || (!dir && q_new_2->node_state == PathNodeRRT::IN_ANTI_TREE))){
+-            // ROS_WARN("[RRT Plan]: Success. num_in_tree: %d, num_in_anti_tree: %d, loop num: %d, node expend: %d, time: %lf.", tree_count_, anti_tree_count_, loop, node_pool_.size(), (ros::Time::now() - time_1).toSec() * 1000.0);
++            // RCLCPP_WARN(rclcpp::get_logger("remani"), "[RRT Plan]: Success. num_in_tree: %d, num_in_anti_tree: %d, loop num: %d, node expend: %d, time: %lf.", tree_count_, anti_tree_count_, loop, node_pool_.size(), (rclcpp::Clock(RCL_STEADY_TIME).now() - time_1).seconds() * 1000.0);
+               // std::cout << "3333333$$$$$$$$$$$$$$$$$$$$$$$$" << std::endl;
+               // std::cout << "cost: " << q_new_2->g_score + q_new_1->g_score + estimateHeuristic(q_new_2, q_new_1) << std::endl;
+               // std::cout << "22" << std::endl;
+@@ -302,11 +302,11 @@
+ 
+ 
+     if(!have_path_){
+-      // ROS_ERROR("[RRT Plan]: Fail. num_in_tree: %d, num_in_anti_tree: %d, loop num: %d, node expend: %d, time: %lf.", tree_count_, anti_tree_count_, loop, (int)node_pool_.size(), (ros::Time::now() - time_1).toSec() * 1000.0);
++      // RCLCPP_ERROR(rclcpp::get_logger("remani"), "[RRT Plan]: Fail. num_in_tree: %d, num_in_anti_tree: %d, loop num: %d, node expend: %d, time: %lf.", tree_count_, anti_tree_count_, loop, (int)node_pool_.size(), (rclcpp::Clock(RCL_STEADY_TIME).now() - time_1).seconds() * 1000.0);
+       return false;
+     }else{
+       // std::cout << "last cost: " << path_node_1->g_score + path_node_2->g_score + estimateHeuristic(path_node_1, path_node_2) << std::endl;
+-      // ROS_INFO("[RRT Plan]: Success. num_in_tree: %d, num_in_anti_tree: %d, loop num: %d, node expend: %d, time: %lf.", tree_count_, anti_tree_count_, loop, (int)node_pool_.size(), (ros::Time::now() - time_1).toSec() * 1000.0);
++      // RCLCPP_INFO(rclcpp::get_logger("remani"), "[RRT Plan]: Success. num_in_tree: %d, num_in_anti_tree: %d, loop num: %d, node expend: %d, time: %lf.", tree_count_, anti_tree_count_, loop, (int)node_pool_.size(), (rclcpp::Clock(RCL_STEADY_TIME).now() - time_1).seconds() * 1000.0);
+       // std::cout << "debug 1\n";
+       mergeTree(path_node_1, path_node_2);
+       // std::cout << "debug 2\n";
+@@ -1054,43 +1054,43 @@
+     node_pool_.clear();
+   }
+ 
+-  void RrtPlanning::setParam(ros::NodeHandle& nh, const std::shared_ptr<MMConfig> &mm_config){
++  void RrtPlanning::setParam(rclcpp::Node::SharedPtr& nh, const std::shared_ptr<MMConfig> &mm_config){
+     mm_config_ = mm_config;
+     manipulator_link_pts_ = mm_config_->getLinkPoint();
+     max_vel_ = mm_config_->getBaseMaxVel();
+     T_q_0_ = mm_config_->getTq0();
+ 
+-    nh.param("search/check_num", check_num_, -1);
+-    nh.param("search/goal_rate", goal_rate_, 0.0);
+-    nh.param("search/max_sample_time", max_sample_time_, 0.0);
+-    nh.param("search/max_loop_num", max_loop_num_, 100);
+-    nh.param("search/time_resolution", time_resolution_, 1.0);
+-    nh.param("optimization/self_safe_margin", self_safe_margin_, 0.1);
+-    nh.param("optimization/safe_margin_mani", safe_margin_mani_, 0.1);
+-
+-    nh.param("mm/mobile_base_dof", mobile_base_dof_, -1);
++    nh->get_parameter_or("search.check_num", check_num_, -1);
++    nh->get_parameter_or("search.goal_rate", goal_rate_, 0.0);
++    nh->get_parameter_or("search.max_sample_time", max_sample_time_, 0.0);
++    nh->get_parameter_or("search.max_loop_num", max_loop_num_, 100);
++    nh->get_parameter_or("search.time_resolution", time_resolution_, 1.0);
++    nh->get_parameter_or("optimization.self_safe_margin", self_safe_margin_, 0.1);
++    nh->get_parameter_or("optimization.safe_margin_mani", safe_margin_mani_, 0.1);
++
++    nh->get_parameter_or("mm.mobile_base_dof", mobile_base_dof_, -1);
+ 
+     double dist_resolution;
+-    nh.param("search/dist_resolution", dist_resolution, 1.0);
++    nh->get_parameter_or("search.dist_resolution", dist_resolution, 1.0);
+     time_resolution_ = dist_resolution / max_vel_;
+ 
+     std::vector<double> joint_pos_limit;
+-    nh.getParam("mm/manipulator_min_pos", joint_pos_limit);
++    nh->get_parameter("mm.manipulator_min_pos", joint_pos_limit);
+     min_joint_pos_.resize(joint_pos_limit.size());
+     for(unsigned int i = 0; i < joint_pos_limit.size(); i++){
+         min_joint_pos_(i) = joint_pos_limit[i];
+     }
+ 
+     joint_pos_limit.clear();
+-    nh.getParam("mm/manipulator_max_pos", joint_pos_limit);
++    nh->get_parameter("mm.manipulator_max_pos", joint_pos_limit);
+     max_joint_pos_.resize(joint_pos_limit.size());
+     for(unsigned int i = 0; i < joint_pos_limit.size(); i++){
+         max_joint_pos_(i) = joint_pos_limit[i];
+     }
+-    nh.param("mm/manipulator_max_vel", max_joint_vel_, -1.0);
+-    nh.param("mm/manipulator_max_acc", max_joint_acc_, -1.0);
+-    nh.param("mm/manipulator_dof", manipulator_dof_, -1);
+-    nh.param("mm/manipulator_thickness", mani_thickness_, 0.1);
++    nh->get_parameter_or("mm.manipulator_max_vel", max_joint_vel_, -1.0);
++    nh->get_parameter_or("mm.manipulator_max_acc", max_joint_acc_, -1.0);
++    nh->get_parameter_or("mm.manipulator_dof", manipulator_dof_, -1);
++    nh->get_parameter_or("mm.manipulator_thickness", mani_thickness_, 0.1);
+ 
+     dubins_curve_ = std::make_shared<ompl::base::DubinsStateSpace>(0.1);
+     traj_dim_ = mobile_base_dof_ + manipulator_dof_;
+@@ -1107,4 +1107,4 @@
+     this->max_size_.push_back(M_PI);
+     this->min_size_.push_back(-M_PI);
+   }
+-}  //namespace remani_planner+}  //namespace remani_planner
+--- remani_planner/path_searching/src/kino_astar.cpp
++++ src/planning/path_searching/src/kino_astar.cpp
+@@ -7,7 +7,7 @@
+ 
+ namespace remani_planner{
+ 
+-void KinoAstar::setParam(ros::NodeHandle& nh, const std::shared_ptr<GridMap> &env, const std::shared_ptr<MMConfig> &mm_config){
++void KinoAstar::setParam(rclcpp::Node::SharedPtr& nh, const std::shared_ptr<GridMap> &env, const std::shared_ptr<MMConfig> &mm_config){
+   sdf_map_ = env;
+   Eigen::Vector3i map_size;
+   sdf_map_->getVoxelNum(map_size);
+@@ -20,40 +20,39 @@
+   mobile_base_wheel_base_ = mm_config_->getBaseWheelBase();
+ 
+   double yaw_resolution;
+-  nh.param("search/yaw_resolution", yaw_resolution, 0.3);
++  nh->get_parameter_or("search.yaw_resolution", yaw_resolution, 0.3);
+   inv_yaw_resolution_ = 1.0 / yaw_resolution;
+-  nh.param("search/lambda_heu", lambda_heu_, 5.0);
+-  nh.param("search/max_seach_time", max_search_time_, 0.1);
+-  nh.param("search/traj_forward_penalty", traj_forward_penalty_, 1.0);
+-  nh.param("search/traj_back_penalty", traj_back_penalty_, 1.0);
+-  nh.param("search/traj_gear_switch_penalty", traj_gear_switch_penalty_, 15.0);
+-  nh.param("search/traj_steer_penalty", traj_steer_penalty_, 0.5);
+-  nh.param("search/traj_steer_change_penalty", traj_steer_change_penalty_, 0.0);
+-  nh.param("search/max_arc", max_arc_, 0.9);
+-  nh.param("search/oneshot_check_len", oneshot_check_len_, 0.2);
++  nh->get_parameter_or("search.lambda_heu", lambda_heu_, 5.0);
++  nh->get_parameter_or("search.max_search_time", max_search_time_, 0.1);
++  nh->get_parameter_or("search.traj_forward_penalty", traj_forward_penalty_, 1.0);
++  nh->get_parameter_or("search.traj_back_penalty", traj_back_penalty_, 1.0);
++  nh->get_parameter_or("search.traj_gear_switch_penalty", traj_gear_switch_penalty_, 15.0);
++  nh->get_parameter_or("search.traj_steer_penalty", traj_steer_penalty_, 0.5);
++  nh->get_parameter_or("search.traj_steer_change_penalty", traj_steer_change_penalty_, 0.0);
++  nh->get_parameter_or("search.max_arc", max_arc_, 0.9);
++  nh->get_parameter_or("search.oneshot_check_len", oneshot_check_len_, 0.2);
+   
+-  nh.param("search/check_num", check_num_, 5);
+-  nh.param("search/oneshot_range", oneshot_range_, 5.0);
+-  nh.param("search/sample_time", sample_time_, 0.1);
+-  nh.param("search/min_turning_radius", min_turning_radius_, 0.1);
+-  nh.param("search/curvatureDisCoe", curvatureDisCoe_, 0.4);
+-  nh.param("mm/mobile_base_non_singul_vel", non_siguav_, 0.01);
++  nh->get_parameter_or("search.check_num", check_num_, 5);
++  nh->get_parameter_or("search.oneshot_range", oneshot_range_, 5.0);
++  nh->get_parameter_or("search.sample_time", sample_time_, 0.1);
++  nh->get_parameter_or("search.min_turning_radius", min_turning_radius_, 0.1);
++  nh->get_parameter_or("search.curvatureDisCoe", curvatureDisCoe_, 0.4);
++  nh->get_parameter_or("mm.mobile_base_non_singul_vel", non_siguav_, 0.01);
+ 
+   double dist_resolution;
+-  nh.param("search/dist_resolution", dist_resolution, -1.0);
+-
+-  nh.param("search/allocate_num", allocate_num_, 100000);
+-  nh.param("search/try_astar_times", try_astar_times_, 20);
+-  nh.param("fsm/planning_horizon", planning_horizon_, 10.0);
++  nh->get_parameter_or("search.dist_resolution", dist_resolution, -1.0);
++
++  nh->get_parameter_or("search.allocate_num", allocate_num_, 100000);
++  nh->get_parameter_or("search.try_astar_times", try_astar_times_, 20);
++  nh->get_parameter_or("fsm.planning_horizon", planning_horizon_, 10.0);
+ 
+   bool global_plan;
+-  nh.param("fsm/global_plan", global_plan, false);
++  nh->get_parameter_or("fsm.global_plan", global_plan, false);
+   if(global_plan){
+     planning_horizon_ = 1000.0;
+   }
+ 
+-  frontend_path_pub_ = nh.advertise<visualization_msgs::Marker>("kinoastar/path", 10);
+-  local_start_goal_pub_ = nh.advertise<visualization_msgs::MarkerArray>("kinoastar/local_start_goal", 10);
++
+ 
+   use_node_num_ = 0;
+   iter_num_ = 0;
+@@ -133,16 +132,16 @@
+   end_state(3) = 0.0;
+   end_state.tail(manipulator_dof_) = end_pos.tail(manipulator_dof_);
+ 
+-  mm_config_->visMM(local_start_goal_pub_, "start", 0, 0.8, start_state.head(3), start_state.tail(manipulator_dof_), start_gripper);
+-  mm_config_->visMM(local_start_goal_pub_, "gaol", 1, 0.8, end_state.head(3), end_state.tail(manipulator_dof_), end_gripper);
++
++
+ 
+   std::cout << "continous_failures_count: " << continous_failures_count << "\n";
+   bool start_goal_is_close = (start_pos - end_pos).head(2).norm() < 8e-2 && (start_pos - end_pos).tail(manipulator_dof_).norm() > 1e-1;
+   if(continous_failures_count < try_astar_times_ && (!start_goal_is_close) /*&& false*/){
+-    // ROS_WARN("ASTAR!");
++    // RCLCPP_WARN(rclcpp::get_logger("remani"), "ASTAR!");
+     search(start_state, end_state, init_ctrl);
+   }else{
+-    // ROS_WARN("FAILED TOO MANY TIMES, use rrt!");
++    // RCLCPP_WARN(rclcpp::get_logger("remani"), "FAILED TOO MANY TIMES, use rrt!");
+     has_path_ = false;
+   }
+   sdf_map_->resetAstarBuffer();
+@@ -205,8 +204,8 @@
+ 
+     car_statept_disp.push_back(car_statelist);
+     car_statelist_disp.push_back(car_statelist_check);
+-    visPath(car_statept_disp, true);
+-    visPath(car_statelist_disp, false);
++
++
+ 
+     std::vector<Eigen::VectorXd> final_state;
+     std::vector<double> final_yaw_list, final_t_list;
+@@ -272,111 +271,22 @@
+   }
+ }
+ 
+-void KinoAstar::visPath(std::vector<std::vector<Eigen::Vector3d>> path, bool pt){
+-  if (frontend_path_pub_.getNumSubscribers() == 0){
+-    return;
+-  }
+-
+-  int i = 0;
+-  vector<Eigen::Vector3d> list;
+-
+-  Eigen::Vector4d color = Eigen::Vector4d(0.5 + ((double)rand() / RAND_MAX / 2), 0.5 + ((double)rand() / RAND_MAX / 2), 0, 1); // make the A star pathes different every time.
+-  double scale = 0.05 + (double)rand() / RAND_MAX / 10;
+-
+-  for (auto block : path){
+-    list.clear();
+-    for (auto pt : block){
+-      // std::cout << pt.head(2).transpose() << std::endl;
+-      list.push_back(Eigen::Vector3d(pt(0), pt(1), 0.1));
+-    }
+-    // Eigen::Vector4d color(0.5,0.5,0,1);
+-    displayMarkerList(frontend_path_pub_, list, scale, color, i, pt); // real ids used: [ id ~ id+a_star_paths.size() ]
+-    i++;
+-  }
+-}
+-
+-void KinoAstar::displayMarkerList(ros::Publisher &pub, const vector<Eigen::Vector3d> &list, double scale,
+-                                  Eigen::Vector4d color, int id, bool show_sphere /* = true */ )
+-{
+-  visualization_msgs::Marker MarkerDelete;
+-  MarkerDelete.action = visualization_msgs::Marker::DELETEALL;
+-  pub.publish(MarkerDelete);
+-
+-  visualization_msgs::Marker sphere, line_strip;
+-  sphere.header.frame_id = line_strip.header.frame_id = "world";
+-  sphere.header.stamp = line_strip.header.stamp = ros::Time::now();
+-  sphere.type = visualization_msgs::Marker::SPHERE_LIST;
+-  line_strip.type = visualization_msgs::Marker::LINE_STRIP;
+-  sphere.action = line_strip.action = visualization_msgs::Marker::ADD;
+-  sphere.id = id;
+-  line_strip.id = id + 1000;
+-
+-  sphere.pose.orientation.w = line_strip.pose.orientation.w = 1.0;
+-  sphere.color.r = line_strip.color.r = color(0);
+-  sphere.color.g = line_strip.color.g = color(1);
+-  sphere.color.b = line_strip.color.b = color(2);
+-  sphere.color.a = line_strip.color.a = color(3) > 1e-5 ? color(3) : 1.0;
+-  sphere.scale.x = scale;
+-  sphere.scale.y = scale;
+-  sphere.scale.z = scale;
+-  line_strip.scale.x = scale / 2;
+-  geometry_msgs::Point pt;
+-  for (int i = 0; i < int(list.size()); i++)
+-  {
+-    pt.x = list[i](0);
+-    pt.y = list[i](1);
+-    pt.z = 0.0;
+-    if(show_sphere)  sphere.points.push_back(pt);
+-    if(!show_sphere) line_strip.points.push_back(pt);
+-  }
+-  if(show_sphere) pub.publish(sphere);
+-  if(!show_sphere) pub.publish(line_strip);
+-}
+-
+-void KinoAstar::displayLocalStartGoal(ros::Publisher &pub, const vector<Eigen::VectorXd> &list)
+-{
+-  visualization_msgs::Marker MarkerDelete;
+-  MarkerDelete.action = visualization_msgs::Marker::DELETEALL;
+-  pub.publish(MarkerDelete);
+-
+-  visualization_msgs::Marker sphere;
+-  sphere.header.frame_id= "world";
+-  sphere.header.stamp= ros::Time::now();
+-  sphere.type = visualization_msgs::Marker::MESH_RESOURCE;
+-  sphere.action = visualization_msgs::Marker::ADD;
+-  sphere.id = 0;
+-
+-  sphere.pose.orientation.w = 1.0;
+-  sphere.color.r = 0;
+-  sphere.color.g = 1;
+-  sphere.color.b = 0;
+-  sphere.color.a = 1.0;
+-  sphere.scale.x = 0.2;
+-  sphere.scale.y = 0.2;
+-  sphere.scale.z = 0.2;
+-  geometry_msgs::Point pt;
+-  for (int i = 0; i < int(list.size()); i++)
+-  {
+-    pt.x = list[i](0);
+-    pt.y = list[i](1);
+-    pt.z = list[i](2);
+-    sphere.points.push_back(pt);
+-  }
+-  pub.publish(sphere);
+-}
++
++
++
+ 
+ int KinoAstar::search(Eigen::VectorXd &start_state, const Eigen::VectorXd &end_state, const Eigen::Vector2d &init_ctrl){
+   bool isocc = false;
+   bool initsearch = false;
+-  double start_time = ros::Time::now().toSec();
++  double start_time = rclcpp::Clock(RCL_STEADY_TIME).now().seconds();
+   int coll_type;
+   if(mm_config_->checkcollision(start_state.head(3), start_state.tail(manipulator_dof_), false, coll_type)){
+-    ROS_WARN("KinoAstar: start (%d) is not free!", coll_type);
++    RCLCPP_WARN(rclcpp::get_logger("remani"), "KinoAstar: start (%d) is not free!", coll_type);
+     return START_COLLISION;
+   }
+ 
+   if(mm_config_->checkcollision(end_state.head(3), end_state.tail(manipulator_dof_), false, coll_type)){
+-    ROS_WARN("KinoAstar: goal (%d) is not free!", coll_type);
++    RCLCPP_WARN(rclcpp::get_logger("remani"), "KinoAstar: goal (%d) is not free!", coll_type);
+     return GOAL_COLLISION;
+   }
+ 
+@@ -417,8 +327,8 @@
+       }
+     }
+     
+-    if(ros::Time::now().toSec() - start_time > max_search_time_){
+-      printf("\033[Kino Astar]: Kino Astar NO_PATH. Exceeds maximum time %lf s \n\033[0m", ros::Time::now().toSec() - start_time);
++    if(rclcpp::Clock(RCL_STEADY_TIME).now().seconds() - start_time > max_search_time_){
++      printf("\033[Kino Astar]: Kino Astar NO_PATH. Exceeds maximum time %lf s \n\033[0m", rclcpp::Clock(RCL_STEADY_TIME).now().seconds() - start_time);
+       has_path_ = false;
+       return NO_PATH;
+     }
+@@ -957,7 +867,7 @@
+ double KinoAstar::evaluateDuration(const double &length, const double &startV, const double &endV){
+   double critical_len; 
+   if(startV > max_vel_ || endV > max_vel_){
+-    ROS_ERROR("kinoAstar:evaluateDuration:start or end vel is larger that the limit!");
++    RCLCPP_ERROR(rclcpp::get_logger("remani"), "kinoAstar:evaluateDuration:start or end vel is larger that the limit!");
+   }
+   double temp_max_acc = max_acc_ * 0.7;
+   double temp_max_vel = max_vel_ * 1.0;
+@@ -978,7 +888,7 @@
+   double critical_len; 
+   if(startV > max_vel_ || endV > max_vel_){
+     // std::cout << startV << ", " << endV << ", " << max_vel_ << std::endl;
+-    // ROS_ERROR("kinoAstar:evaluateLength:start or end vel is larger that the limit!");
++    // RCLCPP_ERROR(rclcpp::get_logger("remani"), "kinoAstar:evaluateLength:start or end vel is larger that the limit!");
+   }
+   double startv2 = pow(startV, 2);
+   double endv2 = pow(endV, 2);
+@@ -1031,7 +941,7 @@
+ Eigen::Vector3d KinoAstar::evaluatePos(const double &input_t){
+   double t = input_t;
+   if(t < 0 || t > totalTrajTime){
+-    // ROS_ERROR("In evaluatePos, t<0 || t>totalTrajTime");
++    // RCLCPP_ERROR(rclcpp::get_logger("remani"), "In evaluatePos, t<0 || t>totalTrajTime");
+     // std::cout << "t: " << t << ", totol: " << totalTrajTime << std::endl;
+     t = std::min<double>(std::max<double>(0, t), totalTrajTime);
+   }
+--- remani_planner/path_searching/src/sample_mani_RRT.cpp
++++ src/planning/path_searching/src/sample_mani_RRT.cpp
+@@ -20,16 +20,16 @@
+     init(car_state_list, car_state_list_check, t_list);
+     bool mani_status = search(start_state, end_state);
+ 
+-    // ROS_ERROR("=====================1");
++    // RCLCPP_ERROR(rclcpp::get_logger("remani"), "=====================1");
+     if(mani_status && astar_succ){
+       getTraj(mani_path);
+-      // ROS_ERROR("=====================1");
++      // RCLCPP_ERROR(rclcpp::get_logger("remani"), "=====================1");
+       int singul_now = singul_container[0];
+       state_full.head(mobile_base_dof_) = car_state_list[0].head(mobile_base_dof_);
+       state_full.tail(manipulator_dof_) = mani_path[0];
+       simple_path.push_back(state_full);
+       yaw_list.push_back(car_state_list[0](2));
+-      // ROS_ERROR("=====================2");
++      // RCLCPP_ERROR(rclcpp::get_logger("remani"), "=====================2");
+       // for(int i = 0; i < singul_container.size(); ++i){
+       //   std::cout << "singul" << i << ": " << singul_container[i] << std::endl;
+       // }
+@@ -37,7 +37,7 @@
+         if(singul_now != singul_container[i - 1]){
+           singul_container_new.push_back(singul_now);
+           singul_now = singul_container[i - 1];
+-          // ROS_ERROR("=====================3");
++          // RCLCPP_ERROR(rclcpp::get_logger("remani"), "=====================3");
+           // rrt_plan_->smoothTraj(simple_path, yaw_list, t_list_temp);
+           simple_path_container.push_back(simple_path);
+           yaw_list_container.push_back(yaw_list);
+@@ -53,7 +53,7 @@
+           simple_path.push_back(state_full);
+           yaw_list.push_back(car_state_list[i - 1](2));
+         }
+-        // ROS_ERROR("=====================4");
++        // RCLCPP_ERROR(rclcpp::get_logger("remani"), "=====================4");
+         state_full.head(mobile_base_dof_) = car_state_list[i].head(mobile_base_dof_);
+         state_full.tail(manipulator_dof_) = mani_path[i];
+         simple_path.push_back(state_full);
+@@ -95,7 +95,7 @@
+     // for(auto it = node_pool_.begin(); it != node_pool_.end(); ++it){
+     //   std::cout << it->second->state.transpose() << std::endl;
+     // }
+-    // ROS_ERROR("[Sample Mani]:fail !!! Try to fix.");
++    // RCLCPP_ERROR(rclcpp::get_logger("remani"), "[Sample Mani]:fail !!! Try to fix.");
+     // std::cout << "test 1" << std::endl; 
+     // 出意外了，需要补上中间的
+     std::vector<Eigen::VectorXd> start_list, end_list;
+@@ -256,7 +256,7 @@
+     if(it != node_pool_.end()){
+       q_t = it->second;
+     }else{
+-      ROS_ERROR("find part_idx_begin, short_mani_start fail!");
++      RCLCPP_ERROR(rclcpp::get_logger("remani"), "find part_idx_begin, short_mani_start fail!");
+       goal_gen_.seed(std::random_device{}());
+       state_gen_.seed(std::random_device{}());
+       node_gen_.seed(std::random_device{}());
+@@ -266,7 +266,7 @@
+     if(it != node_pool_.end()){
+       q_an_t = it->second;
+     }else{
+-      ROS_ERROR("find part_idx_end, short_mani_end fail!");
++      RCLCPP_ERROR(rclcpp::get_logger("remani"), "find part_idx_end, short_mani_end fail!");
+       goal_gen_.seed(std::random_device{}());
+       state_gen_.seed(std::random_device{}());
+       node_gen_.seed(std::random_device{}());
+@@ -390,7 +390,7 @@
+ 
+   bool SampleMani::search(const Eigen::VectorXd &start_state, const Eigen::VectorXd &end_state){
+     // std::cout << "[sample mani]: Search begin. start: " << start_state.transpose() << " end: " << end_state.transpose() << std::endl;
+-    ros::Time time_1 = ros::Time::now();
++    rclcpp::Time time_1 = rclcpp::Clock(RCL_STEADY_TIME).now();
+     std::uniform_real_distribution<double> goal_dis(0.0, 1.0);
+     // std::uniform_int_distribution<int> node_dis(1, max_index_-1);
+     ManiPathNodePtr start_node, end_node;
+@@ -415,15 +415,15 @@
+     // std::cout << "++++++++++++++++++++++++2.1" << std::endl;
+     
+     organizeTree(start_node);
+-    // ROS_INFO("[Sample Mani]: Init1 organ. num_in_tree: %d, node expend: %d, time: %lf.", tree_count_, node_pool_.size(), (ros::Time::now() - time_1).toSec() * 1000.0);
+-    time_1 = ros::Time::now();
++    // RCLCPP_INFO(rclcpp::get_logger("remani"), "[Sample Mani]: Init1 organ. num_in_tree: %d, node expend: %d, time: %lf.", tree_count_, node_pool_.size(), (rclcpp::Clock(RCL_STEADY_TIME).now() - time_1).seconds() * 1000.0);
++    time_1 = rclcpp::Clock(RCL_STEADY_TIME).now();
+ 
+     tree_min_index_ = max_index_ - 1;
+     end_node = initNode(max_index_ - 1, end_state);
+     if(end_node->node_state == ManiPathNode::NODE_STATE::IN_TREE){
+       this->end_node_ = end_node;
+       have_path_ = true;
+-      // ROS_WARN("[Sample Mani]: Success. num_in_tree: %d, loop num: %d, node expend: %d, time: %lf.", tree_count_, 0, node_pool_.size(), (ros::Time::now() - time_1).toSec() * 1000.0);
++      // RCLCPP_WARN(rclcpp::get_logger("remani"), "[Sample Mani]: Success. num_in_tree: %d, loop num: %d, node expend: %d, time: %lf.", tree_count_, 0, node_pool_.size(), (rclcpp::Clock(RCL_STEADY_TIME).now() - time_1).seconds() * 1000.0);
+       return true;
+     }
+     end_node->node_state = ManiPathNode::NODE_STATE::IN_ANTI_TREE;
+@@ -468,10 +468,10 @@
+     double c_min = 1.0e6;
+ 
+     bool dir = false;
+-    auto t_start = ros::Time::now();
++    auto t_start = rclcpp::Clock(RCL_STEADY_TIME).now();
+     // while(loop < max_loop_num_){
+     while(true){
+-      if((ros::Time::now() - t_start).toSec() > max_mani_search_time_){
++      if((rclcpp::Clock(RCL_STEADY_TIME).now() - t_start).seconds() > max_mani_search_time_){
+         break;
+       }
+ 
+@@ -517,7 +517,7 @@
+           // std::cout << "min: " << c_min << std::endl;
+         } 
+         // mergeTrees(q_new, q_near);
+-        // ROS_WARN("[Sample Mani]: Success. num_in_tree: %d, node expend: %d, time: %lf.", tree_count_, node_pool_.size(), (ros::Time::now() - time_1).toSec() * 1000.0);
++        // RCLCPP_WARN(rclcpp::get_logger("remani"), "[Sample Mani]: Success. num_in_tree: %d, node expend: %d, time: %lf.", tree_count_, node_pool_.size(), (rclcpp::Clock(RCL_STEADY_TIME).now() - time_1).seconds() * 1000.0);
+         // return true;
+         continue;
+       }
+@@ -541,7 +541,7 @@
+       // {
+       //   this->end_node_ = q_new;
+       //   have_path_ = true;
+-      //   ROS_INFO("[Sample Mani]: Success. num_in_tree: %d, loop num: %d, node expend: %d, time: %lf.", tree_count_, loop, node_pool_.size(), (ros::Time::now() - time_1).toSec() * 1000.0);
++      //   RCLCPP_INFO(rclcpp::get_logger("remani"), "[Sample Mani]: Success. num_in_tree: %d, loop num: %d, node expend: %d, time: %lf.", tree_count_, loop, node_pool_.size(), (rclcpp::Clock(RCL_STEADY_TIME).now() - time_1).seconds() * 1000.0);
+       //   return true;
+       // }
+ 
+@@ -561,7 +561,7 @@
+           // std::cout << "min: " << c_min << std::endl;
+         } 
+         // mergeTrees(q_new_1, q_near_1);
+-        // ROS_WARN("[Sample Mani]: Success. num_in_tree: %d, node expend: %d, time: %lf.", tree_count_, node_pool_.size(), (ros::Time::now() - time_1).toSec() * 1000.0);
++        // RCLCPP_WARN(rclcpp::get_logger("remani"), "[Sample Mani]: Success. num_in_tree: %d, node expend: %d, time: %lf.", tree_count_, node_pool_.size(), (rclcpp::Clock(RCL_STEADY_TIME).now() - time_1).seconds() * 1000.0);
+         // return true;
+         continue;
+       }
+@@ -595,7 +595,7 @@
+               // std::cout << "min: " << c_min << std::endl;
+             } 
+             // mergeTrees(q_new_2, q_new_1);
+-            // ROS_WARN("[Sample Mani]: Success. num_in_tree: %d, node expend: %d, time: %lf.", tree_count_, node_pool_.size(), (ros::Time::now() - time_1).toSec() * 1000.0);
++            // RCLCPP_WARN(rclcpp::get_logger("remani"), "[Sample Mani]: Success. num_in_tree: %d, node expend: %d, time: %lf.", tree_count_, node_pool_.size(), (rclcpp::Clock(RCL_STEADY_TIME).now() - time_1).seconds() * 1000.0);
+             // return true;
+             break;
+           }
+@@ -624,7 +624,7 @@
+         }
+       }
+     }
+-    // ROS_ERROR("[Sample Mani]: Fail. num_in_tree: %d, num_in_anti_tree: %d, loop num: %d, node expend: %d, time: %lf.", tree_count_, anti_tree_count_, loop, node_pool_.size(), (ros::Time::now() - time_1).toSec() * 1000.0);
++    // RCLCPP_ERROR(rclcpp::get_logger("remani"), "[Sample Mani]: Fail. num_in_tree: %d, num_in_anti_tree: %d, loop num: %d, node expend: %d, time: %lf.", tree_count_, anti_tree_count_, loop, node_pool_.size(), (rclcpp::Clock(RCL_STEADY_TIME).now() - time_1).seconds() * 1000.0);
+     // std::cout << "tree: " << tree_count_ << " max: " << tree_max_index_ <<std::endl;
+     // for(auto &node : node_pool_)
+     //   if(node.second->node_state == ManiPathNode::NODE_STATE::IN_TREE)
+@@ -639,9 +639,9 @@
+     
+     if(have_path_){
+       mergeTrees(path_node_1, path_node_2);
+-      // ROS_INFO("[Sample Mani]: Success. num_in_tree: %d, num_in_anti_tree: %d, loop num: %d, node expend: %d, time: %lf.", tree_count_, anti_tree_count_, loop, (int)node_pool_.size(), (ros::Time::now() - time_1).toSec() * 1000.0);
++      // RCLCPP_INFO(rclcpp::get_logger("remani"), "[Sample Mani]: Success. num_in_tree: %d, num_in_anti_tree: %d, loop num: %d, node expend: %d, time: %lf.", tree_count_, anti_tree_count_, loop, (int)node_pool_.size(), (rclcpp::Clock(RCL_STEADY_TIME).now() - time_1).seconds() * 1000.0);
+     }else{
+-      // ROS_ERROR("[Sample Mani]: Fail. num_in_tree: %d, num_in_anti_tree: %d, loop num: %d, node expend: %d, time: %lf.", tree_count_, anti_tree_count_, loop, (int)node_pool_.size(), (ros::Time::now() - time_1).toSec() * 1000.0);
++      // RCLCPP_ERROR(rclcpp::get_logger("remani"), "[Sample Mani]: Fail. num_in_tree: %d, num_in_anti_tree: %d, loop num: %d, node expend: %d, time: %lf.", tree_count_, anti_tree_count_, loop, (int)node_pool_.size(), (rclcpp::Clock(RCL_STEADY_TIME).now() - time_1).seconds() * 1000.0);
+     }
+       
+     return have_path_;
+@@ -1047,7 +1047,7 @@
+ 
+   void SampleMani::linkNode(ManiPathNodePtr &parent, ManiPathNodePtr &child){
+     // if(parent->index != child->index - 1){
+-    //   ROS_WARN("[Sample Mani]: link node error! Check the code.");
++    //   RCLCPP_WARN(rclcpp::get_logger("remani"), "[Sample Mani]: link node error! Check the code.");
+     //   return;
+     // }
+     ManiPathNodePtr pre_parent = child->parent;
+@@ -1228,42 +1228,42 @@
+     node_pool_.clear();
+   }
+ 
+-  void SampleMani::setParam(ros::NodeHandle& nh, const std::shared_ptr<remani_planner::MMConfig> &mm_config){
++  void SampleMani::setParam(rclcpp::Node::SharedPtr& nh, const std::shared_ptr<remani_planner::MMConfig> &mm_config){
+     mm_config_ = mm_config;
+     manipulator_link_pts_ = mm_config_->getLinkPoint();
+     rrt_plan_.reset(new remani_planner::RrtPlanning);
+     rrt_plan_->setParam(nh, mm_config);
+ 
+-    nh.param("mm/mobile_base_dof", mobile_base_dof_, -1);
+-    nh.param("mm/manipulator_dof", manipulator_dof_, -1);
+-    nh.param("mm/manipulator_thickness", mani_thickness_, -1.0);
++    nh->get_parameter_or("mm.mobile_base_dof", mobile_base_dof_, -1);
++    nh->get_parameter_or("mm.manipulator_dof", manipulator_dof_, -1);
++    nh->get_parameter_or("mm.manipulator_thickness", mani_thickness_, -1.0);
+ 
+     std::vector<double> joint_pos_limit;
+-    nh.getParam("mm/manipulator_min_pos", joint_pos_limit);
++    nh->get_parameter("mm.manipulator_min_pos", joint_pos_limit);
+     min_joint_pos_.resize(joint_pos_limit.size());
+     for(unsigned int i = 0; i < joint_pos_limit.size(); i++){
+         min_joint_pos_(i) = joint_pos_limit[i];
+     }
+ 
+     joint_pos_limit.clear();
+-    nh.getParam("mm/manipulator_max_pos", joint_pos_limit);
++    nh->get_parameter("mm.manipulator_max_pos", joint_pos_limit);
+     max_joint_pos_.resize(joint_pos_limit.size());
+     for(unsigned int i = 0; i < joint_pos_limit.size(); i++){
+         max_joint_pos_(i) = joint_pos_limit[i];
+     }
+-    nh.param("mm/manipulator_max_vel", max_joint_vel_, -1.0);
+-    nh.param("mm/manipulator_max_acc", max_joint_acc_, -1.0);
+-    nh.param("search/check_num", check_num_, -1);
+-    nh.param("search/goal_rate", goal_rate_, 0.4);
+-    nh.param("search/max_loop_num", max_loop_num_, 500);
+-    nh.param("search/max_mani_search_time", max_mani_search_time_, 0.1);
+-    nh.param("optimization/self_safe_margin", self_safe_margin_, 0.1);
+-    nh.param("optimization/safe_margin_mani", safe_margin_mani_, 0.1);
+-    nh.param("mm/mobile_base_check_radius", mobile_base_check_radius_, 0.1);
++    nh->get_parameter_or("mm.manipulator_max_vel", max_joint_vel_, -1.0);
++    nh->get_parameter_or("mm.manipulator_max_acc", max_joint_acc_, -1.0);
++    nh->get_parameter_or("search.check_num", check_num_, -1);
++    nh->get_parameter_or("search.goal_rate", goal_rate_, 0.4);
++    nh->get_parameter_or("search.max_loop_num", max_loop_num_, 500);
++    nh->get_parameter_or("search.max_mani_search_time", max_mani_search_time_, 0.1);
++    nh->get_parameter_or("optimization.self_safe_margin", self_safe_margin_, 0.1);
++    nh->get_parameter_or("optimization.safe_margin_mani", safe_margin_mani_, 0.1);
++    nh->get_parameter_or("mm.mobile_base_check_radius", mobile_base_check_radius_, 0.1);
+ 
+     traj_dim_ = mobile_base_dof_ + manipulator_dof_;
+ 
+     phi_.setIdentity(3, 3);
+     T_q_0_ = mm_config_->getTq0();
+   }
+-}  //namespace mani_sample+}  //namespace mani_sample
+--- remani_planner/path_searching/include/path_searching/kino_astar.h
++++ src/planning/path_searching/include/path_searching/kino_astar.h
+@@ -12,8 +12,8 @@
+ #include <queue>
+ #include <algorithm>
+ 
+-#include <ros/console.h>
+-#include <ros/ros.h>
++#include <mm_utils/ros2_utils.hpp>
++#include <mm_utils/ros2_utils.hpp>
+ #include <Eigen/Eigen>
+ #include <iostream>
+ #include <map>
+@@ -100,7 +100,7 @@
+ 
+ class KinoAstar{
+   private:
+-    ros::NodeHandle nh_;
++    rclcpp::Node::SharedPtr nh_;
+ 	  int manipulator_dof_;
+     int try_astar_times_;
+ 
+@@ -153,8 +153,7 @@
+     std::vector<int> shotindex;
+     std::vector<int> shot_SList;
+ 
+-    ros::Publisher frontend_path_pub_, local_start_goal_pub_;
+-  
++
+     double mobile_base_wheel_base_;
+     std::vector<PathNodePtr> path_nodes_;
+     std::vector<CarFlatTrajData> flat_trajs_;
+@@ -171,13 +170,11 @@
+     enum { REACH_HORIZON = 1, REACH_END = 2,  NO_PATH = 3, REACH_END_BUT_SHOT_FAILS = 4, START_COLLISION = 5, GOAL_COLLISION = 6};
+     KinoAstar(){}
+     ~KinoAstar();
+-    void setParam(ros::NodeHandle& nh, const std::shared_ptr<GridMap> &env, const std::shared_ptr<MMConfig> &mm_config);
++    void setParam(rclcpp::Node::SharedPtr& nh, const std::shared_ptr<GridMap> &env, const std::shared_ptr<MMConfig> &mm_config);
+     // void init();
+     void reset();
+-    void visPath(std::vector<std::vector<Eigen::Vector3d>> path, bool pt);
+-    void displayMarkerList(ros::Publisher &pub, const vector<Eigen::Vector3d> &list, double scale,
+-                                                Eigen::Vector4d color, int id, bool show_sphere /* = true */ );
+-    void displayLocalStartGoal(ros::Publisher &pub, const vector<Eigen::VectorXd> &list);
++
++
+     int KinoAstarSearchAndGetSimplePath(const Eigen::VectorXd &start_pos, const Eigen::VectorXd &start_vel, const double start_yaw, const int start_singul, const bool start_gripper,
+                                         const Eigen::VectorXd &end_pos, const Eigen::VectorXd &end_vel, double end_yaw, const bool end_gripper, const Eigen::Vector2d &init_ctrl, const int continous_failures_count,
+                                         std::vector<std::vector<Eigen::VectorXd>> &simple_path_container, std::vector<std::vector<double>> &yaw_list_container, 
+@@ -211,4 +208,4 @@
+ };
+ 
+ } // namespace remani_planner
+-#endif+#endif
+--- remani_planner/path_searching/include/path_searching/sample_mani_RRT.h
++++ src/planning/path_searching/include/path_searching/sample_mani_RRT.h
+@@ -1,8 +1,8 @@
+ #ifndef _SAMPLE_MANI_H_
+ #define _SAMPLE_MANI_H_
+ 
+-#include <ros/console.h>
+-#include <ros/ros.h>
++#include <mm_utils/ros2_utils.hpp>
++#include <mm_utils/ros2_utils.hpp>
+ #include <Eigen/Eigen>
+ #include <iostream>
+ #include <map>
+@@ -124,7 +124,7 @@
+     }
+ 
+     bool search(const Eigen::VectorXd &start_state, const Eigen::VectorXd &end_state);
+-    void setParam(ros::NodeHandle& nh, const std::shared_ptr<remani_planner::MMConfig> &mm_config);
++    void setParam(rclcpp::Node::SharedPtr& nh, const std::shared_ptr<remani_planner::MMConfig> &mm_config);
+     void init(const std::vector<Eigen::Vector3d> &car_state_list, const std::vector<Eigen::Vector3d> &car_state_list_check, const std::vector<double> &t_list);
+     void reset();
+     bool getTraj(std::vector<Eigen::VectorXd> &traj);
+--- remani_planner/path_searching/include/path_searching/rrt.h
++++ src/planning/path_searching/include/path_searching/rrt.h
+@@ -1,8 +1,8 @@
+ #ifndef _MM_CAR_FULL_RRT_PLANNING_
+ #define _MM_CAR_FULL_RRT_PLANNING_
+ 
+-#include <ros/console.h>
+-#include <ros/ros.h>
++#include <mm_utils/ros2_utils.hpp>
++#include <mm_utils/ros2_utils.hpp>
+ #include <Eigen/Eigen>
+ #include <iostream>
+ #include <map>
+@@ -137,7 +137,7 @@
+                 const std::vector<Eigen::VectorXd>& end_pt_list, const std::vector<double>& end_yaw_list,
+                 const std::vector<double>& start_g_score_list, const std::vector<int>& start_layer_list, const std::vector<double>& end_g_score_list, const std::vector<int>& end_layer_list,
+                 const std::vector<int>& start_singul_list, const std::vector<int>& end_singul_list);
+-    void setParam(ros::NodeHandle& nh, const std::shared_ptr<MMConfig> &mm_config);
++    void setParam(rclcpp::Node::SharedPtr& nh, const std::shared_ptr<MMConfig> &mm_config);
+     void init(const std::vector<Eigen::VectorXd>& start_pt_list, const std::vector<Eigen::VectorXd>& end_pt_list);
+     void reset();
+     bool smooth(PathNodeRRTPtr smooth_node);
+--- remani_planner/traj_opt/src/poly_traj_optimizer.cpp
++++ src/planning/traj_opt/src/poly_traj_optimizer.cpp
+@@ -2,7 +2,7 @@
+ 
+ namespace remani_planner
+ {
+-  void PolyTrajOptimizer::setParam(ros::NodeHandle &nh, const std::shared_ptr<GridMap> &map, const std::shared_ptr<MMConfig> &mm_config){
++  void PolyTrajOptimizer::setParam(rclcpp::Node::SharedPtr &nh, const std::shared_ptr<GridMap> &map, const std::shared_ptr<MMConfig> &mm_config){
+     grid_map_ = map;
+     map_resolution_ = grid_map_->getResolution();
+ 
+@@ -13,52 +13,52 @@
+     T_q_0_ = mm_config_->getTq0();
+     manipulator_link_pts_ = mm_config_->getLinkPoint();
+ 
+-    nh.param("optimization/constrain_points_perPiece", cps_num_prePiece_, -1);
+-    nh.param("optimization/weight_obstacle", wei_obs_, -1.0);
+-    nh.param("optimization/weight_base_feasibility", wei_feas_, -1.0);
+-    nh.param("optimization/weight_time", wei_time_, -1.0);
++    nh->get_parameter_or("optimization.constrain_points_perPiece", cps_num_prePiece_, -1);
++    nh->get_parameter_or("optimization.weight_obstacle", wei_obs_, -1.0);
++    nh->get_parameter_or("optimization.weight_base_feasibility", wei_feas_, -1.0);
++    nh->get_parameter_or("optimization.weight_time", wei_time_, -1.0);
+     wei_mani_obs_ = wei_obs_ / 5.0;
+-    nh.param("optimization/weight_manipulator_self", wei_mani_self_, -1.0);
+-    nh.param("optimization/weight_manipulator_feasibility", wei_mani_feas_, -1.0);
+-
+-    nh.param("optimization/dense_sample_resolution", dense_sample_resolution_, -1);
+-
+-    nh.param("optimization/safe_margin", safe_margin_, 0.1);
+-    nh.param("optimization/safe_margin_mani", safe_margin_mani_, 0.1);
+-    nh.param("optimization/self_safe_margin", self_safe_margin_, 0.1);
+-    nh.param("optimization/ground_safe_dis", ground_safe_dis_, 0.1);
+-    nh.param("optimization/ground_safe_margin", ground_safe_margin_, 0.1);
+-    nh.param("optimization/mobile_base_opt_gear", opt_gear_, true);
+-
+-    nh.param("mm/mobile_base_dof", mobile_base_dof_, -1);
+-    nh.param("mm/mobile_base_non_singul_vel", non_singul_v_, -1.0);
+-    nh.param("mm/mobile_base_max_wheel_omega", max_wheel_omega_, -1.0);
+-    nh.param("mm/mobile_base_max_wheel_alpha", max_wheel_alpha_, -1.0);
+-    nh.param("mm/mobile_base_wheel_base", mobile_base_wheel_base_, -1.0);
+-    nh.param("mm/mobile_base_wheel_radius", mobile_base_wheel_radius_, -1.0);
+-    nh.param("mm/mobile_base_length", mobile_base_length_, -1.0);
+-    nh.param("mm/mobile_base_width", mobile_base_width_, -1.0);
+-    nh.param("mm/mobile_base_height", mobile_base_height_, -1.0);
+-    nh.param("mm/mobile_base_check_radius", mobile_base_check_radius_, -1.0);
+-
+-    nh.param("mm/manipulator_dof", manipulator_dof_, -1);
+-    nh.param("mm/manipulator_thickness", manipulator_thickness_, -1.0);
++    nh->get_parameter_or("optimization.weight_manipulator_self", wei_mani_self_, -1.0);
++    nh->get_parameter_or("optimization.weight_manipulator_feasibility", wei_mani_feas_, -1.0);
++
++    nh->get_parameter_or("optimization.dense_sample_resolution", dense_sample_resolution_, -1);
++
++    nh->get_parameter_or("optimization.safe_margin", safe_margin_, 0.1);
++    nh->get_parameter_or("optimization.safe_margin_mani", safe_margin_mani_, 0.1);
++    nh->get_parameter_or("optimization.self_safe_margin", self_safe_margin_, 0.1);
++    nh->get_parameter_or("optimization.ground_safe_dis", ground_safe_dis_, 0.1);
++    nh->get_parameter_or("optimization.ground_safe_margin", ground_safe_margin_, 0.1);
++    nh->get_parameter_or("optimization.mobile_base_opt_gear", opt_gear_, true);
++
++    nh->get_parameter_or("mm.mobile_base_dof", mobile_base_dof_, -1);
++    nh->get_parameter_or("mm.mobile_base_non_singul_vel", non_singul_v_, -1.0);
++    nh->get_parameter_or("mm.mobile_base_max_wheel_omega", max_wheel_omega_, -1.0);
++    nh->get_parameter_or("mm.mobile_base_max_wheel_alpha", max_wheel_alpha_, -1.0);
++    nh->get_parameter_or("mm.mobile_base_wheel_base", mobile_base_wheel_base_, -1.0);
++    nh->get_parameter_or("mm.mobile_base_wheel_radius", mobile_base_wheel_radius_, -1.0);
++    nh->get_parameter_or("mm.mobile_base_length", mobile_base_length_, -1.0);
++    nh->get_parameter_or("mm.mobile_base_width", mobile_base_width_, -1.0);
++    nh->get_parameter_or("mm.mobile_base_height", mobile_base_height_, -1.0);
++    nh->get_parameter_or("mm.mobile_base_check_radius", mobile_base_check_radius_, -1.0);
++
++    nh->get_parameter_or("mm.manipulator_dof", manipulator_dof_, -1);
++    nh->get_parameter_or("mm.manipulator_thickness", manipulator_thickness_, -1.0);
+     
+     std::vector<double> joint_pos_limit;
+-    nh.getParam("mm/manipulator_min_pos", joint_pos_limit);
++    nh->get_parameter("mm.manipulator_min_pos", joint_pos_limit);
+     min_joint_pos_.resize(joint_pos_limit.size());
+     for(unsigned int i = 0; i < joint_pos_limit.size(); i++){
+         min_joint_pos_(i) = joint_pos_limit[i];
+     }
+ 
+     joint_pos_limit.clear();
+-    nh.getParam("mm/manipulator_max_pos", joint_pos_limit);
++    nh->get_parameter("mm.manipulator_max_pos", joint_pos_limit);
+     max_joint_pos_.resize(joint_pos_limit.size());
+     for(unsigned int i = 0; i < joint_pos_limit.size(); i++){
+         max_joint_pos_(i) = joint_pos_limit[i];
+     }
+-    nh.param("mm/manipulator_max_vel", max_joint_vel_, -1.0);
+-    nh.param("mm/manipulator_max_acc", max_joint_acc_, -1.0);
++    nh->get_parameter_or("mm.manipulator_max_vel", max_joint_vel_, -1.0);
++    nh->get_parameter_or("mm.manipulator_max_acc", max_joint_acc_, -1.0);
+ 
+     firs_plot_ = true;
+ 
+@@ -72,10 +72,10 @@
+     // kino_a_star_->init();
+ 
+     traj_dim_ = mobile_base_dof_ + manipulator_dof_;
+-    traj_pt_pub_ = nh.advertise<visualization_msgs::Marker>("traj_pt_vis", 10);
+-    traj_init_pt_pub_ = nh.advertise<visualization_msgs::Marker>("traj_init_pt_vis", 10);
+-    front_end_mm_mesh_vis_pub_ =  nh.advertise<visualization_msgs::MarkerArray>("front_end_mm_mesh_vis", 50);
+-    back_end_mm_mesh_vis_pub_ =  nh.advertise<visualization_msgs::MarkerArray>("back_end_mm_mesh_vis", 50);
++
++
++
++
+   }
+ 
+   /* main planning API */
+@@ -98,7 +98,7 @@
+     SnapOpt_container_.resize(traj_num_);
+     piece_num_container_.resize(traj_num_);
+     if (traj_num_ != (int)initT_container.size()){
+-      ROS_ERROR("traj_num_ != initT_container.size()");
++      RCLCPP_ERROR(rclcpp::get_logger("remani"), "traj_num_ != initT_container.size()");
+       return false;
+     }
+ 
+@@ -107,7 +107,7 @@
+     for(int i = 0; i < traj_num_; i++){
+       //check
+       if(initInnerPts_container[i].cols()==0){
+-        ROS_ERROR("There is only a piece?");
++        RCLCPP_ERROR(rclcpp::get_logger("remani"), "There is only a piece?");
+         return false;
+       }
+       piece_num = initInnerPts_container[i].cols() + 1;
+@@ -181,7 +181,7 @@
+     force_stop_type_ = DONT_STOP;
+ 
+     /* ---------- optimize ---------- */
+-    // ros::Time t1 = ros::Time::now();
++    // rclcpp::Time t1 = rclcpp::Clock(RCL_STEADY_TIME).now();
+     int result = lbfgs::lbfgs_optimize(
+         x,
+         final_cost,
+@@ -191,13 +191,13 @@
+         this,
+         lbfgs_params);
+ 
+-    // printf("\033[32miter = %d, time = %5.3f(ms), \n\033[0m", iter_num_, (ros::Time::now() - t1).toSec() * 1000.0);
++    // printf("\033[32miter = %d, time = %5.3f(ms), \n\033[0m", iter_num_, (rclcpp::Clock(RCL_STEADY_TIME).now() - t1).seconds() * 1000.0);
+     if((result != lbfgs::LBFGS_CONVERGENCE)&&(result != lbfgs::LBFGS_STOP)&&(result != lbfgs::LBFGSERR_MAXIMUMLINESEARCH)){
+-      ROS_ERROR("The optimization result is : %s", lbfgs::lbfgs_strerror(result));      
++      RCLCPP_ERROR(rclcpp::get_logger("remani"), "The optimization result is : %s", lbfgs::lbfgs_strerror(result));      
+     }else if(result == lbfgs::LBFGSERR_MAXIMUMLINESEARCH){
+-      ROS_WARN("The optimization result is : %s", lbfgs::lbfgs_strerror(result));
++      RCLCPP_WARN(rclcpp::get_logger("remani"), "The optimization result is : %s", lbfgs::lbfgs_strerror(result));
+     }else{
+-      ROS_INFO("The optimization result is : %s", lbfgs::lbfgs_strerror(result));      
++      RCLCPP_INFO(rclcpp::get_logger("remani"), "The optimization result is : %s", lbfgs::lbfgs_strerror(result));      
+     }
+ 
+     // test collision
+@@ -227,35 +227,7 @@
+     return good_traj;
+   }
+ 
+-  void PolyTrajOptimizer::displayBackEndMesh(const SingulTrajData &traj_data, bool init, bool gripper_close){
+-    Eigen::Vector3d car_state;
+-    Eigen::VectorXd joint_state;
+-    joint_state.resize(manipulator_dof_);
+-
+-    visualization_msgs::MarkerArray marker_array, marker_array_all, marker_array_i;
+-    visualization_msgs::Marker marker_delete_all;
+-    marker_delete_all.action = visualization_msgs::Marker::DELETEALL;
+-    marker_array_all.markers.push_back(marker_delete_all);
+-
+-    Eigen::VectorXd pos, vel;
+-    int i = 0;
+-    double yaw;
+-    double t_step = 0.5 / max_vel_;
+-    double duration = traj_data.duration;
+-    for(double t = 0; t < duration - 1e-3; t += t_step, ++i){
+-      pos = traj_data.getPos(t);
+-      vel = traj_data.getVel(t);
+-      yaw = traj_data.getCarAngle(t);
+-
+-      car_state.head(2) = pos.head(2);
+-      car_state(2) = yaw;
+-      joint_state = pos.tail(manipulator_dof_);
+-      mm_config_->getMMMarkerArray(marker_array, "vis_mm_back_end", i, 0.17, car_state, joint_state, gripper_close);
+-      marker_array_all.markers.insert(marker_array_all.markers.end(), marker_array.markers.begin(), marker_array.markers.end());
+-      back_end_mm_mesh_vis_pub_.publish(marker_array_all);
+-      ros::Duration(0.05).sleep();
+-    }
+-  }
++
+ 
+   bool PolyTrajOptimizer::smoothedL1(const double &x, const double &mu, double &f, double &df){
+     if (x < 0.0)
+@@ -341,7 +313,7 @@
+     // Check minimum speed
+     // pen =  non_singul_v_ *  non_singul_v_ * (1.0 - feas_tol_percent_) * (1.0 - feas_tol_percent_) - vel.squaredNorm();
+     // if(pen > 0.0){
+-    //   ROS_WARN("%f min vel is not feasible at relative time %f! opt failed", vel.norm(), t);
++    //   RCLCPP_WARN(rclcpp::get_logger("remani"), "%f min vel is not feasible at relative time %f! opt failed", vel.norm(), t);
+     //   return true;
+     // }
+ 
+@@ -350,7 +322,7 @@
+     double wheel_omega_left = (2.0 * singul * v_norm - mobile_base_wheel_base_ * omega) / (2 * mobile_base_wheel_radius_);
+     pen =  wheel_omega_left * wheel_omega_left - max_wheel_omega_ * max_wheel_omega_ * (1.0 + feas_tol_percent_) * (1.0 + feas_tol_percent_);
+     if(pen > 0.0){
+-      ROS_WARN("%f max left wheel omega is not feasible at relative time %f! opt failed", wheel_omega_left, t );
++      RCLCPP_WARN(rclcpp::get_logger("remani"), "%f max left wheel omega is not feasible at relative time %f! opt failed", wheel_omega_left, t );
+       return true;
+     }
+ 
+@@ -358,7 +330,7 @@
+     double wheel_omega_right = (2.0 * singul * v_norm + mobile_base_wheel_base_ * omega) / (2 * mobile_base_wheel_radius_);
+     pen =  wheel_omega_right * wheel_omega_right - max_wheel_omega_ * max_wheel_omega_ * (1.0 + feas_tol_percent_) * (1.0 + feas_tol_percent_);
+     if(pen > 0.0){
+-      ROS_WARN("%f max right wheel omega is not feasible at relative time %f! opt failed", wheel_omega_right, t );
++      RCLCPP_WARN(rclcpp::get_logger("remani"), "%f max right wheel omega is not feasible at relative time %f! opt failed", wheel_omega_right, t );
+       return true;
+     }
+ 
+@@ -367,7 +339,7 @@
+     double wheel_alpha_left = (2.0 * singul * aTv / v_norm - mobile_base_wheel_base_ * alpha) / (2 * mobile_base_wheel_radius_);
+     pen =  wheel_alpha_left * wheel_alpha_left - max_wheel_alpha_ * max_wheel_alpha_ * (1.0 + feas_tol_percent_) * (1.0 + feas_tol_percent_);
+     if(pen > 0.0){
+-      ROS_WARN("%f max left wheel alpha is not feasible at relative time %f! opt failed", wheel_alpha_left, t );
++      RCLCPP_WARN(rclcpp::get_logger("remani"), "%f max left wheel alpha is not feasible at relative time %f! opt failed", wheel_alpha_left, t );
+       return true;
+     }
+ 
+@@ -375,7 +347,7 @@
+     double wheel_alpha_right = (2.0 * singul * aTv / v_norm + mobile_base_wheel_base_ * alpha) / (2 * mobile_base_wheel_radius_);
+     pen =  wheel_alpha_right * wheel_alpha_right - max_wheel_alpha_ * max_wheel_alpha_ * (1.0 + feas_tol_percent_) * (1.0 + feas_tol_percent_);
+     if(pen > 0.0){
+-      ROS_WARN("%f max right wheel alpha is not feasible at relative time %f! opt failed", wheel_alpha_right, t );
++      RCLCPP_WARN(rclcpp::get_logger("remani"), "%f max right wheel alpha is not feasible at relative time %f! opt failed", wheel_alpha_right, t );
+       return true;
+     }
+ 
+@@ -383,12 +355,12 @@
+     vel = traj_data.getVel(t).tail(manipulator_dof_);
+     acc = traj_data.getAcc(t).tail(manipulator_dof_);
+     if(vel.lpNorm<Eigen::Infinity>() - max_joint_vel_ * (1.0 + feas_tol_percent_) > 0){
+-      ROS_WARN("mani vel %f is not feasible at relative time %f! opt failed", vel.lpNorm<Eigen::Infinity>(), t);
++      RCLCPP_WARN(rclcpp::get_logger("remani"), "mani vel %f is not feasible at relative time %f! opt failed", vel.lpNorm<Eigen::Infinity>(), t);
+       return true;
+     }
+ 
+     if(acc.lpNorm<Eigen::Infinity>() - max_joint_acc_ * (1.0 + feas_tol_percent_) > 0){
+-      ROS_WARN("mani acc %f is not feasible at relative time %f! opt failed", acc.lpNorm<Eigen::Infinity>(), t);
++      RCLCPP_WARN(rclcpp::get_logger("remani"), "mani acc %f is not feasible at relative time %f! opt failed", acc.lpNorm<Eigen::Infinity>(), t);
+       return true;
+     }
+ 
+@@ -405,15 +377,15 @@
+     for (int i = 5; i < i_end; i++){
+       if(checkCollision(traj_data, t, coll_type)){
+         if(coll_type == 0){
+-          ROS_WARN("car collision at time %f!", t);
++          RCLCPP_WARN(rclcpp::get_logger("remani"), "car collision at time %f!", t);
+         }else if (coll_type == 1){
+-          ROS_WARN("mani collision at time %f!", t);
++          RCLCPP_WARN(rclcpp::get_logger("remani"), "mani collision at time %f!", t);
+         }else if (coll_type == 2){
+-          ROS_WARN("car-mani collision at time %f!", t);
++          RCLCPP_WARN(rclcpp::get_logger("remani"), "car-mani collision at time %f!", t);
+         }else if (coll_type == 3){
+-          ROS_WARN("mani-mani collision at time %f!", t);
+-        }
+-        // ROS_WARN("mm (%d) collision at time %f! opt failed", coll_type, t);
++          RCLCPP_WARN(rclcpp::get_logger("remani"), "mani-mani collision at time %f!", t);
++        }
++        // RCLCPP_WARN(rclcpp::get_logger("remani"), "mm (%d) collision at time %f! opt failed", coll_type, t);
+         return false;
+       }
+ 
+@@ -856,7 +828,7 @@
+     Eigen::Vector4d dist_grad4 = Eigen::Vector4d::Zero();
+     Eigen::VectorXd curr_grad(traj_dim_);
+     curr_grad.setZero();
+-    ros::Time t1, t2, t3, t4;
++    rclcpp::Time t1, t2, t3, t4;
+ 
+     std::vector<Eigen::Vector3d> car_pts;
+     std::vector<Eigen::Matrix2d> car_dPtsdv_list;
+@@ -1241,7 +1213,7 @@
+         }
+       }
+       else{
+-        // ROS_WARN("simple path is too short");
++        // RCLCPP_WARN(rclcpp::get_logger("remani"), "simple path is too short");
+         piece_num = 2;
+         innerPts.resize(traj_dim_, 1);
+         innerPts.col(0) = ((simple_path_container[i])[0] + (simple_path_container[i])[1]) / 2;
+@@ -1311,27 +1283,7 @@
+     return status;
+   }
+ 
+-  void PolyTrajOptimizer::displayFrontEndMesh(std::vector<Eigen::VectorXd> &simple_path_full, vector<double> &yaw_list){
+-    Eigen::Vector3d car_state;
+-    Eigen::VectorXd joint_state;
+-    joint_state.resize(manipulator_dof_);
+-
+-    visualization_msgs::MarkerArray marker_array, marker_array_all;
+-    visualization_msgs::Marker marker_delete_all;
+-    marker_delete_all.action = visualization_msgs::Marker::DELETEALL;
+-    marker_array_all.markers.push_back(marker_delete_all);
+-    
+-    for(unsigned int i = 0; i < simple_path_full.size(); i+=1){
+-      car_state.head(2) = simple_path_full[i].head(2);
+-      car_state(2) = yaw_list[i];
+-      joint_state = simple_path_full[i].tail(manipulator_dof_);
+-      mm_config_->getMMMarkerArray(marker_array, "vis_mm_front_end", i, 0.07, car_state, joint_state, true); // TODO gripper state
+-      marker_array_all.markers.insert(marker_array_all.markers.end(), marker_array.markers.begin(), marker_array.markers.end());
+-    }
+-
+-    front_end_mm_mesh_vis_pub_.publish(marker_array_all);
+-
+-  }
++
+ 
+   void PolyTrajOptimizer::clear_resize_Cps_container(int container_size){
+     cps_container_.clear();
+@@ -1343,4 +1295,4 @@
+     cps_container_[trajid].points = points;
+   }
+ 
+-}+}
+--- remani_planner/traj_opt/include/optimizer/poly_traj_optimizer.hpp
++++ src/planning/traj_opt/include/optimizer/poly_traj_optimizer.hpp
+@@ -1,11 +1,11 @@
+ #ifndef _POLY_TRAJ_OPTIMIZER_H_
+ #define _POLY_TRAJ_OPTIMIZER_H_
+ 
+-#include <visualization_msgs/Marker.h>
+-#include <visualization_msgs/MarkerArray.h>
++#include <visualization_msgs/msg/marker.hpp>
++#include <visualization_msgs/msg/marker_array.hpp>
+ #include <Eigen/Eigen>
+ #include <Eigen/Dense>
+-#include <ros/ros.h>
++#include <mm_utils/ros2_utils.hpp>
+ #include <fstream>
+ #include <sys/time.h>
+ #include <ctime>
+@@ -121,15 +121,15 @@
+     Eigen::Matrix2d B_h_;
+     Eigen::MatrixXd C_h_;
+ 
+-    ros::Publisher traj_pt_pub_, traj_init_pt_pub_;
+-    ros::Publisher front_end_mm_mesh_vis_pub_, back_end_mm_mesh_vis_pub_;
++
++
+   public:
+ 
+     PolyTrajOptimizer() {}
+     ~PolyTrajOptimizer() {}
+ 
+     /* set variables */
+-    void setParam(ros::NodeHandle &nh, const std::shared_ptr<GridMap> &map, const std::shared_ptr<MMConfig> &mm_config);
++    void setParam(rclcpp::Node::SharedPtr &nh, const std::shared_ptr<GridMap> &map, const std::shared_ptr<MMConfig> &mm_config);
+     void clear_resize_Cps_container(int container_size);
+     void setControlPoints(const int trajid, const Eigen::MatrixXd &points);
+ 
+@@ -165,8 +165,7 @@
+                           std::vector<vector<double>> &yaw_list_container,
+                           std::vector<poly_traj::MinSnapOpt<8>> &frontendMJ_container,
+                           std::vector<int> &singul_container);
+-    void displayFrontEndMesh(std::vector<Eigen::VectorXd> &simple_path_full, vector<double> &yaw_list);
+-    void displayBackEndMesh(const SingulTrajData &traj_data, bool init, bool gripper_close);
++
+   
+   
+   private:
+--- remani_planner/traj_utils/include/traj_utils/plan_container.hpp
++++ src/planning/traj_utils/include/traj_utils/plan_container.hpp
+@@ -3,7 +3,7 @@
+ 
+ #include <Eigen/Eigen>
+ #include <vector>
+-#include <ros/ros.h>
++#include <mm_utils/ros2_utils.hpp>
+ 
+ #include "traj_utils/poly_traj_utils.hpp"
+ 
+@@ -66,7 +66,7 @@
+     int traj_id = 0;
+     double duration = 0;
+     double start_time;
+-    ros::Time start_time_ros;
++    rclcpp::Time start_time_ros;
+     
+     void addSingulTraj(const poly_traj::Trajectory<7> &trajectory, const double &world_time){
+       if(traj_id == 0) start_time = world_time;
+@@ -203,4 +203,4 @@
+ 
+ } // namespace remani_planner
+ 
+-#endif+#endif

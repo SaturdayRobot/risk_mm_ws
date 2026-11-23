@@ -1,0 +1,8 @@
+{
+  "returncode": 0,
+  "stdout": "ROS2 original REMANI + current URDF initialized; execution disabled\n",
+  "stderr": "[INFO] [1795422993.569422261] [mm_config]: [MMConfig] URDF chain loaded: 6 joints, base collision samples=1599\n",
+  "planning_success": null,
+  "execution_success": null,
+  "scope": "initialization only"
+}

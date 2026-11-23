@@ -1,0 +1,31 @@
+joint_limits:
+  xarm6_joint1:
+    has_velocity_limits: true
+    max_velocity: 0.35
+    has_acceleration_limits: true
+    max_acceleration: 0.7
+  xarm6_joint2:
+    has_velocity_limits: true
+    max_velocity: 0.35
+    has_acceleration_limits: true
+    max_acceleration: 0.7
+  xarm6_joint3:
+    has_velocity_limits: true
+    max_velocity: 0.35
+    has_acceleration_limits: true
+    max_acceleration: 0.7
+  xarm6_joint4:
+    has_velocity_limits: true
+    max_velocity: 0.35
+    has_acceleration_limits: true
+    max_acceleration: 0.7
+  xarm6_joint5:
+    has_velocity_limits: true
+    max_velocity: 0.35
+    has_acceleration_limits: true
+    max_acceleration: 0.7
+  xarm6_joint6:
+    has_velocity_limits: true
+    max_velocity: 0.35
+    has_acceleration_limits: true
+    max_acceleration: 0.7

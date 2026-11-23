@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>risk_mm</name><version>0.1.0</version>
+  <description>Rangermini xArm6 risk planning: risk_mm</description>
+  <maintainer email="user@example.com">user</maintainer>
+  <license>GPL-3.0-or-later</license>
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>ament_cmake_python</buildtool_depend>
+  <depend>rclpy</depend>
+  <depend>python3-yaml</depend>
+  <depend>python3-numpy</depend>
+  <exec_depend>ament_index_python</exec_depend>
+  <exec_depend>moveit_msgs</exec_depend>
+  <export><build_type>ament_cmake</build_type></export>
+</package>

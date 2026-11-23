@@ -1,0 +1,18 @@
+{
+  "status": "passed",
+  "method": "XComposite window buffers inspected visually",
+  "rviz_global_status": "Ok",
+  "screenshots": [
+    "rviz_composite.png",
+    "joints_composite.png"
+  ],
+  "failed_capture_attempt": {
+    "method": "QScreen.grabWindow",
+    "reason": "WSLg returned all-black images",
+    "artifacts": [
+      "rviz.png",
+      "joints.png"
+    ]
+  },
+  "scope": "Model rendering and visible controls; no collision/path/motion validation"
+}

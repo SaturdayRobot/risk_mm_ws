@@ -1,0 +1,29 @@
+[WARN] [1795422929.556400137] [kdl_parser]: The root link base_link has an inertia specified in the URDF, but KDL does not support a root link with an inertia.  As a workaround, you can add an extra dummy link to your URDF.
+[INFO] [1795422929.556529272] [robot_state_publisher]: got segment arm_mount_link
+[INFO] [1795422929.556601799] [robot_state_publisher]: got segment base_link
+[INFO] [1795422929.556613339] [robot_state_publisher]: got segment camera_color_optical_frame
+[INFO] [1795422929.556618513] [robot_state_publisher]: got segment camera_depth_optical_frame
+[INFO] [1795422929.556622691] [robot_state_publisher]: got segment camera_imu_link
+[INFO] [1795422929.556626770] [robot_state_publisher]: got segment front_camera_link
+[INFO] [1795422929.556630650] [robot_state_publisher]: got segment head_camera_link
+[INFO] [1795422929.556634530] [robot_state_publisher]: got segment head_camera_optical_frame
+[INFO] [1795422929.556638410] [robot_state_publisher]: got segment head_link
+[INFO] [1795422929.556642091] [robot_state_publisher]: got segment imu_link
+[INFO] [1795422929.556645673] [robot_state_publisher]: got segment lidar_link
+[INFO] [1795422929.556649454] [robot_state_publisher]: got segment steering_fl
+[INFO] [1795422929.556653234] [robot_state_publisher]: got segment steering_fr
+[INFO] [1795422929.556657015] [robot_state_publisher]: got segment steering_rl
+[INFO] [1795422929.556660696] [robot_state_publisher]: got segment steering_rr
+[INFO] [1795422929.556664377] [robot_state_publisher]: got segment wheel_fl
+[INFO] [1795422929.556668356] [robot_state_publisher]: got segment wheel_fr
+[INFO] [1795422929.556685070] [robot_state_publisher]: got segment wheel_rl
+[INFO] [1795422929.556694223] [robot_state_publisher]: got segment wheel_rr
+[INFO] [1795422929.556698103] [robot_state_publisher]: got segment xarm6_link1
+[INFO] [1795422929.556701884] [robot_state_publisher]: got segment xarm6_link2
+[INFO] [1795422929.556705664] [robot_state_publisher]: got segment xarm6_link3
+[INFO] [1795422929.556709246] [robot_state_publisher]: got segment xarm6_link4
+[INFO] [1795422929.556713126] [robot_state_publisher]: got segment xarm6_link5
+[INFO] [1795422929.556716807] [robot_state_publisher]: got segment xarm6_link6
+[INFO] [1795422929.556720886] [robot_state_publisher]: got segment xarm6_link_base
+[INFO] [1795422929.556724666] [robot_state_publisher]: got segment xarm6_link_eef
+[INFO] [1795422933.132204119] [rclcpp]: signal_handler(SIGINT/SIGTERM)

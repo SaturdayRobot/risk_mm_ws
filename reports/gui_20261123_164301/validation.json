@@ -1,0 +1,36 @@
+{
+  "status": "passed",
+  "scope": "RViz2 model display and synthetic joint state GUI; no motion execution",
+  "planning_candidate": null,
+  "validation_passed": null,
+  "execution_started": null,
+  "execution_completed": null,
+  "domain_id": 181,
+  "model_id": "rangermini_xarm6",
+  "joint_count": 14,
+  "link_count": 27,
+  "joint_samples": 3,
+  "joint_state_age_ros_s": 0.0009181,
+  "windows": {
+    "rviz2": "0x600014",
+    "joint_state_publisher_gui": "0xc00006"
+  },
+  "joint_positions": {
+    "joint_steer_fl": 0.0,
+    "joint_wheel_fl": 0.0,
+    "joint_steer_fr": 0.0,
+    "joint_wheel_fr": 0.0,
+    "joint_steer_rl": 0.0,
+    "joint_wheel_rl": 0.0,
+    "joint_steer_rr": 0.0,
+    "joint_wheel_rr": 0.0,
+    "xarm6_joint1": -0.16964600329384893,
+    "xarm6_joint2": -1.0488931200000002,
+    "xarm6_joint3": -0.0003763660000002389,
+    "xarm6_joint4": 0.0,
+    "xarm6_joint5": -0.00038961497821343727,
+    "xarm6_joint6": 0.0
+  },
+  "note": "Synthetic GUI state and TF only; no collision or trajectory safety validation.",
+  "check_wall_s": 0.28103012000065064
+}

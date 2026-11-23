@@ -1,0 +1,38 @@
+Starting >>> mm_utils
+Starting >>> xarm_description
+Finished <<< xarm_description [0.09s]
+Finished <<< mm_utils [0.11s]
+Starting >>> plan_env
+Starting >>> traj_utils
+Finished <<< traj_utils [0.06s]
+Starting >>> rangermini_description
+Finished <<< plan_env [0.11s]
+Starting >>> mm_config
+Finished <<< rangermini_description [0.07s]
+Starting >>> mm_model
+Finished <<< mm_config [0.15s]
+Starting >>> path_searching
+Finished <<< mm_model [0.35s]
+Starting >>> risk_mm
+Finished <<< risk_mm [0.38s]
+Starting >>> rangermini_moveit_config
+Finished <<< rangermini_moveit_config [0.28s]
+Finished <<< path_searching [1.40s]
+Starting >>> traj_opt
+--- stderr: traj_opt
+In file included from /tmp/risk_mm_ws/src/planning/traj_opt/include/optimizer/poly_traj_optimizer.hpp:17,
+                 from /tmp/risk_mm_ws/src/planning/traj_opt/src/poly_traj_optimizer.cpp:1:
+/tmp/risk_mm_ws/install/path_searching/include/path_searching/kino_astar.h:4:10: fatal error: ompl/base/spaces/ReedsSheppStateSpace.h: No such file or directory
+    4 | #include <ompl/base/spaces/ReedsSheppStateSpace.h>
+      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+compilation terminated.
+gmake[2]: *** [CMakeFiles/traj_opt.dir/build.make:76: CMakeFiles/traj_opt.dir/src/poly_traj_optimizer.cpp.o] Error 1
+gmake[1]: *** [CMakeFiles/Makefile2:137: CMakeFiles/traj_opt.dir/all] Error 2
+gmake: *** [Makefile:146: all] Error 2
+---
+Failed   <<< traj_opt [2.81s, exited with code 2]
+
+Summary: 10 packages finished [4.83s]
+  1 package failed: traj_opt
+  1 package had stderr output: traj_opt
+  2 packages not processed

@@ -1,0 +1,126 @@
+[INFO] [launch]: All log files can be found below /home/ubuntu/risk_mm_ws/reports/moveit_ros/2026-11-23-16-36-28-170472-PC-20260608GIST-127389
+[INFO] [launch]: Default logging verbosity is set to INFO
+[INFO] [robot_state_publisher-1]: process started with pid [127401]
+[INFO] [move_group-2]: process started with pid [127403]
+[robot_state_publisher-1] [WARN] [1795422988.304972706] [kdl_parser]: The root link base_link has an inertia specified in the URDF, but KDL does not support a root link with an inertia.  As a workaround, you can add an extra dummy link to your URDF.
+[robot_state_publisher-1] [INFO] [1795422988.305126421] [robot_state_publisher]: got segment arm_mount_link
+[robot_state_publisher-1] [INFO] [1795422988.305210684] [robot_state_publisher]: got segment base_link
+[robot_state_publisher-1] [INFO] [1795422988.305224294] [robot_state_publisher]: got segment camera_color_optical_frame
+[robot_state_publisher-1] [INFO] [1795422988.305231099] [robot_state_publisher]: got segment camera_depth_optical_frame
+[robot_state_publisher-1] [INFO] [1795422988.305237303] [robot_state_publisher]: got segment camera_imu_link
+[robot_state_publisher-1] [INFO] [1795422988.305243608] [robot_state_publisher]: got segment front_camera_link
+[robot_state_publisher-1] [INFO] [1795422988.305250013] [robot_state_publisher]: got segment head_camera_link
+[robot_state_publisher-1] [INFO] [1795422988.305256418] [robot_state_publisher]: got segment head_camera_optical_frame
+[robot_state_publisher-1] [INFO] [1795422988.305262522] [robot_state_publisher]: got segment head_link
+[robot_state_publisher-1] [INFO] [1795422988.305268427] [robot_state_publisher]: got segment imu_link
+[robot_state_publisher-1] [INFO] [1795422988.305273931] [robot_state_publisher]: got segment lidar_link
+[robot_state_publisher-1] [INFO] [1795422988.305279635] [robot_state_publisher]: got segment steering_fl
+[robot_state_publisher-1] [INFO] [1795422988.305285640] [robot_state_publisher]: got segment steering_fr
+[robot_state_publisher-1] [INFO] [1795422988.305291644] [robot_state_publisher]: got segment steering_rl
+[robot_state_publisher-1] [INFO] [1795422988.305297649] [robot_state_publisher]: got segment steering_rr
+[robot_state_publisher-1] [INFO] [1795422988.305303953] [robot_state_publisher]: got segment wheel_fl
+[robot_state_publisher-1] [INFO] [1795422988.305309658] [robot_state_publisher]: got segment wheel_fr
+[robot_state_publisher-1] [INFO] [1795422988.305315362] [robot_state_publisher]: got segment wheel_rl
+[robot_state_publisher-1] [INFO] [1795422988.305321066] [robot_state_publisher]: got segment wheel_rr
+[robot_state_publisher-1] [INFO] [1795422988.305327171] [robot_state_publisher]: got segment xarm6_link1
+[robot_state_publisher-1] [INFO] [1795422988.305332875] [robot_state_publisher]: got segment xarm6_link2
+[robot_state_publisher-1] [INFO] [1795422988.305338979] [robot_state_publisher]: got segment xarm6_link3
+[robot_state_publisher-1] [INFO] [1795422988.305344884] [robot_state_publisher]: got segment xarm6_link4
+[robot_state_publisher-1] [INFO] [1795422988.305350688] [robot_state_publisher]: got segment xarm6_link5
+[robot_state_publisher-1] [INFO] [1795422988.305356493] [robot_state_publisher]: got segment xarm6_link6
+[robot_state_publisher-1] [INFO] [1795422988.305362297] [robot_state_publisher]: got segment xarm6_link_base
+[robot_state_publisher-1] [INFO] [1795422988.305367901] [robot_state_publisher]: got segment xarm6_link_eef
+[move_group-2] [INFO] [1795422988.318703264] [moveit_rdf_loader.rdf_loader]: Loaded robot model in 0.0263545 seconds
+[move_group-2] [INFO] [1795422988.318781822] [moveit_robot_model.robot_model]: Loading robot model 'rangermini_xarm6'...
+[move_group-2] [INFO] [1795422988.318790229] [moveit_robot_model.robot_model]: No root/virtual joint specified in SRDF. Assuming fixed joint
+[move_group-2] [WARN] [1795422988.643310973] [kdl_parser]: The root link base_link has an inertia specified in the URDF, but KDL does not support a root link with an inertia.  As a workaround, you can add an extra dummy link to your URDF.
+[move_group-2] [INFO] [1795422989.447811471] [moveit.ros_planning_interface.moveit_cpp]: Listening to 'joint_states' for joint states
+[move_group-2] [INFO] [1795422989.449094414] [moveit_ros.current_state_monitor]: Listening to joint states on topic 'joint_states'
+[move_group-2] [INFO] [1795422989.452151759] [moveit_ros.planning_scene_monitor.planning_scene_monitor]: Listening to '/attached_collision_object' for attached collision objects
+[move_group-2] [INFO] [1795422989.452875490] [moveit_ros.planning_scene_monitor.planning_scene_monitor]: Publishing maintained planning scene on 'monitored_planning_scene'
+[move_group-2] [INFO] [1795422989.453022498] [moveit_ros.planning_scene_monitor.planning_scene_monitor]: Starting planning scene monitor
+[move_group-2] [INFO] [1795422989.453338330] [moveit_ros.planning_scene_monitor.planning_scene_monitor]: Listening to '/planning_scene'
+[move_group-2] [INFO] [1795422989.453353641] [moveit_ros.planning_scene_monitor.planning_scene_monitor]: Starting world geometry update monitor for collision objects, attached objects, octomap updates.
+[move_group-2] [INFO] [1795422989.453649659] [moveit_ros.planning_scene_monitor.planning_scene_monitor]: Listening to 'collision_object'
+[move_group-2] [INFO] [1795422989.453967892] [moveit_ros.planning_scene_monitor.planning_scene_monitor]: Listening to 'planning_scene_world' for planning scene world geometry
+[move_group-2] [WARN] [1795422989.454212772] [moveit.ros.occupancy_map_monitor.middleware_handle]: Resolution not specified for Octomap. Assuming resolution = 0.1 instead
+[move_group-2] [ERROR] [1795422989.454240292] [moveit.ros.occupancy_map_monitor.middleware_handle]: No 3D sensor plugin(s) defined for octomap updates
+[move_group-2] [INFO] [1795422991.733144858] [moveit.ros_planning_interface.moveit_cpp]: Loading planning pipeline 'ompl'
+[move_group-2] [INFO] [1795422991.741007868] [moveit.ros_planning.planning_pipeline]: Using planning interface 'OMPL'
+[move_group-2] [INFO] [1795422991.742927637] [moveit_ros.add_time_optimal_parameterization]: Param 'ompl.path_tolerance' was not set. Using default value: 0.100000
+[move_group-2] [INFO] [1795422991.742956758] [moveit_ros.add_time_optimal_parameterization]: Param 'ompl.resample_dt' was not set. Using default value: 0.100000
+[move_group-2] [INFO] [1795422991.742962862] [moveit_ros.add_time_optimal_parameterization]: Param 'ompl.min_angle_change' was not set. Using default value: 0.001000
+[move_group-2] [INFO] [1795422991.742974771] [moveit_ros.fix_workspace_bounds]: Param 'ompl.default_workspace_bounds' was not set. Using default value: 10.000000
+[move_group-2] [INFO] [1795422991.742984978] [moveit_ros.fix_start_state_bounds]: Param 'ompl.start_state_max_bounds_error' was set to 0.010000
+[move_group-2] [INFO] [1795422991.742989481] [moveit_ros.fix_start_state_bounds]: Param 'ompl.start_state_max_dt' was not set. Using default value: 0.500000
+[move_group-2] [INFO] [1795422991.742997087] [moveit_ros.fix_start_state_collision]: Param 'ompl.start_state_max_dt' was not set. Using default value: 0.500000
+[move_group-2] [INFO] [1795422991.743001490] [moveit_ros.fix_start_state_collision]: Param 'ompl.jiggle_fraction' was not set. Using default value: 0.020000
+[move_group-2] [INFO] [1795422991.743005493] [moveit_ros.fix_start_state_collision]: Param 'ompl.max_sampling_attempts' was not set. Using default value: 100
+[move_group-2] [INFO] [1795422991.743012498] [moveit.ros_planning.planning_pipeline]: Using planning request adapter 'Add Time Optimal Parameterization'
+[move_group-2] [INFO] [1795422991.743016100] [moveit.ros_planning.planning_pipeline]: Using planning request adapter 'Fix Workspace Bounds'
+[move_group-2] [INFO] [1795422991.743019503] [moveit.ros_planning.planning_pipeline]: Using planning request adapter 'Fix Start State Bounds'
+[move_group-2] [INFO] [1795422991.743022305] [moveit.ros_planning.planning_pipeline]: Using planning request adapter 'Fix Start State In Collision'
+[move_group-2] [INFO] [1795422991.743025207] [moveit.ros_planning.planning_pipeline]: Using planning request adapter 'Fix Start State Path Constraints'
+[move_group-2] [WARN] [1795422991.745950794] [moveit_ros.trajectory_execution_manager]: Parameter '~moveit_controller_manager' is not specified but only one matching plugin was found: 'moveit_simple_controller_manager/MoveItSimpleControllerManager'. Using that one.
+[move_group-2] [ERROR] [1795422991.756127554] [moveit.plugins.moveit_simple_controller_manager]: No controller_names specified.
+[move_group-2] [INFO] [1795422991.756291771] [moveit.plugins.moveit_simple_controller_manager]: Returned 0 controllers in list
+[move_group-2] [INFO] [1795422991.756301878] [moveit.plugins.moveit_simple_controller_manager]: Returned 0 controllers in list
+[move_group-2] [INFO] [1795422991.756600891] [moveit_ros.trajectory_execution_manager]: Trajectory execution is not managing controllers
+[move_group-2] [INFO] [1795422991.756632414] [move_group.move_group]: MoveGroup debug mode is ON
+[move_group-2] [INFO] [1795422991.764179898] [move_group.move_group]: 
+[move_group-2] 
+[move_group-2] ********************************************************
+[move_group-2] * MoveGroup using: 
+[move_group-2] *     - ApplyPlanningSceneService
+[move_group-2] *     - ClearOctomapService
+[move_group-2] *     - CartesianPathService
+[move_group-2] *     - GetPlanningSceneService
+[move_group-2] *     - KinematicsService
+[move_group-2] *     - MotionPlanService
+[move_group-2] *     - QueryPlannersService
+[move_group-2] *     - StateValidationService
+[move_group-2] ********************************************************
+[move_group-2] 
+[move_group-2] [INFO] [1795422991.764215023] [moveit_move_group_capabilities_base.move_group_context]: MoveGroup context using planning plugin ompl_interface/OMPLPlanner
+[move_group-2] [INFO] [1795422991.764223229] [moveit_move_group_capabilities_base.move_group_context]: MoveGroup context initialization complete
+[move_group-2] [96mLoading 'move_group/ApplyPlanningSceneService'...
+[move_group-2] [0m[96mLoading 'move_group/ClearOctomapService'...
+[move_group-2] [0m[96mLoading 'move_group/MoveGroupCartesianPathService'...
+[move_group-2] [0m[96mLoading 'move_group/MoveGroupGetPlanningSceneService'...
+[move_group-2] [0m[96mLoading 'move_group/MoveGroupKinematicsService'...
+[move_group-2] [0m[96mLoading 'move_group/MoveGroupPlanService'...
+[move_group-2] [0m[96mLoading 'move_group/MoveGroupQueryPlannersService'...
+[move_group-2] [0m[96mLoading 'move_group/MoveGroupStateValidationService'...
+[move_group-2] [0m[92m
+[move_group-2] You can start planning now!
+[move_group-2] 
+[move_group-2] [INFO] [1795422991.844625586] [moveit_move_group_default_capabilities.plan_service_capability]: Received new planning service request...
+[move_group-2] [INFO] [1795422991.845313877] [moveit.ompl_planning.model_based_planning_context]: Planner configuration 'arm[RRTConnect]' will use planner 'geometric::RRTConnect'. Additional configuration parameters will be set when the planner is constructed.
+[WARNING] [launch]: user interrupted with ctrl-c (SIGINT)
+[INFO] [move_group-2]: sending signal 'SIGINT' to process[move_group-2]
+[INFO] [robot_state_publisher-1]: sending signal 'SIGINT' to process[robot_state_publisher-1]
+[move_group-2] [INFO] [1795422991.873546617] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+[robot_state_publisher-1] [INFO] [1795422991.873953907] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+[move_group-2] [INFO] [1795422991.879620550] [moveit.ros_planning_interface.moveit_cpp]: Deleting MoveItCpp
+[move_group-2] [INFO] [1795422991.879832201] [moveit_ros.planning_scene_monitor.planning_scene_monitor]: Stopped publishing maintained planning scene.
+[move_group-2] [INFO] [1795422991.880077476] [moveit_ros.planning_scene_monitor.planning_scene_monitor]: Stopping world geometry monitor
+[move_group-2] [INFO] [1795422991.880200464] [moveit_ros.planning_scene_monitor.planning_scene_monitor]: Stopping planning scene monitor
+[move_group-2] Warning: class_loader.ClassLoader: SEVERE WARNING!!! Attempting to unload library while objects created by this loader exist in the heap! You should delete your objects before attempting to unload the library or destroying the ClassLoader. The library will NOT be unloaded.
+[move_group-2]          at line 127 in ./src/class_loader.cpp
+[move_group-2] Stack trace (most recent call last):
+[move_group-2] #11   Object "/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2", at 0xffffffffffffffff, in 
+[move_group-2] #10   Object "/opt/ros/humble/lib/moveit_ros_move_group/move_group", at 0x56f476e39704, in 
+[move_group-2] #9    Source "../csu/libc-start.c", line 392, in __libc_start_main_impl [0x7d60f2029e3f]
+[move_group-2] #8    Source "../sysdeps/nptl/libc_start_call_main.h", line 58, in __libc_start_call_main [0x7d60f2029d8f]
+[move_group-2] #7    Object "/opt/ros/humble/lib/moveit_ros_move_group/move_group", at 0x56f476e38681, in 
+[move_group-2] #6    Object "/opt/ros/humble/lib/moveit_ros_move_group/move_group", at 0x56f476e3a6e9, in 
+[move_group-2] #5    Object "/opt/ros/humble/lib/librclcpp.so", at 0x7d60f28558fe, in rclcpp::Node::~Node()
+[move_group-2] #4    Object "/opt/ros/humble/lib/librclcpp.so", at 0x7d60f282fe19, in 
+[move_group-2] #3    Object "/opt/ros/humble/lib/librclcpp.so", at 0x7d60f285eef9, in 
+[move_group-2] #2    Object "/opt/ros/humble/lib/librclcpp.so", at 0x7d60f285ee40, in rclcpp::node_interfaces::NodeBase::~NodeBase()
+[move_group-2] #1    Object "/opt/ros/humble/lib/librclcpp.so", at 0x7d60f282fe19, in 
+[move_group-2] #0    Object "/opt/ros/humble/lib/librclcpp.so", at 0x7d60f2834e49, in rclcpp::CallbackGroup::~CallbackGroup()
+[move_group-2] Segmentation fault (Address not mapped to object [0x7d60d19f8750])
+[INFO] [robot_state_publisher-1]: process has finished cleanly [pid 127401]
+[ERROR] [move_group-2]: process has died [pid 127403, exit code -11, cmd '/opt/ros/humble/lib/moveit_ros_move_group/move_group --ros-args --params-file /tmp/launch_params__v1xhhpg'].
+[move_group-2] [0m

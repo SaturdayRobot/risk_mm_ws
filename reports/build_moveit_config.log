@@ -1,0 +1,6 @@
+Starting >>> risk_mm
+Starting >>> rangermini_moveit_config
+Finished <<< rangermini_moveit_config [0.25s]
+Finished <<< risk_mm [0.54s]
+
+Summary: 2 packages finished [0.78s]

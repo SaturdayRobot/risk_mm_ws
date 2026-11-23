@@ -1,0 +1,4 @@
+build:
+  symlink-install: false
+  parallel-workers: 2
+  cmake-args: ["-DCMAKE_BUILD_TYPE=Release"]

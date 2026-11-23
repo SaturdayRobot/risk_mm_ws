@@ -1,0 +1,28 @@
+Starting >>> mm_utils
+Starting >>> xarm_description
+Finished <<< xarm_description [0.06s]
+Starting >>> rangermini_description
+Finished <<< mm_utils [0.09s]
+Starting >>> plan_env
+Finished <<< rangermini_description [0.10s]
+Starting >>> traj_utils
+Finished <<< plan_env [0.10s]
+Starting >>> mm_config
+Finished <<< traj_utils [0.09s]
+Starting >>> mm_model
+Finished <<< mm_config [0.27s]
+Starting >>> path_searching
+Finished <<< mm_model [0.50s]
+Starting >>> risk_mm
+Finished <<< risk_mm [0.72s]
+Starting >>> rangermini_moveit_config
+Finished <<< rangermini_moveit_config [0.23s]
+Finished <<< path_searching [21.1s]
+Starting >>> traj_opt
+Finished <<< traj_opt [22.5s]
+Starting >>> remani_adapter
+Finished <<< remani_adapter [25.1s]
+Starting >>> mm_bringup
+Finished <<< mm_bringup [0.58s]
+
+Summary: 13 packages finished [1min 10s]

@@ -1,0 +1,10 @@
+# Simulator manual interface; these do not replace planner/executor constraints.
+rate_hz: 50.0
+command_timeout_s: 0.30
+feedback_timeout_s: 0.50
+arm_rate_rad_s: 0.30
+steer_rate_rad_s: 0.80
+wheel_accel_rad_s2: 4.0
+base_speed_max_m_s: 0.25
+base_yaw_max_rad_s: 0.35
+wheel_rate_max_rad_s: 2.5

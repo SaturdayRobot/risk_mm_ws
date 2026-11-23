@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>remani_adapter</name><version>0.1.0</version>
+  <description>Rangermini xArm6 risk planning: remani_adapter</description>
+  <maintainer email="user@example.com">user</maintainer>
+  <license>GPL-3.0-or-later</license>
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <depend>rclcpp</depend>
+  <depend>traj_opt</depend>
+  <depend>plan_env</depend>
+  <depend>mm_config</depend>
+  <depend>mm_utils</depend>
+  <depend>path_searching</depend>
+  <depend>traj_utils</depend>
+  <depend>eigen</depend>
+  <export><build_type>ament_cmake</build_type></export>
+</package>

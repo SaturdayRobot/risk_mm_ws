@@ -1,0 +1,238 @@
+[
+  {
+    "path": "src/description/rangermini_description/package.xml",
+    "sha256": "dd2dc33b2826173ea02445a019f1f0cb4b606fafa054c0000879a0e0741e773c"
+  },
+  {
+    "path": "src/description/rangermini_description/README.md",
+    "sha256": "992fa00905e3ed28d7baa792f1837bf5b2ae2c39fb1974e547a4c8ed3a88a4c1"
+  },
+  {
+    "path": "src/description/rangermini_description/CMakeLists.txt",
+    "sha256": "8834f7fdf45608c68e2c21f5378923cce25015978681a10aa6e784d447cb9ad5"
+  },
+  {
+    "path": "src/description/rangermini_description/urdf/rangermini_xarm6.urdf",
+    "sha256": "357b726151aa1feddbcaba09963a15f38d33771d92953c45fe5567a7b41ff514"
+  },
+  {
+    "path": "src/description/rangermini_description/launch/display.launch.py",
+    "sha256": "e25f00e73d86648a063f3d86ecf530e2d4f253ec179b4cd41feccf8d02a5aec6"
+  },
+  {
+    "path": "src/description/rangermini_description/rviz/display.rviz",
+    "sha256": "a4858bc498f5006e0003080ffff861ac0d48c0f39f295e4912e92403d7c5c057"
+  },
+  {
+    "path": "src/description/rangermini_description/meshes/wheel_rr.stl",
+    "sha256": "dbf8e00272350d8b876ecfa183f9aca3a1d45f9dc5e537d03767b33c99d8bcc6"
+  },
+  {
+    "path": "src/description/rangermini_description/meshes/steering_fl.stl",
+    "sha256": "0ceb7f936ccc61883b09d2437e310bd9d438faa183b8f5a20e93e6426fc2bd9c"
+  },
+  {
+    "path": "src/description/rangermini_description/meshes/steering_rr.stl",
+    "sha256": "404756920332a758f5554b74b2355c0434e5b5ca40a26cd9ddc5d96494671466"
+  },
+  {
+    "path": "src/description/rangermini_description/meshes/wheel_rl.stl",
+    "sha256": "f0cf51358b29e49c458707901a398c37035376c1653ff1cf47e9a9cb375e1780"
+  },
+  {
+    "path": "src/description/rangermini_description/meshes/steering_fr.stl",
+    "sha256": "28762a39f49069f18f2344e721d191cc7052d31d1da6ec1e2a1a20e716e6a35b"
+  },
+  {
+    "path": "src/description/rangermini_description/meshes/wheel_fr.stl",
+    "sha256": "ce3169204a217ac3baf4ab7e3d4e62b60df0cf5a5cee20c852e568eed5e68d0d"
+  },
+  {
+    "path": "src/description/rangermini_description/meshes/wheel_fl.stl",
+    "sha256": "1b28c36b5bcebc8850c2cc6ebd156b01735054bcffb2e895a7b497d505f5e296"
+  },
+  {
+    "path": "src/description/rangermini_description/meshes/base_link.stl",
+    "sha256": "b9e34d94ce0eb8aec91c02571e9f428e119c5a418da53987f0434ce312d05cbb"
+  },
+  {
+    "path": "src/description/rangermini_description/meshes/steering_rl.stl",
+    "sha256": "d73505988da052f1971db2608b633bfead0846e1deeb72d8bb14eb6bdc81cfa9"
+  },
+  {
+    "path": "src/description/rangermini_description/meshes/head_link.stl",
+    "sha256": "7271fa334aca025bd108917f95d3a694e65a76053105d10a8a456666e89ca925"
+  },
+  {
+    "path": "src/description/rangermini_description/meshes/base_auxiliary.stl",
+    "sha256": "19085f0b7a613fee75b035adfad940eb341357731b162473331fa1105bc76d1a"
+  },
+  {
+    "path": "src/description/xarm_description/package.xml",
+    "sha256": "d6e210f4141d22c40bad99bcbbea05da761b4b5d9769acc50434c59241b1853b"
+  },
+  {
+    "path": "src/description/xarm_description/README.md",
+    "sha256": "dbef99e6956c72ea4adfb7d8578fbd2115a48d3d33b546c84bbd5b8df89eb88a"
+  },
+  {
+    "path": "src/description/xarm_description/CMakeLists.txt",
+    "sha256": "eb4283d00ae5341a3d9f5b8c54cb930294a2738126a4590150223fdc9940e5ba"
+  },
+  {
+    "path": "src/description/xarm_description/meshes/end_tool/collision/end_tool.stl",
+    "sha256": "e06112781cdd615b7df536569f50addb445a6f4b4acced6d53b0742018b6c768"
+  },
+  {
+    "path": "src/description/xarm_description/meshes/xarm6/visual/link_base.stl",
+    "sha256": "d3d61f2888bc39eecb8583babc7dddccb92f2ccd55aa32cd6f1dce6193feb3b6"
+  },
+  {
+    "path": "src/description/xarm_description/meshes/xarm6/visual/link6.stl",
+    "sha256": "b90cb1b373e65c035d7965bde92f4e2aedacdbbd57785a9018cd996b6b0b688e"
+  },
+  {
+    "path": "src/description/xarm_description/meshes/xarm6/visual/link5.stl",
+    "sha256": "bfca01aae4255803ba2f5391c93836b91e1761e069275e38a9656ff2d53f45a4"
+  },
+  {
+    "path": "src/description/xarm_description/meshes/xarm6/visual/link3.stl",
+    "sha256": "f1503bc0c1fe8d39f4c509dba7288d9130954a35a1bcbaa0fca95d083fed3ffe"
+  },
+  {
+    "path": "src/description/xarm_description/meshes/xarm6/visual/link1.stl",
+    "sha256": "103a81f9f00c217247f8b6c8f19b3afcbc9288852082389044d88a4a321cd8cd"
+  },
+  {
+    "path": "src/description/xarm_description/meshes/xarm6/visual/link2.stl",
+    "sha256": "20ef55e34f8a63bb65108ed3134c4b22d911b55cd496ca5562b3978cba88ac77"
+  },
+  {
+    "path": "src/description/xarm_description/meshes/xarm6/visual/link4.stl",
+    "sha256": "2a9952085fef91045380dac9825d9ad5a75867196933bc2cb1c3a635c23b0b7e"
+  },
+  {
+    "path": "src/description/mm_model/package.xml",
+    "sha256": "92ebdeb850fc3a6f4d7fbb4d6c4bde64c71e5b32799cce0960c2b76fd8d6ea26"
+  },
+  {
+    "path": "src/description/mm_model/README.md",
+    "sha256": "f4247577c3b0d6ccfe7e8fbb8f778c2b2d8bdb15e1a1e6c0658aa625185feee4"
+  },
+  {
+    "path": "src/description/mm_model/CMakeLists.txt",
+    "sha256": "ad437571245548a920f3897547906c3b586c074b6e4c0c4e0eb57908e28a381d"
+  },
+  {
+    "path": "src/description/mm_model/mm_model/description.py",
+    "sha256": "f3e9ef5f564cd43680b30a1ad403638a639c045b912c53cf09b604748607f091"
+  },
+  {
+    "path": "src/description/mm_model/mm_model/geometry.py",
+    "sha256": "a871a6f7284e92da1d18261b1b139ecfb2ac911830517bab44e0792e855d83c6"
+  },
+  {
+    "path": "src/description/mm_model/mm_model/identity.py",
+    "sha256": "dd937a7ecf9bddb6f26804fbf9616533db884637436692a1a839ff88899b09b5"
+  },
+  {
+    "path": "src/description/mm_model/mm_model/__init__.py",
+    "sha256": "08ae20e2981928a6a992a9060dd24d2ace0cd8a7da9bf80cb75bfcaf50ebd48f"
+  },
+  {
+    "path": "src/description/mm_model/mm_model/wheel_ik.py",
+    "sha256": "4c5cccf647dcd565a3bd01b989da9c41b82e541a8601534e592c8f43276d5617"
+  },
+  {
+    "path": "src/description/mm_model/include/mm_model/wheel_kinematics.hpp",
+    "sha256": "4a62e7017b5b4e885573fd64efb2a757be80d090b19660eb6381b553863fd740"
+  },
+  {
+    "path": "src/description/mm_model/test/test_model_identity.py",
+    "sha256": "18e9e2f9e429e5aaac6a9de94161d2fa7968c87f2ad17b9b9bfbabacddaa0bac"
+  },
+  {
+    "path": "src/description/mm_model/test/test_wheel_ik.py",
+    "sha256": "4201ead678ddaa6c86bce823176bd9b728e892733cca28947936f96b02cfa211"
+  },
+  {
+    "path": "src/description/mm_config/package.xml",
+    "sha256": "a4250908b70980d057282dbc0461245145a29c6ea044bca84d909033ff94a768"
+  },
+  {
+    "path": "src/description/mm_config/CMakeLists.txt",
+    "sha256": "03705f6a10045a2ebb897215ef89eefb1060cfa55d24bb0da874f0de34e7029f"
+  },
+  {
+    "path": "src/description/mm_config/src/mm_config.cpp",
+    "sha256": "ab3e9815e1092e1da5286367b48ed2bad4fccead86a3ca66f992ef15172b6524"
+  },
+  {
+    "path": "src/description/mm_config/include/mm_config/mm_config.hpp",
+    "sha256": "fbf1055c1e2a23598578b15fda8001968b7fb66bf9fee46902a2de2d92155883"
+  },
+  {
+    "path": "src/description/mm_config/test/model_check.cpp",
+    "sha256": "2af239b193030d237a713fe875e80c7c15076b0750f3f4233c77dffe2518008e"
+  },
+  {
+    "path": "src/common/mm_utils/package.xml",
+    "sha256": "c9de0a9c3777a581d13e91d63229fd5b53ad466aca15daf0a98d210c95cf7ace"
+  },
+  {
+    "path": "src/common/mm_utils/CMakeLists.txt",
+    "sha256": "6a047bbc5b5dfd7de898f23f73af72f3b7f06f72b1137d334877d60dfb1ddfdb"
+  },
+  {
+    "path": "src/common/mm_utils/include/mm_utils/converters.h",
+    "sha256": "0e58a949ce2e48a24b79fdc0f3e947ab1984e17dda68879c364a056280a039b0"
+  },
+  {
+    "path": "src/common/mm_utils/include/mm_utils/utils.h",
+    "sha256": "88816d49b21d66488c4f837fa314ca3ff77a538063968895481da938767423de"
+  },
+  {
+    "path": "src/common/mm_utils/include/mm_utils/ros2_utils.hpp",
+    "sha256": "15527b320b631e65cf0a0e571b9ee8fe838d902c84da2ea15f594f17c82e9206"
+  },
+  {
+    "path": "src/common/mm_utils/include/mm_utils/geometry_utils.h",
+    "sha256": "dd2f1be502930647d974380b099b7d287940ef7620cdf4aeebd9d110d275911a"
+  },
+  {
+    "path": "src/common/mm_utils/include/mm_utils/steady_timer.hpp",
+    "sha256": "42b1808f7f4c2e33d1b24b1f4ecc4a0bdff287472ce4ef2acf7729cef992d565"
+  },
+  {
+    "path": "src/common/mm_utils/scripts/topic_statistics.py",
+    "sha256": "fa364c187a6c752adccf67c34482368fa112f832994313b602add8b306e5f233"
+  },
+  {
+    "path": "src/common/mm_utils/test/test_ros2.cpp",
+    "sha256": "58807d7b10429b9e4ae451bd6bd1e71f270f6778e9c67a32793c6599c303a965"
+  },
+  {
+    "path": "src/perception/plan_env/package.xml",
+    "sha256": "d77f365667348f71b27d0aba937671642f8d17a95f24ece0b7de6de07e877f1b"
+  },
+  {
+    "path": "src/perception/plan_env/CMakeLists.txt",
+    "sha256": "e7b49b22fd79b5ebe54d4318483c072d85456cf3399ae0fe11e66773bf9162f6"
+  },
+  {
+    "path": "src/perception/plan_env/src/grid_map.cpp",
+    "sha256": "27e0bf9ce69c4548d6d43597e61ed6dc0499f153a128926f0b95507c979fba02"
+  },
+  {
+    "path": "src/perception/plan_env/src/raycast.cpp",
+    "sha256": "0d5d4dd09f006a22857d023935267108cb1dbc27c45a59200d992f05eea8aa41"
+  },
+  {
+    "path": "src/perception/plan_env/include/plan_env/raycast.h",
+    "sha256": "9a46cf4a0bb177bcd9fce229001a623dff11c55e65eeb32eba3d4209771e2a9b"
+  },
+  {
+    "path": "src/perception/plan_env/include/plan_env/grid_map.h",
+    "sha256": "c66e3f548433ebc02ee07533b0fae58430faf5f2eb5ade9ee1caeb17684b67e2"
+  }
+]

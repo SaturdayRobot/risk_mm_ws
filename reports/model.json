@@ -1,0 +1,7 @@
+{
+  "model_id": "rangermini_xarm6",
+  "returncode": 0,
+  "stdout": "collision_candidate_recall=pass fk_error=3.88578e-16 gradient_error=8.32001e-11 body_collision=0 self_collision=0\n",
+  "stderr": "[INFO] [1795422681.445567227] [mm_config]: [MMConfig] URDF chain loaded: 6 joints, base collision samples=1599\n",
+  "scope": "FK, analytic gradient and sampled self collision at stow; not continuous path safety"
+}

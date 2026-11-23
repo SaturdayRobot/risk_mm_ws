@@ -1,0 +1,6 @@
+[INFO] [launch]: All log files can be found below /tmp/risk_mm_ros_logs/2026-11-23-16-32-11-573148-PC-20260608GIST-125035
+[INFO] [launch]: Default logging verbosity is set to INFO
+[INFO] [coupled_check-1]: process started with pid [125060]
+[coupled_check-1] [INFO] [1795422732.245745531] [mm_config]: [MMConfig] URDF chain loaded: 6 joints, base collision samples=1599
+[coupled_check-1] ROS2 original REMANI + current URDF initialized; execution disabled
+[INFO] [coupled_check-1]: process has finished cleanly [pid 125060]

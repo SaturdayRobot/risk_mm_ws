@@ -1,0 +1,74 @@
+Starting >>> mm_utils
+Starting >>> xarm_description
+Finished <<< xarm_description [0.69s]
+Starting >>> rangermini_description
+Finished <<< rangermini_description [3.30s]
+Starting >>> mm_model
+Finished <<< mm_utils [4.17s]
+Starting >>> plan_env
+Finished <<< mm_model [0.94s]
+Starting >>> traj_utils
+Finished <<< traj_utils [1.22s]
+--- stderr: plan_env
+CMake Warning (dev) at CMakeLists.txt:18 (find_package):
+  Policy CMP0074 is not set: find_package uses <PackageName>_ROOT variables.
+  Run "cmake --help-policy CMP0074" for policy details.  Use the cmake_policy
+  command to set the policy and suppress this warning.
+
+  CMake variable PCL_ROOT is set to:
+
+    /usr
+
+  For compatibility, CMake is ignoring the variable.
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+---
+[Processing: plan_env]
+[Processing: plan_env]
+Finished <<< plan_env [1min 2s]
+Starting >>> mm_config
+--- stderr: mm_config
+CMake Warning (dev) at CMakeLists.txt:13 (find_package):
+  Policy CMP0074 is not set: find_package uses <PackageName>_ROOT variables.
+  Run "cmake --help-policy CMP0074" for policy details.  Use the cmake_policy
+  command to set the policy and suppress this warning.
+
+  CMake variable PCL_ROOT is set to:
+
+    /usr
+
+  For compatibility, CMake is ignoring the variable.
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+---
+[Processing: mm_config]
+[Processing: mm_config]
+Finished <<< mm_config [1min 0s]
+Starting >>> path_searching
+--- stderr: path_searching
+/tmp/risk_mm_ws/src/planning/path_searching/src/kino_astar.cpp: In member function ‘int remani_planner::KinoAstar::KinoAstarSearchAndGetSimplePath(const VectorXd&, const VectorXd&, double, int, bool, const VectorXd&, const VectorXd&, double, bool, const Vector2d&, int, std::vector<std::vector<Eigen::Matrix<double, -1, 1> > >&, std::vector<std::vector<double> >&, std::vector<int>&, std::vector<Eigen::Matrix<double, -1, 1> >&)’:
+/tmp/risk_mm_ws/src/planning/path_searching/src/kino_astar.cpp:135:21: error: ‘local_start_goal_pub_’ was not declared in this scope
+  135 |   mm_config_->visMM(local_start_goal_pub_, "start", 0, 0.8, start_state.head(3), start_state.tail(manipulator_dof_), start_gripper);
+      |                     ^~~~~~~~~~~~~~~~~~~~~
+/tmp/risk_mm_ws/src/planning/path_searching/src/kino_astar.cpp: In member function ‘void remani_planner::KinoAstar::visPath(std::vector<std::vector<Eigen::Matrix<double, 3, 1> > >, bool)’:
+/tmp/risk_mm_ws/src/planning/path_searching/src/kino_astar.cpp:275:7: error: ‘frontend_path_pub_’ was not declared in this scope
+  275 |   if (frontend_path_pub_.getNumSubscribers() == 0){
+      |       ^~~~~~~~~~~~~~~~~~
+/tmp/risk_mm_ws/src/planning/path_searching/src/kino_astar.cpp:292:23: error: ‘frontend_path_pub_’ was not declared in this scope
+  292 |     displayMarkerList(frontend_path_pub_, list, scale, color, i, pt); // real ids used: [ id ~ id+a_star_paths.size() ]
+      |                       ^~~~~~~~~~~~~~~~~~
+/tmp/risk_mm_ws/src/planning/path_searching/src/kino_astar.cpp:292:5: error: ‘displayMarkerList’ was not declared in this scope
+  292 |     displayMarkerList(frontend_path_pub_, list, scale, color, i, pt); // real ids used: [ id ~ id+a_star_paths.size() ]
+      |     ^~~~~~~~~~~~~~~~~
+gmake[2]: *** [CMakeFiles/path_searching.dir/build.make:76: CMakeFiles/path_searching.dir/src/kino_astar.cpp.o] Error 1
+gmake[1]: *** [CMakeFiles/Makefile2:137: CMakeFiles/path_searching.dir/all] Error 2
+gmake: *** [Makefile:146: all] Error 2
+---
+Failed   <<< path_searching [1min 0s, exited with code 2]
+[Processing: path_searching]
+[Processing: path_searching]
+
+Summary: 7 packages finished [3min 7s]
+  1 package failed: path_searching
+  3 packages had stderr output: mm_config path_searching plan_env
+  1 package not processed

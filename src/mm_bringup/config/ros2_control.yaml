@@ -1,0 +1,47 @@
+# Gazebo Classic 11 + ros2_control 控制器配置
+# 加载方式: gazebo_ros2_control 插件通过 <parameters> 读取本文件
+controller_manager:
+  ros__parameters:
+    update_rate: 500          # Hz; 4WIS 轮地接触稳定建议 ≥ 500 (与 control_period 0.002 对应)
+    use_sim_time: true
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    arm_position_controller:
+      type: position_controllers/JointGroupPositionController
+
+    steer_position_controller:
+      type: position_controllers/JointGroupPositionController
+
+    wheel_velocity_controller:
+      type: velocity_controllers/JointGroupVelocityController
+
+# 臂: 6 维位置流；执行轨迹跟踪适配器尚待接通
+arm_position_controller:
+  ros__parameters:
+    joints:
+      - xarm6_joint1
+      - xarm6_joint2
+      - xarm6_joint3
+      - xarm6_joint4
+      - xarm6_joint5
+      - xarm6_joint6
+
+# 转向: 4 维位置, 顺序固定 fl, fr, rl, rr
+steer_position_controller:
+  ros__parameters:
+    joints:
+      - joint_steer_fl
+      - joint_steer_fr
+      - joint_steer_rl
+      - joint_steer_rr
+
+# 车轮: 4 维速度 (rad/s), 顺序固定 fl, fr, rl, rr
+wheel_velocity_controller:
+  ros__parameters:
+    joints:
+      - joint_wheel_fl
+      - joint_wheel_fr
+      - joint_wheel_rl
+      - joint_wheel_rr

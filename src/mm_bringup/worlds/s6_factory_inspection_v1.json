@@ -1,0 +1,1450 @@
+{
+  "version": "factory_inspection_v1.0",
+  "world_sha256": "14afd312fd0c3f870eb5829357d349eccee3f273721fb382476627fea6632d48",
+  "map_bounds": [
+    -11,
+    11,
+    -7,
+    7,
+    0,
+    3
+  ],
+  "dimensions_m": [
+    20,
+    12
+  ],
+  "engineering_assumptions": "compact four-cell workshop; roof omitted for observation; low clearance confined to robot service alcove",
+  "zones": [
+    {
+      "name": "machining",
+      "bounds": [
+        -9.8,
+        -1.2,
+        1.4,
+        5.8
+      ],
+      "type": "equipment_and_doors"
+    },
+    {
+      "name": "electrical_quality",
+      "bounds": [
+        1.2,
+        9.8,
+        1.4,
+        5.8
+      ],
+      "type": "cabinets_and_benches"
+    },
+    {
+      "name": "utilities",
+      "bounds": [
+        -9.8,
+        -1.2,
+        -5.8,
+        -1.4
+      ],
+      "type": "pipes_beam_restricted_bay"
+    },
+    {
+      "name": "warehouse",
+      "bounds": [
+        1.2,
+        9.8,
+        -5.8,
+        -1.4
+      ],
+      "type": "racks_pallets_ground_obstacles"
+    }
+  ],
+  "obstacle_types": [
+    "walls_and_doorways",
+    "ground_pallets",
+    "equipment_protrusions",
+    "normal_height_suspended_pipes",
+    "restricted_low_beam",
+    "restricted_suspended_pipes"
+  ],
+  "equipment": [
+    {
+      "name": "floor",
+      "kind": "building",
+      "origin": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "building",
+      "kind": "building",
+      "origin": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "CNC_A",
+      "kind": "CNC_cell",
+      "origin": [
+        -7.4,
+        4.2,
+        0
+      ]
+    },
+    {
+      "name": "CNC_B",
+      "kind": "CNC_cell",
+      "origin": [
+        -3.8,
+        4.2,
+        0
+      ]
+    },
+    {
+      "name": "quality_station",
+      "kind": "inspection_bench",
+      "origin": [
+        7.6,
+        4.8,
+        0
+      ]
+    },
+    {
+      "name": "assembly_bench",
+      "kind": "inspection_bench",
+      "origin": [
+        3.5,
+        4.8,
+        0
+      ]
+    },
+    {
+      "name": "electrical_cabinets",
+      "kind": "electrical",
+      "origin": [
+        7.7,
+        3.4,
+        0
+      ]
+    },
+    {
+      "name": "material_rack",
+      "kind": "licensed_warehouse_asset",
+      "origin": [
+        6.5,
+        -4.9,
+        0
+      ]
+    },
+    {
+      "name": "pallet_jack",
+      "kind": "licensed_warehouse_asset",
+      "origin": [
+        8.45,
+        -2.35,
+        0
+      ]
+    },
+    {
+      "name": "pallet_load",
+      "kind": "licensed_warehouse_asset",
+      "origin": [
+        3.15,
+        -4.65,
+        0
+      ]
+    },
+    {
+      "name": "overhead_utilities",
+      "kind": "suspended_utilities",
+      "origin": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "robot_service_alcove",
+      "kind": "restricted_low_clearance",
+      "origin": [
+        -5.0,
+        -3.45,
+        0
+      ]
+    },
+    {
+      "name": "pump_-7.9",
+      "kind": "pump_skid",
+      "origin": [
+        -7.9,
+        -4.6,
+        0
+      ]
+    },
+    {
+      "name": "pump_-2.5",
+      "kind": "pump_skid",
+      "origin": [
+        -2.5,
+        -4.6,
+        0
+      ]
+    },
+    {
+      "name": "CNC_A_status",
+      "kind": "inspection_target",
+      "origin": [
+        -7.4,
+        3.08,
+        1.0
+      ]
+    },
+    {
+      "name": "electric_status",
+      "kind": "inspection_target",
+      "origin": [
+        7.7,
+        3.04,
+        1.0
+      ]
+    },
+    {
+      "name": "rack_label",
+      "kind": "inspection_target",
+      "origin": [
+        6.5,
+        -4.44,
+        1.0
+      ]
+    },
+    {
+      "name": "utility_gauge",
+      "kind": "inspection_target",
+      "origin": [
+        -5.0,
+        -4.94,
+        0.65
+      ]
+    },
+    {
+      "name": "floor_markings",
+      "kind": "visual_only",
+      "origin": [
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "collision_boxes": [
+    {
+      "model": "building",
+      "part": "north",
+      "center": [
+        0,
+        5.9,
+        1.4
+      ],
+      "size": [
+        20,
+        0.16,
+        2.8
+      ]
+    },
+    {
+      "model": "building",
+      "part": "south",
+      "center": [
+        0,
+        -5.9,
+        1.4
+      ],
+      "size": [
+        20,
+        0.16,
+        2.8
+      ]
+    },
+    {
+      "model": "building",
+      "part": "west",
+      "center": [
+        -9.9,
+        0,
+        1.4
+      ],
+      "size": [
+        0.16,
+        12,
+        2.8
+      ]
+    },
+    {
+      "model": "building",
+      "part": "east",
+      "center": [
+        9.9,
+        0,
+        1.4
+      ],
+      "size": [
+        0.16,
+        12,
+        2.8
+      ]
+    },
+    {
+      "model": "building",
+      "part": "northWouter",
+      "center": [
+        -7.800000000000001,
+        1.35,
+        1.15
+      ],
+      "size": [
+        4.000000000000001,
+        0.12,
+        2.3
+      ]
+    },
+    {
+      "model": "building",
+      "part": "northWinner",
+      "center": [
+        -2.7,
+        1.35,
+        1.15
+      ],
+      "size": [
+        3.0,
+        0.12,
+        2.3
+      ]
+    },
+    {
+      "model": "building",
+      "part": "northEinner",
+      "center": [
+        2.725,
+        1.35,
+        1.15
+      ],
+      "size": [
+        3.05,
+        0.12,
+        2.3
+      ]
+    },
+    {
+      "model": "building",
+      "part": "northEouter",
+      "center": [
+        7.775,
+        1.35,
+        1.15
+      ],
+      "size": [
+        4.050000000000001,
+        0.12,
+        2.3
+      ]
+    },
+    {
+      "model": "building",
+      "part": "southWouter",
+      "center": [
+        -7.800000000000001,
+        -1.35,
+        1.15
+      ],
+      "size": [
+        4.000000000000001,
+        0.12,
+        2.3
+      ]
+    },
+    {
+      "model": "building",
+      "part": "southWinner",
+      "center": [
+        -2.7,
+        -1.35,
+        1.15
+      ],
+      "size": [
+        3.0,
+        0.12,
+        2.3
+      ]
+    },
+    {
+      "model": "building",
+      "part": "southEinner",
+      "center": [
+        2.725,
+        -1.35,
+        1.15
+      ],
+      "size": [
+        3.05,
+        0.12,
+        2.3
+      ]
+    },
+    {
+      "model": "building",
+      "part": "southEouter",
+      "center": [
+        7.775,
+        -1.35,
+        1.15
+      ],
+      "size": [
+        4.050000000000001,
+        0.12,
+        2.3
+      ]
+    },
+    {
+      "model": "building",
+      "part": "westNlow",
+      "center": [
+        -1.2,
+        2.075,
+        1.15
+      ],
+      "size": [
+        0.12,
+        1.4499999999999997,
+        2.3
+      ]
+    },
+    {
+      "model": "building",
+      "part": "westNhigh",
+      "center": [
+        -1.2,
+        5.0,
+        1.15
+      ],
+      "size": [
+        0.12,
+        1.5999999999999996,
+        2.3
+      ]
+    },
+    {
+      "model": "building",
+      "part": "westSlow",
+      "center": [
+        -1.2,
+        -5.0,
+        1.15
+      ],
+      "size": [
+        0.12,
+        1.5999999999999996,
+        2.3
+      ]
+    },
+    {
+      "model": "building",
+      "part": "westShigh",
+      "center": [
+        -1.2,
+        -2.075,
+        1.15
+      ],
+      "size": [
+        0.12,
+        1.4499999999999997,
+        2.3
+      ]
+    },
+    {
+      "model": "building",
+      "part": "eastNlow",
+      "center": [
+        1.2,
+        2.075,
+        1.15
+      ],
+      "size": [
+        0.12,
+        1.4499999999999997,
+        2.3
+      ]
+    },
+    {
+      "model": "building",
+      "part": "eastNhigh",
+      "center": [
+        1.2,
+        5.0,
+        1.15
+      ],
+      "size": [
+        0.12,
+        1.5999999999999996,
+        2.3
+      ]
+    },
+    {
+      "model": "building",
+      "part": "eastSlow",
+      "center": [
+        1.2,
+        -5.0,
+        1.15
+      ],
+      "size": [
+        0.12,
+        1.5999999999999996,
+        2.3
+      ]
+    },
+    {
+      "model": "building",
+      "part": "eastShigh",
+      "center": [
+        1.2,
+        -2.075,
+        1.15
+      ],
+      "size": [
+        0.12,
+        1.4499999999999997,
+        2.3
+      ]
+    },
+    {
+      "model": "building",
+      "part": "column-9.5-5.5",
+      "center": [
+        -9.5,
+        -5.5,
+        1.4
+      ],
+      "size": [
+        0.22,
+        0.22,
+        2.8
+      ]
+    },
+    {
+      "model": "building",
+      "part": "column-9.55.5",
+      "center": [
+        -9.5,
+        5.5,
+        1.4
+      ],
+      "size": [
+        0.22,
+        0.22,
+        2.8
+      ]
+    },
+    {
+      "model": "building",
+      "part": "column9.5-5.5",
+      "center": [
+        9.5,
+        -5.5,
+        1.4
+      ],
+      "size": [
+        0.22,
+        0.22,
+        2.8
+      ]
+    },
+    {
+      "model": "building",
+      "part": "column9.55.5",
+      "center": [
+        9.5,
+        5.5,
+        1.4
+      ],
+      "size": [
+        0.22,
+        0.22,
+        2.8
+      ]
+    },
+    {
+      "model": "CNC_A",
+      "part": "plinth",
+      "center": [
+        -7.4,
+        4.2,
+        0.14
+      ],
+      "size": [
+        2.7,
+        2.2,
+        0.28
+      ]
+    },
+    {
+      "model": "CNC_A",
+      "part": "housing",
+      "center": [
+        -7.4,
+        4.2,
+        1.28
+      ],
+      "size": [
+        2.7,
+        2.2,
+        2.0
+      ]
+    },
+    {
+      "model": "CNC_A",
+      "part": "console",
+      "center": [
+        -5.930000000000001,
+        3.45,
+        1.05
+      ],
+      "size": [
+        0.22,
+        0.36,
+        0.62
+      ]
+    },
+    {
+      "model": "CNC_A",
+      "part": "lamp_envelope",
+      "center": [
+        -6.3500000000000005,
+        4.9,
+        2.45
+      ],
+      "size": [
+        0.09,
+        0.09,
+        0.25
+      ]
+    },
+    {
+      "model": "CNC_B",
+      "part": "plinth",
+      "center": [
+        -3.8,
+        4.2,
+        0.14
+      ],
+      "size": [
+        2.7,
+        2.2,
+        0.28
+      ]
+    },
+    {
+      "model": "CNC_B",
+      "part": "housing",
+      "center": [
+        -3.8,
+        4.2,
+        1.28
+      ],
+      "size": [
+        2.7,
+        2.2,
+        2.0
+      ]
+    },
+    {
+      "model": "CNC_B",
+      "part": "console",
+      "center": [
+        -2.33,
+        3.45,
+        1.05
+      ],
+      "size": [
+        0.22,
+        0.36,
+        0.62
+      ]
+    },
+    {
+      "model": "CNC_B",
+      "part": "lamp_envelope",
+      "center": [
+        -2.75,
+        4.9,
+        2.45
+      ],
+      "size": [
+        0.09,
+        0.09,
+        0.25
+      ]
+    },
+    {
+      "model": "quality_station",
+      "part": "top",
+      "center": [
+        7.6,
+        4.8,
+        0.91
+      ],
+      "size": [
+        1.6,
+        0.75,
+        0.1
+      ]
+    },
+    {
+      "model": "quality_station",
+      "part": "leg-0.65-0.25",
+      "center": [
+        6.949999999999999,
+        4.55,
+        0.44
+      ],
+      "size": [
+        0.07,
+        0.07,
+        0.88
+      ]
+    },
+    {
+      "model": "quality_station",
+      "part": "leg-0.650.25",
+      "center": [
+        6.949999999999999,
+        5.05,
+        0.44
+      ],
+      "size": [
+        0.07,
+        0.07,
+        0.88
+      ]
+    },
+    {
+      "model": "quality_station",
+      "part": "leg0.65-0.25",
+      "center": [
+        8.25,
+        4.55,
+        0.44
+      ],
+      "size": [
+        0.07,
+        0.07,
+        0.88
+      ]
+    },
+    {
+      "model": "quality_station",
+      "part": "leg0.650.25",
+      "center": [
+        8.25,
+        5.05,
+        0.44
+      ],
+      "size": [
+        0.07,
+        0.07,
+        0.88
+      ]
+    },
+    {
+      "model": "quality_station",
+      "part": "drawers",
+      "center": [
+        7.6,
+        4.8,
+        0.64
+      ],
+      "size": [
+        1.15,
+        0.6,
+        0.38
+      ]
+    },
+    {
+      "model": "assembly_bench",
+      "part": "top",
+      "center": [
+        3.5,
+        4.8,
+        0.91
+      ],
+      "size": [
+        1.6,
+        0.75,
+        0.1
+      ]
+    },
+    {
+      "model": "assembly_bench",
+      "part": "leg-0.65-0.25",
+      "center": [
+        2.85,
+        4.55,
+        0.44
+      ],
+      "size": [
+        0.07,
+        0.07,
+        0.88
+      ]
+    },
+    {
+      "model": "assembly_bench",
+      "part": "leg-0.650.25",
+      "center": [
+        2.85,
+        5.05,
+        0.44
+      ],
+      "size": [
+        0.07,
+        0.07,
+        0.88
+      ]
+    },
+    {
+      "model": "assembly_bench",
+      "part": "leg0.65-0.25",
+      "center": [
+        4.15,
+        4.55,
+        0.44
+      ],
+      "size": [
+        0.07,
+        0.07,
+        0.88
+      ]
+    },
+    {
+      "model": "assembly_bench",
+      "part": "leg0.650.25",
+      "center": [
+        4.15,
+        5.05,
+        0.44
+      ],
+      "size": [
+        0.07,
+        0.07,
+        0.88
+      ]
+    },
+    {
+      "model": "assembly_bench",
+      "part": "drawers",
+      "center": [
+        3.5,
+        4.8,
+        0.64
+      ],
+      "size": [
+        1.15,
+        0.6,
+        0.38
+      ]
+    },
+    {
+      "model": "electrical_cabinets",
+      "part": "cabinet-0.65",
+      "center": [
+        7.05,
+        3.4,
+        0.95
+      ],
+      "size": [
+        0.61,
+        0.65,
+        1.9
+      ]
+    },
+    {
+      "model": "electrical_cabinets",
+      "part": "cabinet0.0",
+      "center": [
+        7.7,
+        3.4,
+        0.95
+      ],
+      "size": [
+        0.61,
+        0.65,
+        1.9
+      ]
+    },
+    {
+      "model": "electrical_cabinets",
+      "part": "cabinet0.65",
+      "center": [
+        8.35,
+        3.4,
+        0.95
+      ],
+      "size": [
+        0.61,
+        0.65,
+        1.9
+      ]
+    },
+    {
+      "model": "material_rack",
+      "part": "conservative_proxy",
+      "center": [
+        6.5,
+        -4.899929500000001,
+        1.306255
+      ],
+      "size": [
+        3.917188,
+        0.8795489999999999,
+        2.61251
+      ]
+    },
+    {
+      "model": "pallet_jack",
+      "part": "conservative_proxy",
+      "center": [
+        8.517793,
+        -2.365163,
+        0.494655
+      ],
+      "size": [
+        1.15192,
+        0.531656,
+        0.964238
+      ]
+    },
+    {
+      "model": "pallet_load",
+      "part": "conservative_proxy",
+      "center": [
+        3.15,
+        -4.65,
+        0.42945
+      ],
+      "size": [
+        1.6096499999999998,
+        1.4870999999999999,
+        0.7931999999999999
+      ]
+    },
+    {
+      "model": "overhead_utilities",
+      "part": "header-0.22_envelope",
+      "center": [
+        0,
+        -0.22,
+        2.7
+      ],
+      "size": [
+        18.0,
+        0.11,
+        0.11
+      ]
+    },
+    {
+      "model": "overhead_utilities",
+      "part": "header0.22_envelope",
+      "center": [
+        0,
+        0.22,
+        2.7
+      ],
+      "size": [
+        18.0,
+        0.11,
+        0.11
+      ]
+    },
+    {
+      "model": "overhead_utilities",
+      "part": "hanger-8",
+      "center": [
+        -8,
+        0,
+        2.87
+      ],
+      "size": [
+        0.04,
+        0.55,
+        0.12
+      ]
+    },
+    {
+      "model": "overhead_utilities",
+      "part": "hanger-4",
+      "center": [
+        -4,
+        0,
+        2.87
+      ],
+      "size": [
+        0.04,
+        0.55,
+        0.12
+      ]
+    },
+    {
+      "model": "overhead_utilities",
+      "part": "hanger0",
+      "center": [
+        0,
+        0,
+        2.87
+      ],
+      "size": [
+        0.04,
+        0.55,
+        0.12
+      ]
+    },
+    {
+      "model": "overhead_utilities",
+      "part": "hanger4",
+      "center": [
+        4,
+        0,
+        2.87
+      ],
+      "size": [
+        0.04,
+        0.55,
+        0.12
+      ]
+    },
+    {
+      "model": "overhead_utilities",
+      "part": "hanger8",
+      "center": [
+        8,
+        0,
+        2.87
+      ],
+      "size": [
+        0.04,
+        0.55,
+        0.12
+      ]
+    },
+    {
+      "model": "robot_service_alcove",
+      "part": "guard-0.82",
+      "center": [
+        -5.82,
+        -3.6,
+        0.5
+      ],
+      "size": [
+        0.1,
+        2.8,
+        1.0
+      ]
+    },
+    {
+      "model": "robot_service_alcove",
+      "part": "post-0.82-1.45_envelope",
+      "center": [
+        -5.82,
+        -4.9,
+        0.54
+      ],
+      "size": [
+        0.09,
+        0.09,
+        1.08
+      ]
+    },
+    {
+      "model": "robot_service_alcove",
+      "part": "post-0.821.2_envelope",
+      "center": [
+        -5.82,
+        -2.25,
+        0.54
+      ],
+      "size": [
+        0.09,
+        0.09,
+        1.08
+      ]
+    },
+    {
+      "model": "robot_service_alcove",
+      "part": "guard0.82",
+      "center": [
+        -4.18,
+        -3.6,
+        0.5
+      ],
+      "size": [
+        0.1,
+        2.8,
+        1.0
+      ]
+    },
+    {
+      "model": "robot_service_alcove",
+      "part": "post0.82-1.45_envelope",
+      "center": [
+        -4.18,
+        -4.9,
+        0.54
+      ],
+      "size": [
+        0.09,
+        0.09,
+        1.08
+      ]
+    },
+    {
+      "model": "robot_service_alcove",
+      "part": "post0.821.2_envelope",
+      "center": [
+        -4.18,
+        -2.25,
+        0.54
+      ],
+      "size": [
+        0.09,
+        0.09,
+        1.08
+      ]
+    },
+    {
+      "model": "robot_service_alcove",
+      "part": "backwall",
+      "center": [
+        -5.0,
+        -5.0,
+        1.0
+      ],
+      "size": [
+        1.75,
+        0.1,
+        2.0
+      ]
+    },
+    {
+      "model": "robot_service_alcove",
+      "part": "service_crossbeam",
+      "center": [
+        -5.0,
+        -2.85,
+        1.52
+      ],
+      "size": [
+        1.74,
+        0.24,
+        0.2
+      ]
+    },
+    {
+      "model": "robot_service_alcove",
+      "part": "low_pipe-0.05_envelope",
+      "center": [
+        -5.0,
+        -3.5,
+        1.54
+      ],
+      "size": [
+        1.72,
+        0.13,
+        0.13
+      ]
+    },
+    {
+      "model": "robot_service_alcove",
+      "part": "low_pipe0.16_envelope",
+      "center": [
+        -5.0,
+        -3.29,
+        1.54
+      ],
+      "size": [
+        1.72,
+        0.13,
+        0.13
+      ]
+    },
+    {
+      "model": "pump_-7.9",
+      "part": "skid",
+      "center": [
+        -7.9,
+        -4.6,
+        0.12
+      ],
+      "size": [
+        1.35,
+        1.4,
+        0.24
+      ]
+    },
+    {
+      "model": "pump_-7.9",
+      "part": "motor_envelope",
+      "center": [
+        -7.9,
+        -4.6,
+        0.6
+      ],
+      "size": [
+        0.52,
+        0.7,
+        0.52
+      ]
+    },
+    {
+      "model": "pump_-7.9",
+      "part": "riser_envelope",
+      "center": [
+        -7.5,
+        -4.6,
+        1.1
+      ],
+      "size": [
+        0.15,
+        0.15,
+        1.3
+      ]
+    },
+    {
+      "model": "pump_-7.9",
+      "part": "gauge",
+      "center": [
+        -7.5,
+        -4.8,
+        1.12
+      ],
+      "size": [
+        0.18,
+        0.07,
+        0.18
+      ]
+    },
+    {
+      "model": "pump_-2.5",
+      "part": "skid",
+      "center": [
+        -2.5,
+        -4.6,
+        0.12
+      ],
+      "size": [
+        1.35,
+        1.4,
+        0.24
+      ]
+    },
+    {
+      "model": "pump_-2.5",
+      "part": "motor_envelope",
+      "center": [
+        -2.5,
+        -4.6,
+        0.6
+      ],
+      "size": [
+        0.52,
+        0.7,
+        0.52
+      ]
+    },
+    {
+      "model": "pump_-2.5",
+      "part": "riser_envelope",
+      "center": [
+        -2.1,
+        -4.6,
+        1.1
+      ],
+      "size": [
+        0.15,
+        0.15,
+        1.3
+      ]
+    },
+    {
+      "model": "pump_-2.5",
+      "part": "gauge",
+      "center": [
+        -2.1,
+        -4.8,
+        1.12
+      ],
+      "size": [
+        0.18,
+        0.07,
+        0.18
+      ]
+    },
+    {
+      "model": "CNC_A_status",
+      "part": "plate",
+      "center": [
+        -7.4,
+        3.08,
+        1.0
+      ],
+      "size": [
+        0.22,
+        0.035,
+        0.14
+      ]
+    },
+    {
+      "model": "electric_status",
+      "part": "plate",
+      "center": [
+        7.7,
+        3.04,
+        1.0
+      ],
+      "size": [
+        0.22,
+        0.035,
+        0.14
+      ]
+    },
+    {
+      "model": "rack_label",
+      "part": "plate",
+      "center": [
+        6.5,
+        -4.44,
+        1.0
+      ],
+      "size": [
+        0.22,
+        0.035,
+        0.14
+      ]
+    },
+    {
+      "model": "utility_gauge",
+      "part": "plate",
+      "center": [
+        -5.0,
+        -4.94,
+        0.65
+      ],
+      "size": [
+        0.22,
+        0.035,
+        0.14
+      ]
+    }
+  ],
+  "start": [
+    -8.0,
+    0.0,
+    0.0
+  ],
+  "camera_poses": {
+    "overview_optical": {
+      "xyz": [
+        12,
+        -16,
+        22
+      ],
+      "body_rpy": [
+        0,
+        0.8192017070909033,
+        2.214297435588181
+      ]
+    },
+    "service_view_optical": {
+      "xyz": [
+        -2.0,
+        -1.8,
+        3.1
+      ],
+      "body_rpy": [
+        0,
+        0.608048309375522,
+        -2.6260436461308143
+      ]
+    }
+  },
+  "stations": [
+    {
+      "id": "CNC_A",
+      "pose": [
+        -5.0,
+        2.4,
+        -0.2760970193954364
+      ],
+      "target": [
+        -7.4,
+        3.08,
+        1.0
+      ]
+    },
+    {
+      "id": "ELECTRICAL",
+      "pose": [
+        4.8,
+        2.4,
+        -2.92438462705635
+      ],
+      "target": [
+        7.7,
+        3.04,
+        1.0
+      ]
+    },
+    {
+      "id": "MATERIAL_RACK",
+      "pose": [
+        5.0,
+        -2.4,
+        2.2048190464583186
+      ],
+      "target": [
+        6.5,
+        -4.44,
+        1.0
+      ]
+    },
+    {
+      "id": "UTILITY",
+      "pose": [
+        -5.0,
+        -4.3,
+        1.5707963267948966
+      ],
+      "target": [
+        -5.0,
+        -4.94,
+        0.65
+      ]
+    },
+    {
+      "id": "HOME",
+      "pose": [
+        -8.0,
+        0.0,
+        0.0
+      ],
+      "target": null
+    }
+  ],
+  "asset_commit": "ee0af733315e78432408c3cd98d378ecee5f767c",
+  "localization_reference_models": [
+    "building",
+    "CNC_A",
+    "CNC_B",
+    "electrical_cabinets",
+    "robot_service_alcove"
+  ]
+}

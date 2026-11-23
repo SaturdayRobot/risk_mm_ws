@@ -1,0 +1,13 @@
+{
+  "status": "failed",
+  "execution_success": null,
+  "scope": "synthetic static start and scene; real MoveIt services; no motion execution",
+  "stow_valid": false,
+  "contacts": [
+    [
+      "xarm6_link6",
+      "head_link"
+    ]
+  ],
+  "reason": "configured stow is in mesh self collision"
+}

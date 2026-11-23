@@ -1,0 +1,7 @@
+{
+  "status": "passed",
+  "packages": 13,
+  "local_mesh_references": 35,
+  "verified_upstream_files": 31,
+  "ament_prefix_path": "/home/ubuntu/risk_mm_ws/install/rangermini_moveit_config:/home/ubuntu/risk_mm_ws/install/mm_bringup:/home/ubuntu/risk_mm_ws/install/mm_model:/home/ubuntu/risk_mm_ws/install/rangermini_description:/home/ubuntu/risk_mm_ws/install/xarm_description:/home/ubuntu/risk_mm_ws/install/remani_adapter:/home/ubuntu/risk_mm_ws/install/traj_opt:/home/ubuntu/risk_mm_ws/install/path_searching:/home/ubuntu/risk_mm_ws/install/traj_utils:/home/ubuntu/risk_mm_ws/install/risk_mm:/home/ubuntu/risk_mm_ws/install/mm_config:/home/ubuntu/risk_mm_ws/install/plan_env:/home/ubuntu/risk_mm_ws/install/mm_utils:/opt/ros/humble"
+}

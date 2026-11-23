@@ -1,0 +1,20 @@
+{
+  "purpose": "User-authorized one-time world asset copy; no old workspace runtime dependencies",
+  "files": [
+    {
+      "source": "/home/ubuntu/h_acmp_ws/src/simulation/worlds/s6_factory_inspection_v1.world",
+      "local": "src/mm_bringup/worlds/s6_factory_inspection_v1.world",
+      "sha256": "14afd312fd0c3f870eb5829357d349eccee3f273721fb382476627fea6632d48"
+    },
+    {
+      "source": "/home/ubuntu/h_acmp_ws/src/simulation/worlds/s6_factory_inspection_v1.json",
+      "local": "src/mm_bringup/worlds/s6_factory_inspection_v1.json",
+      "sha256": "6906f80f63688862541fd67412c953246ddfcfe683b3e5ec5883bf8bce67b652"
+    },
+    {
+      "source": "/home/ubuntu/h_acmp_ws/src/simulation/worlds/s6_factory_inspection_v1_layout.png",
+      "local": "src/mm_bringup/worlds/s6_factory_inspection_v1_layout.png",
+      "sha256": "609dbb6e098a864a2ce316af763ded95a37cd0249ab46af10f6590cd29e97a81"
+    }
+  ]
+}

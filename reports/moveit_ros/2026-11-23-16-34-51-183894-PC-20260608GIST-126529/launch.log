@@ -1,0 +1,39 @@
+1795422891.1850977 [INFO] [launch]: All log files can be found below /home/ubuntu/risk_mm_ws/reports/moveit_ros/2026-11-23-16-34-51-183894-PC-20260608GIST-126529
+1795422891.1852427 [INFO] [launch]: Default logging verbosity is set to INFO
+1795422891.2703860 [INFO] [robot_state_publisher-1]: process started with pid [126541]
+1795422891.2705641 [INFO] [move_group-2]: process started with pid [126543]
+1795422891.3354652 [robot_state_publisher-1] [WARN] [1795422891.335179167] [kdl_parser]: The root link base_link has an inertia specified in the URDF, but KDL does not support a root link with an inertia.  As a workaround, you can add an extra dummy link to your URDF.
+1795422891.3356607 [robot_state_publisher-1] [INFO] [1795422891.335282842] [robot_state_publisher]: got segment arm_mount_link
+1795422891.3359427 [robot_state_publisher-1] [INFO] [1795422891.335339374] [robot_state_publisher]: got segment base_link
+1795422891.3360517 [robot_state_publisher-1] [INFO] [1795422891.335350161] [robot_state_publisher]: got segment camera_color_optical_frame
+1795422891.3361413 [robot_state_publisher-1] [INFO] [1795422891.335355055] [robot_state_publisher]: got segment camera_depth_optical_frame
+1795422891.3362224 [robot_state_publisher-1] [INFO] [1795422891.335359549] [robot_state_publisher]: got segment camera_imu_link
+1795422891.3362982 [robot_state_publisher-1] [INFO] [1795422891.335363544] [robot_state_publisher]: got segment front_camera_link
+1795422891.3363457 [robot_state_publisher-1] [INFO] [1795422891.335367440] [robot_state_publisher]: got segment head_camera_link
+1795422891.3363926 [robot_state_publisher-1] [INFO] [1795422891.335371235] [robot_state_publisher]: got segment head_camera_optical_frame
+1795422891.3364325 [robot_state_publisher-1] [INFO] [1795422891.335375130] [robot_state_publisher]: got segment head_link
+1795422891.3364730 [robot_state_publisher-1] [INFO] [1795422891.335379026] [robot_state_publisher]: got segment imu_link
+1795422891.3365128 [robot_state_publisher-1] [INFO] [1795422891.335382721] [robot_state_publisher]: got segment lidar_link
+1795422891.3365519 [robot_state_publisher-1] [INFO] [1795422891.335386517] [robot_state_publisher]: got segment steering_fl
+1795422891.3366277 [robot_state_publisher-1] [INFO] [1795422891.335390312] [robot_state_publisher]: got segment steering_fr
+1795422891.3367033 [robot_state_publisher-1] [INFO] [1795422891.335394107] [robot_state_publisher]: got segment steering_rl
+1795422891.3367770 [robot_state_publisher-1] [INFO] [1795422891.335398103] [robot_state_publisher]: got segment steering_rr
+1795422891.3368242 [robot_state_publisher-1] [INFO] [1795422891.335401798] [robot_state_publisher]: got segment wheel_fl
+1795422891.3368931 [robot_state_publisher-1] [INFO] [1795422891.335406093] [robot_state_publisher]: got segment wheel_fr
+1795422891.3369377 [robot_state_publisher-1] [INFO] [1795422891.335409789] [robot_state_publisher]: got segment wheel_rl
+1795422891.3369741 [robot_state_publisher-1] [INFO] [1795422891.335413684] [robot_state_publisher]: got segment wheel_rr
+1795422891.3370104 [robot_state_publisher-1] [INFO] [1795422891.335417379] [robot_state_publisher]: got segment xarm6_link1
+1795422891.3370457 [robot_state_publisher-1] [INFO] [1795422891.335421674] [robot_state_publisher]: got segment xarm6_link2
+1795422891.3370798 [robot_state_publisher-1] [INFO] [1795422891.335425370] [robot_state_publisher]: got segment xarm6_link3
+1795422891.3371446 [robot_state_publisher-1] [INFO] [1795422891.335429565] [robot_state_publisher]: got segment xarm6_link4
+1795422891.3371925 [robot_state_publisher-1] [INFO] [1795422891.335433260] [robot_state_publisher]: got segment xarm6_link5
+1795422891.3372314 [robot_state_publisher-1] [INFO] [1795422891.335437455] [robot_state_publisher]: got segment xarm6_link6
+1795422891.3372681 [robot_state_publisher-1] [INFO] [1795422891.335441151] [robot_state_publisher]: got segment xarm6_link_base
+1795422891.3373289 [robot_state_publisher-1] [INFO] [1795422891.335445046] [robot_state_publisher]: got segment xarm6_link_eef
+1795422894.8904252 [WARNING] [launch]: user interrupted with ctrl-c (SIGINT)
+1795422894.8920798 [INFO] [move_group-2]: sending signal 'SIGINT' to process[move_group-2]
+1795422894.8924050 [INFO] [robot_state_publisher-1]: sending signal 'SIGINT' to process[robot_state_publisher-1]
+1795422894.8927662 [robot_state_publisher-1] [INFO] [1795422894.890328790] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+1795422894.8929279 [robot_state_publisher-1] [INFO] [1795422894.892543684] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+1795422894.9990113 [INFO] [robot_state_publisher-1]: process has finished cleanly [pid 126541]
+1795422895.7454166 [ERROR] [move_group-2]: process has died [pid 126543, exit code -11, cmd '/opt/ros/humble/lib/moveit_ros_move_group/move_group --ros-args --params-file /tmp/launch_params_43640ump'].

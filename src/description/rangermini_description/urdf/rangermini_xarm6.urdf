@@ -1,0 +1,877 @@
+<robot name="rangermini_xarm6">
+  <link name="base_link">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0" />
+      <geometry>
+        <mesh filename="package://rangermini_description/meshes/base_link.stl" />
+      </geometry>
+      <material name="color_base_link">
+        <color rgba="0.85 0.85 0.88 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0" />
+      <geometry>
+        <mesh filename="package://rangermini_description/meshes/base_link.stl" />
+      </geometry>
+    </collision>
+    <inertial>
+      <origin xyz="-0.018621757 -0.005896705 0.271407712" rpy="0 0 0" />
+      <mass value="63.204716271" />
+      <inertia ixx="2.195479133031" ixy="-0.009096831742" ixz="-0.000399046675" iyy="2.743178181310" iyz="-0.000116029484" izz="2.420468701317" />
+    </inertial>
+    <collision name="hidden_auxiliary_geometry">
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://rangermini_description/meshes/base_auxiliary.stl" />
+      </geometry>
+    </collision>
+  </link>
+  <link name="steering_fl">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0" />
+      <geometry>
+        <mesh filename="package://rangermini_description/meshes/steering_fl.stl" />
+      </geometry>
+      <material name="color_steering_fl">
+        <color rgba="0.55 0.56 0.58 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0" />
+      <geometry>
+        <mesh filename="package://rangermini_description/meshes/steering_fl.stl" />
+      </geometry>
+    </collision>
+    <inertial>
+      <origin rpy="0 0 0" xyz="-0.001029365 -0.033421804 0.059608123" />
+      <mass value="0.247093668" />
+      <inertia ixx="0.000545853604" ixy="0.000001160616" ixz="0.000005753732" iyy="0.000456184020" iyz="-0.000164580677" izz="0.000301195867" />
+    </inertial>
+  </link>
+  <link name="wheel_fl">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0" />
+      <geometry>
+        <mesh filename="package://rangermini_description/meshes/wheel_fl.stl" />
+      </geometry>
+      <material name="color_wheel_fl">
+        <color rgba="0.16 0.16 0.17 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0" />
+      <geometry>
+        <mesh filename="package://rangermini_description/meshes/wheel_fl.stl" />
+      </geometry>
+    </collision>
+    <inertial>
+      <origin rpy="0 0 0" xyz="-0.000000018 0.017499989 -0.000184547" />
+      <mass value="2.258815000" />
+      <inertia ixx="0.006315821633" ixy="0.000000062027" ixz="0.000000003998" iyy="0.010122017980" iyz="0.000000002733" izz="0.006313103593" />
+    </inertial>
+  </link>
+  <link name="steering_fr">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0" />
+      <geometry>
+        <mesh filename="package://rangermini_description/meshes/steering_fr.stl" />
+      </geometry>
+      <material name="color_steering_fr">
+        <color rgba="0.55 0.56 0.58 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0" />
+      <geometry>
+        <mesh filename="package://rangermini_description/meshes/steering_fr.stl" />
+      </geometry>
+    </collision>
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.001029369 0.033421599 0.059608425" />
+      <mass value="0.240170128" />
+      <inertia ixx="0.000530553333" ixy="0.000001128050" ixz="-0.000005592462" iyy="0.000443398126" iyz="0.000159966275" izz="0.000292754926" />
+    </inertial>
+  </link>
+  <link name="wheel_fr">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0" />
+      <geometry>
+        <mesh filename="package://rangermini_description/meshes/wheel_fr.stl" />
+      </geometry>
+      <material name="color_wheel_fr">
+        <color rgba="0.16 0.16 0.17 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0" />
+      <geometry>
+        <mesh filename="package://rangermini_description/meshes/wheel_fr.stl" />
+      </geometry>
+    </collision>
+    <inertial>
+      <origin rpy="0 0 0" xyz="-0.000000160 -0.017499969 -0.000180521" />
+      <mass value="2.258896000" />
+      <inertia ixx="0.006316559993" ixy="-0.000000076516" ixz="-0.000000002303" iyy="0.010124028842" iyz="0.000000000459" izz="0.006314566571" />
+    </inertial>
+  </link>
+  <link name="steering_rl">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0" />
+      <geometry>
+        <mesh filename="package://rangermini_description/meshes/steering_rl.stl" />
+      </geometry>
+      <material name="color_steering_rl">
+        <color rgba="0.55 0.56 0.58 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0" />
+      <geometry>
+        <mesh filename="package://rangermini_description/meshes/steering_rl.stl" />
+      </geometry>
+    </collision>
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.000604863 -0.030112111 0.060612105" />
+      <mass value="0.266252700" />
+      <inertia ixx="0.000618422413" ixy="-0.000013863972" ixz="-0.000002397920" iyy="0.000497957186" iyz="-0.000187777653" izz="0.000359021743" />
+    </inertial>
+  </link>
+  <link name="wheel_rl">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0" />
+      <geometry>
+        <mesh filename="package://rangermini_description/meshes/wheel_rl.stl" />
+      </geometry>
+      <material name="color_wheel_rl">
+        <color rgba="0.16 0.16 0.17 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0" />
+      <geometry>
+        <mesh filename="package://rangermini_description/meshes/wheel_rl.stl" />
+      </geometry>
+    </collision>
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.000003569 0.020000028 -0.000036170" />
+      <mass value="2.227454000" />
+      <inertia ixx="0.006228993675" ixy="0.000000174870" ixz="0.000000164975" iyy="0.009983657898" iyz="0.000000015219" izz="0.006226500620" />
+    </inertial>
+  </link>
+  <link name="steering_rr">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0" />
+      <geometry>
+        <mesh filename="package://rangermini_description/meshes/steering_rr.stl" />
+      </geometry>
+      <material name="color_steering_rr">
+        <color rgba="0.55 0.56 0.58 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0" />
+      <geometry>
+        <mesh filename="package://rangermini_description/meshes/steering_rr.stl" />
+      </geometry>
+    </collision>
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.000974157 0.033220591 0.059814701" />
+      <mass value="0.350266233" />
+      <inertia ixx="0.000772750102" ixy="0.000001639758" ixz="-0.000008139433" iyy="0.000644331401" iyz="0.000233324243" izz="0.000425886013" />
+    </inertial>
+  </link>
+  <link name="wheel_rr">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0" />
+      <geometry>
+        <mesh filename="package://rangermini_description/meshes/wheel_rr.stl" />
+      </geometry>
+      <material name="color_wheel_rr">
+        <color rgba="0.16 0.16 0.17 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0" />
+      <geometry>
+        <mesh filename="package://rangermini_description/meshes/wheel_rr.stl" />
+      </geometry>
+    </collision>
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.000000662 -0.020000820 0.000207716" />
+      <mass value="1.941612000" />
+      <inertia ixx="0.005443830688" ixy="0.000000025517" ixz="-0.000000091062" iyy="0.008716788551" iyz="0.000000140385" izz="0.005425698167" />
+    </inertial>
+  </link>
+  <joint name="joint_steer_fl" type="revolute">
+    <parent link="base_link" />
+    <child link="steering_fl" />
+    <origin rpy="0 0 0" xyz="0.246999 0.185333 0.100000" />
+    <axis xyz="0 0 1" />
+    <limit effort="30" lower="-1.5708" upper="1.5708" velocity="2.0" />
+    <dynamics damping=".1" friction="0" />
+  </joint>
+  <joint name="joint_wheel_fl" type="continuous">
+    <parent link="steering_fl" />
+    <child link="wheel_fl" />
+    <origin rpy="0 0 0" xyz="0 -0.017500 0" />
+    <axis xyz="0 1 0" />
+    <limit effort="20" velocity="10.0" />
+    <dynamics damping=".02" friction="0" />
+  </joint>
+  <joint name="joint_steer_fr" type="revolute">
+    <parent link="base_link" />
+    <child link="steering_fr" />
+    <origin rpy="0 0 0" xyz="0.246999 -0.184952 0.100000" />
+    <axis xyz="0 0 1" />
+    <limit effort="30" lower="-1.5708" upper="1.5708" velocity="2.0" />
+    <dynamics damping=".1" friction="0" />
+  </joint>
+  <joint name="joint_wheel_fr" type="continuous">
+    <parent link="steering_fr" />
+    <child link="wheel_fr" />
+    <origin rpy="0 0 0" xyz="0 0.017500 0" />
+    <axis xyz="0 1 0" />
+    <limit effort="20" velocity="10.0" />
+    <dynamics damping=".02" friction="0" />
+  </joint>
+  <joint name="joint_steer_rl" type="revolute">
+    <parent link="base_link" />
+    <child link="steering_rl" />
+    <origin rpy="0 0 0" xyz="-0.247004 0.187405 0.100000" />
+    <axis xyz="0 0 1" />
+    <limit effort="30" lower="-1.5708" upper="1.5708" velocity="2.0" />
+    <dynamics damping=".1" friction="0" />
+  </joint>
+  <joint name="joint_wheel_rl" type="continuous">
+    <parent link="steering_rl" />
+    <child link="wheel_rl" />
+    <origin rpy="0 0 0" xyz="0 -0.020000 0" />
+    <axis xyz="0 1 0" />
+    <limit effort="20" velocity="10.0" />
+    <dynamics damping=".02" friction="0" />
+  </joint>
+  <joint name="joint_steer_rr" type="revolute">
+    <parent link="base_link" />
+    <child link="steering_rr" />
+    <origin rpy="0 0 0" xyz="-0.247001 -0.188634 0.100000" />
+    <axis xyz="0 0 1" />
+    <limit effort="30" lower="-1.5708" upper="1.5708" velocity="2.0" />
+    <dynamics damping=".1" friction="0" />
+  </joint>
+  <joint name="joint_wheel_rr" type="continuous">
+    <parent link="steering_rr" />
+    <child link="wheel_rr" />
+    <origin rpy="0 0 0" xyz="0 0.020000 0" />
+    <axis xyz="0 1 0" />
+    <limit effort="20" velocity="10.0" />
+    <dynamics damping=".02" friction="0" />
+  </joint>
+  <material name="xarm6_Black">
+    <color rgba="0.0 0.0 0.0 1.0" />
+  </material>
+  <material name="xarm6_Red">
+    <color rgba="0.8 0.0 0.0 1.0" />
+  </material>
+  <material name="xarm6_White">
+    <color rgba="0.78 0.79 0.81 1" />
+  </material>
+  <material name="xarm6_Silver">
+    <color rgba="0.62 0.64 0.67 1" />
+  </material>
+  <link name="xarm6_link_base">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.0 0.0 0.09103" />
+      <mass value="2.7" />
+      <inertia ixx="0.00494875" ixy="-3.5E-06" ixz="1.25E-05" iyy="0.00494174" iyz="1.67E-06" izz="0.002219" />
+    </inertial>
+    <visual>
+      <geometry>
+        <mesh filename="package://xarm_description/meshes/xarm6/visual/link_base.stl" />
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0" />
+      <material name="xarm6_Silver" />
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="package://xarm_description/meshes/xarm6/visual/link_base.stl" />
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0" />
+    </collision>
+  </link>
+  <link name="xarm6_link1">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.00022 0.02951 -0.0124" />
+      <mass value="2.3814" />
+      <inertia ixx="0.0058562" ixy="-1.79e-05" ixz="3.55e-06" iyy="0.0050316" iyz="-0.000888336" izz="0.003536652" />
+    </inertial>
+    <visual>
+      <geometry>
+        <mesh filename="package://xarm_description/meshes/xarm6/visual/link1.stl" />
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0" />
+      <material name="xarm6_White" />
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="package://xarm_description/meshes/xarm6/visual/link1.stl" />
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0" />
+    </collision>
+  </link>
+  <joint name="xarm6_joint1" type="revolute">
+    <parent link="xarm6_link_base" />
+    <child link="xarm6_link1" />
+    <origin rpy="0 0 0" xyz="0 0 0.267" />
+    <axis xyz="0 0 1" />
+    <limit effort="163.2" lower="-6.283185307179586" upper="6.283185307179586" velocity="3.14" />
+    <dynamics damping="0.1" friction="0" />
+  </joint>
+  <link name="xarm6_link2">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.03881 -0.22783 0.03496" />
+      <mass value="2.2675" />
+      <inertia ixx="0.028315776" ixy="0.005" ixz="0.00066546" iyy="0.0058" iyz="-0.0045741" izz="0.0273447" />
+    </inertial>
+    <visual>
+      <geometry>
+        <mesh filename="package://xarm_description/meshes/xarm6/visual/link2.stl" />
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0" />
+      <material name="xarm6_White" />
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="package://xarm_description/meshes/xarm6/visual/link2.stl" />
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0" />
+    </collision>
+  </link>
+  <joint name="xarm6_joint2" type="revolute">
+    <parent link="xarm6_link1" />
+    <child link="xarm6_link2" />
+    <origin rpy="-1.5708 0 0" xyz="0 0 0" />
+    <axis xyz="0 0 1" />
+    <limit effort="163.2" lower="-2.059" upper="2.0944" velocity="3.14" />
+    <dynamics damping="0.1" friction="0" />
+  </joint>
+  <link name="xarm6_link3">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.07041 0.11631 0.0107" />
+      <mass value="1.875" />
+      <inertia ixx="0.0063483" ixy="-0.0015397" ixz="0.00096858" iyy="0.00379758" iyz="0.00186567" izz="0.00595768" />
+    </inertial>
+    <visual>
+      <geometry>
+        <mesh filename="package://xarm_description/meshes/xarm6/visual/link3.stl" />
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0" />
+      <material name="xarm6_White" />
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="package://xarm_description/meshes/xarm6/visual/link3.stl" />
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0" />
+    </collision>
+  </link>
+  <joint name="xarm6_joint3" type="revolute">
+    <parent link="xarm6_link2" />
+    <child link="xarm6_link3" />
+    <origin rpy="0 0 0" xyz="0.0535 -0.2845 0" />
+    <axis xyz="0 0 1" />
+    <limit effort="81.6" lower="-3.927" upper="0.19198" velocity="3.14" />
+    <dynamics damping="0.1" friction="0" />
+  </joint>
+  <link name="xarm6_link4">
+    <inertial>
+      <origin rpy="0 0 0" xyz="-0.00018 0.01798 -0.02291" />
+      <mass value="1.3192" />
+      <inertia ixx="0.004896" ixy="-6.925e-06" ixz="-1.418e-05" iyy="0.00445694" iyz="-0.00023186" izz="0.00134332" />
+    </inertial>
+    <visual>
+      <geometry>
+        <mesh filename="package://xarm_description/meshes/xarm6/visual/link4.stl" />
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0" />
+      <material name="xarm6_White" />
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="package://xarm_description/meshes/xarm6/visual/link4.stl" />
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0" />
+    </collision>
+  </link>
+  <joint name="xarm6_joint4" type="revolute">
+    <parent link="xarm6_link3" />
+    <child link="xarm6_link4" />
+    <origin rpy="-1.5708 0 0" xyz="0.0775 0.3425 0" />
+    <axis xyz="0 0 1" />
+    <limit effort="81.6" lower="-6.283185307179586" upper="6.283185307179586" velocity="3.14" />
+    <dynamics damping="0.01" friction="0" />
+  </joint>
+  <link name="xarm6_link5">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.0651 0.03096 0.00315" />
+      <mass value="1.33854" />
+      <inertia ixx="0.00146378" ixy="-0.000450624" ixz="0.000284306" iyy="0.00184192" iyz="0.000130866" izz="0.002333524" />
+    </inertial>
+    <visual>
+      <geometry>
+        <mesh filename="package://xarm_description/meshes/xarm6/visual/link5.stl" />
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0" />
+      <material name="xarm6_White" />
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="package://xarm_description/meshes/xarm6/visual/link5.stl" />
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0" />
+    </collision>
+  </link>
+  <joint name="xarm6_joint5" type="revolute">
+    <parent link="xarm6_link4" />
+    <child link="xarm6_link5" />
+    <origin rpy="1.5708 0 0" xyz="0 0 0" />
+    <axis xyz="0 0 1" />
+    <limit effort="30.6" lower="-1.69297" upper="3.141592653589793" velocity="3.14" />
+    <dynamics damping="0.01" friction="0" />
+  </joint>
+  <link name="xarm6_link6">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0 -0.00677 -0.01098" />
+      <mass value="0.17" />
+      <inertia ixx="9.3e-05" ixy="-0.0" ixz="-0.0" iyy="5.87e-05" iyz="-3.6e-06" izz="0.000132" />
+    </inertial>
+    <visual>
+      <geometry>
+        <mesh filename="package://xarm_description/meshes/xarm6/visual/link6.stl" />
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0" />
+      <material name="xarm6_Silver" />
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="package://xarm_description/meshes/end_tool/collision/end_tool.stl" />
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0" />
+    </collision>
+  </link>
+  <joint name="xarm6_joint6" type="revolute">
+    <parent link="xarm6_link5" />
+    <child link="xarm6_link6" />
+    <origin rpy="-1.5708 0 0" xyz="0.076 0.097 0" />
+    <axis xyz="0 0 1" />
+    <limit effort="30.6" lower="-6.283185307179586" upper="6.283185307179586" velocity="3.14" />
+    <dynamics damping="0.01" friction="0" />
+  </joint>
+  <link name="xarm6_link_eef" />
+  <joint name="xarm6_joint_eef" type="fixed">
+    <origin rpy="0 0 0" xyz="0 0 0" />
+    <parent link="xarm6_link6" />
+    <child link="xarm6_link_eef" />
+  </joint>
+  <joint name="arm_mount_to_xarm6" type="fixed">
+    <parent link="arm_mount_link" />
+    <child link="xarm6_link_base" />
+    <origin xyz="0 0 -0.0752" rpy="0 0 0" />
+  </joint>
+  <joint name="head_mount" type="fixed">
+    <parent link="xarm6_link_eef" />
+    <child link="head_link" />
+    <origin xyz="0.0117 0.0072 0.0570" rpy="0 0 0" />
+  </joint>
+  <link name="head_link">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0" />
+      <geometry>
+        <mesh filename="package://rangermini_description/meshes/head_link.stl" />
+      </geometry>
+      <material name="color_head_link">
+        <color rgba="0.65 0.65 0.68 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0" />
+      <geometry>
+        <mesh filename="package://rangermini_description/meshes/head_link.stl" />
+      </geometry>
+    </collision>
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.003747 0.004504 0.00211" />
+      <mass value="0.419182" />
+      <inertia ixx="0.000854" ixy="-0.000184" ixz="0.00001" iyy="0.000879" iyz="-0.000026" izz="0.001163" />
+    </inertial>
+  </link>
+  <link name="lidar_link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.01" />
+      <inertia ixx="0.0006" ixy="0" ixz="0" iyy="0.0006" iyz="0" izz="0.0009" />
+    </inertial>
+  </link>
+  <joint name="lidar_mount" type="fixed">
+    <parent link="base_link" />
+    <child link="lidar_link" />
+    <origin xyz="-0.139 -0.125 0.796" rpy="0 0 0" />
+  </joint>
+  <link name="arm_mount_link" />
+  <joint name="arm_mount_frame" type="fixed">
+    <parent link="base_link" />
+    <child link="arm_mount_link" />
+    <origin xyz="0.126 0.0002 0.6622" rpy="0 0 0" />
+  </joint>
+  <ros2_control name="RangerminiGazebo" type="system">
+    <hardware>
+      <plugin>gazebo_ros2_control/GazeboSystem</plugin>
+    </hardware>
+    <joint name="joint_steer_fl">
+      <command_interface name="position" />
+      <state_interface name="position" />
+      <state_interface name="velocity" />
+      <state_interface name="effort" />
+      <param name="pos_kp">300.0</param>
+      <param name="pos_ki">10.0</param>
+      <param name="pos_kd">3.0</param>
+      <param name="pos_max_integral_error">2.0</param>
+      <param name="pos_min_integral_error">-2.0</param>
+    </joint>
+    <joint name="joint_steer_fr">
+      <command_interface name="position" />
+      <state_interface name="position" />
+      <state_interface name="velocity" />
+      <state_interface name="effort" />
+      <param name="pos_kp">300.0</param>
+      <param name="pos_ki">10.0</param>
+      <param name="pos_kd">3.0</param>
+      <param name="pos_max_integral_error">2.0</param>
+      <param name="pos_min_integral_error">-2.0</param>
+    </joint>
+    <joint name="joint_steer_rl">
+      <command_interface name="position" />
+      <state_interface name="position" />
+      <state_interface name="velocity" />
+      <state_interface name="effort" />
+      <param name="pos_kp">300.0</param>
+      <param name="pos_ki">10.0</param>
+      <param name="pos_kd">3.0</param>
+      <param name="pos_max_integral_error">2.0</param>
+      <param name="pos_min_integral_error">-2.0</param>
+    </joint>
+    <joint name="joint_steer_rr">
+      <command_interface name="position" />
+      <state_interface name="position" />
+      <state_interface name="velocity" />
+      <state_interface name="effort" />
+      <param name="pos_kp">300.0</param>
+      <param name="pos_ki">10.0</param>
+      <param name="pos_kd">3.0</param>
+      <param name="pos_max_integral_error">2.0</param>
+      <param name="pos_min_integral_error">-2.0</param>
+    </joint>
+    <joint name="joint_wheel_fl">
+      <command_interface name="velocity" />
+      <state_interface name="position" />
+      <state_interface name="velocity" />
+      <state_interface name="effort" />
+      <param name="vel_kp">12.0</param>
+      <param name="vel_ki">80.0</param>
+      <param name="vel_kd">0.0</param>
+      <param name="vel_max_integral_error">3.0</param>
+      <param name="vel_min_integral_error">-3.0</param>
+      <param name="vel_antiwindup">true</param>
+    </joint>
+    <joint name="joint_wheel_fr">
+      <command_interface name="velocity" />
+      <state_interface name="position" />
+      <state_interface name="velocity" />
+      <state_interface name="effort" />
+      <param name="vel_kp">12.0</param>
+      <param name="vel_ki">80.0</param>
+      <param name="vel_kd">0.0</param>
+      <param name="vel_max_integral_error">3.0</param>
+      <param name="vel_min_integral_error">-3.0</param>
+      <param name="vel_antiwindup">true</param>
+    </joint>
+    <joint name="joint_wheel_rl">
+      <command_interface name="velocity" />
+      <state_interface name="position" />
+      <state_interface name="velocity" />
+      <state_interface name="effort" />
+      <param name="vel_kp">12.0</param>
+      <param name="vel_ki">80.0</param>
+      <param name="vel_kd">0.0</param>
+      <param name="vel_max_integral_error">3.0</param>
+      <param name="vel_min_integral_error">-3.0</param>
+      <param name="vel_antiwindup">true</param>
+    </joint>
+    <joint name="joint_wheel_rr">
+      <command_interface name="velocity" />
+      <state_interface name="position" />
+      <state_interface name="velocity" />
+      <state_interface name="effort" />
+      <param name="vel_kp">12.0</param>
+      <param name="vel_ki">80.0</param>
+      <param name="vel_kd">0.0</param>
+      <param name="vel_max_integral_error">3.0</param>
+      <param name="vel_min_integral_error">-3.0</param>
+      <param name="vel_antiwindup">true</param>
+    </joint>
+    <joint name="xarm6_joint1">
+      <command_interface name="position" />
+      <state_interface name="position" />
+      <state_interface name="velocity" />
+      <state_interface name="effort" />
+      <param name="pos_kp">1500.0</param>
+      <param name="pos_ki">30.0</param>
+      <param name="pos_kd">10.0</param>
+      <param name="pos_max_integral_error">2.0</param>
+      <param name="pos_min_integral_error">-2.0</param>
+    </joint>
+    <joint name="xarm6_joint2">
+      <command_interface name="position" />
+      <state_interface name="position" />
+      <state_interface name="velocity" />
+      <state_interface name="effort" />
+      <param name="pos_kp">2000.0</param>
+      <param name="pos_ki">50.0</param>
+      <param name="pos_kd">15.0</param>
+      <param name="pos_max_integral_error">2.0</param>
+      <param name="pos_min_integral_error">-2.0</param>
+    </joint>
+    <joint name="xarm6_joint3">
+      <command_interface name="position" />
+      <state_interface name="position" />
+      <state_interface name="velocity" />
+      <state_interface name="effort" />
+      <param name="pos_kp">1200.0</param>
+      <param name="pos_ki">40.0</param>
+      <param name="pos_kd">6.0</param>
+      <param name="pos_max_integral_error">2.0</param>
+      <param name="pos_min_integral_error">-2.0</param>
+    </joint>
+    <joint name="xarm6_joint4">
+      <command_interface name="position" />
+      <state_interface name="position" />
+      <state_interface name="velocity" />
+      <state_interface name="effort" />
+      <param name="pos_kp">600.0</param>
+      <param name="pos_ki">20.0</param>
+      <param name="pos_kd">0.5</param>
+      <param name="pos_max_integral_error">2.0</param>
+      <param name="pos_min_integral_error">-2.0</param>
+    </joint>
+    <joint name="xarm6_joint5">
+      <command_interface name="position" />
+      <state_interface name="position" />
+      <state_interface name="velocity" />
+      <state_interface name="effort" />
+      <param name="pos_kp">400.0</param>
+      <param name="pos_ki">20.0</param>
+      <param name="pos_kd">0.3</param>
+      <param name="pos_max_integral_error">2.0</param>
+      <param name="pos_min_integral_error">-2.0</param>
+    </joint>
+    <joint name="xarm6_joint6">
+      <command_interface name="position" />
+      <state_interface name="position" />
+      <state_interface name="velocity" />
+      <state_interface name="effort" />
+      <param name="pos_kp">100.0</param>
+      <param name="pos_ki">10.0</param>
+      <param name="pos_kd">0.04</param>
+      <param name="pos_max_integral_error">2.0</param>
+      <param name="pos_min_integral_error">-2.0</param>
+    </joint>
+  </ros2_control>
+  <gazebo>
+    <selfCollide>false</selfCollide>
+  </gazebo>
+  <gazebo>
+    <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">
+      <parameters>$(find mm_bringup)/config/ros2_control.yaml</parameters>
+      <robot_param>robot_description</robot_param>
+      <robot_param_node>robot_state_publisher</robot_param_node>
+      <control_period>0.002</control_period>
+    </plugin>
+    <plugin filename="libgazebo_ros_p3d.so" name="p3d_base_odom">
+      <ros>
+        <namespace>/mm/car</namespace>
+        <remapping>odom:=/ground_truth/odom</remapping>
+      </ros>
+      <body_name>base_link</body_name>
+      <frame_name>world</frame_name>
+      <update_rate>100</update_rate>
+      <gaussian_noise>0.0</gaussian_noise>
+      <publish_tf>false</publish_tf>
+    </plugin>
+  </gazebo>
+  <gazebo reference="head_camera_link">
+    <sensor type="camera" name="head_camera">
+      <update_rate>15</update_rate>
+      <camera>
+        <horizontal_fov>1.047</horizontal_fov>
+        <image>
+          <width>640</width>
+          <height>480</height>
+          <format>R8G8B8</format>
+        </image>
+        <clip>
+          <near>0.05</near>
+          <far>30</far>
+        </clip>
+      </camera>
+      <plugin filename="libgazebo_ros_camera.so" name="head_camera_plugin">
+        <ros>
+          <namespace>/camera</namespace>
+          <remapping>image_raw:=head/image_raw</remapping>
+          <remapping>camera_info:=head/camera_info</remapping>
+        </ros>
+        <camera_name>head</camera_name>
+        <frame_name>head_camera_optical_frame</frame_name>
+      </plugin>
+    </sensor>
+  </gazebo>
+  <gazebo reference="lidar_link">
+    <sensor type="gpu_ray" name="lidar3d">
+      <pose>0 0 0 0 0 0</pose>
+      <always_on>1</always_on>
+      <visualize>false</visualize>
+      <update_rate>10</update_rate>
+      <ray>
+        <scan>
+          <horizontal>
+            <samples>900</samples>
+            <resolution>1</resolution>
+            <min_angle>-3.14159</min_angle>
+            <max_angle>3.14159</max_angle>
+          </horizontal>
+          <vertical>
+            <samples>16</samples>
+            <resolution>1</resolution>
+            <min_angle>-0.2617993877991494</min_angle>
+            <max_angle>0.2617993877991494</max_angle>
+          </vertical>
+        </scan>
+        <range>
+          <min>.2</min>
+          <max>30.0</max>
+          <resolution>0.01</resolution>
+        </range>
+      </ray>
+      <plugin filename="libgazebo_ros_ray_sensor.so" name="lidar3d_plugin">
+        <ros>
+          <namespace>/lidar</namespace>
+          <remapping>~/out:=/rslidar_points</remapping>
+        </ros>
+        <output_type>sensor_msgs/PointCloud2</output_type>
+        <frame_name>lidar_link</frame_name>
+      </plugin>
+    </sensor>
+  </gazebo>
+  <link name="front_camera_link" />
+  <joint name="front_camera_link_joint" type="fixed">
+    <parent link="base_link" />
+    <child link="front_camera_link" />
+    <origin xyz="-0.324 0.048 0.542" rpy="0.0 0.0 3.141592653589793" />
+  </joint>
+  <link name="imu_link" />
+  <joint name="imu_link_joint" type="fixed">
+    <parent link="base_link" />
+    <child link="imu_link" />
+    <origin xyz="0.0 0.0 0.35" rpy="0.0 0.0 0.0" />
+  </joint>
+  <link name="camera_depth_optical_frame" />
+  <joint name="camera_depth_optical_frame_joint" type="fixed">
+    <parent link="front_camera_link" />
+    <child link="camera_depth_optical_frame" />
+    <origin xyz="0 0 0" rpy="-1.5707963267948966 0 -1.5707963267948966" />
+  </joint>
+  <link name="camera_color_optical_frame" />
+  <joint name="camera_color_optical_frame_joint" type="fixed">
+    <parent link="front_camera_link" />
+    <child link="camera_color_optical_frame" />
+    <origin xyz="0 0 0" rpy="-1.5707963267948966 0 -1.5707963267948966" />
+  </joint>
+  <link name="camera_imu_link" />
+  <joint name="camera_imu_link_joint" type="fixed">
+    <parent link="front_camera_link" />
+    <child link="camera_imu_link" />
+    <origin xyz="0 0 0" rpy="0 0 0" />
+  </joint>
+  <!-- CAD lens center on the face with the square panel and circular lens. -->
+  <link name="head_camera_link" />
+  <joint name="head_camera_mount" type="fixed">
+    <parent link="head_link" />
+    <child link="head_camera_link" />
+    <origin xyz="-0.005980921 0.068711959 0.012817872" rpy="0.132419768 -0.056003871 1.252244922" />
+  </joint>
+  <link name="head_camera_optical_frame" />
+  <joint name="head_camera_optical_frame_joint" type="fixed">
+    <parent link="head_camera_link" />
+    <child link="head_camera_optical_frame" />
+    <origin xyz="0 0 0" rpy="-1.5707963267948966 0 -1.5707963267948966" />
+  </joint>
+  <gazebo reference="front_camera_link">
+    <sensor type="depth" name="d435i_rgbd">
+      <always_on>true</always_on>
+      <update_rate>10</update_rate>
+      <camera>
+        <horizontal_fov>1.5184364492350666</horizontal_fov>
+        <image>
+          <width>424</width>
+          <height>240</height>
+          <format>R8G8B8</format>
+        </image>
+        <clip>
+          <near>0.15</near>
+          <far>8.0</far>
+        </clip>
+      </camera>
+      <plugin name="d435i_rgbd_plugin" filename="libgazebo_ros_camera.so">
+        <ros>
+          <namespace>/camera</namespace>
+          <remapping>d435i/image_raw:=color/image_raw</remapping>
+          <remapping>d435i/camera_info:=color/camera_info</remapping>
+          <remapping>d435i/depth/image_raw:=depth/image_rect_raw</remapping>
+          <remapping>d435i/depth/camera_info:=depth/camera_info</remapping>
+          <remapping>d435i/points:=depth/color/points</remapping>
+        </ros>
+        <camera_name>d435i</camera_name>
+        <frame_name>camera_depth_optical_frame</frame_name>
+        <min_depth>0.15</min_depth>
+        <max_depth>8.0</max_depth>
+      </plugin>
+    </sensor>
+  </gazebo>
+  <gazebo reference="imu_link">
+    <sensor type="imu" name="hi226">
+      <always_on>true</always_on>
+      <update_rate>100</update_rate>
+      <imu />
+      <plugin name="hi226_plugin" filename="libgazebo_ros_imu_sensor.so">
+        <ros>
+          <remapping>~/out:=/imu/data_raw</remapping>
+        </ros>
+        <frame_name>imu_link</frame_name>
+        <initial_orientation_as_reference>false</initial_orientation_as_reference>
+      </plugin>
+    </sensor>
+  </gazebo>
+  <gazebo reference="camera_imu_link">
+    <sensor type="imu" name="d435i_imu">
+      <always_on>true</always_on>
+      <update_rate>100</update_rate>
+      <imu />
+      <plugin name="d435i_imu_plugin" filename="libgazebo_ros_imu_sensor.so">
+        <ros>
+          <remapping>~/out:=/camera/imu</remapping>
+        </ros>
+        <frame_name>camera_imu_link</frame_name>
+        <initial_orientation_as_reference>false</initial_orientation_as_reference>
+      </plugin>
+    </sensor>
+  </gazebo>
+</robot>

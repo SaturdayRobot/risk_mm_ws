@@ -1,0 +1,20 @@
+model_id: rangermini_xarm6
+arm_joint_names:
+- xarm6_joint1
+- xarm6_joint2
+- xarm6_joint3
+- xarm6_joint4
+- xarm6_joint5
+- xarm6_joint6
+stow:
+- 0.0
+- -0.76
+- -1.62
+- -0.06
+- 1.11
+- 0.02
+stow_tolerance_rad: 0.03
+stow_source: current planning q_ready; full-scene motion validation required
+# Visualization / simulator initialization only; never an ARM_FIRST target.
+# Lens +X faces chassis front (-base X); camera +Z points up.
+display_arm: [-0.00304854, -1.65888096, -1.76230338, -0.54100105, 0.25919855, -0.73050608]

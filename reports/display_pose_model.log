@@ -1,0 +1,10 @@
+[37;1m2026-11-23 17:36:11.341 [31;1m[[37;1mTRANSPORT[31;1m Error] [37mAll whitelist interfaces were filtered out[34;1m -> Function [36mUDPv4Transport[m
+[37;1m2026-11-23 17:36:11.341 [31;1m[[37;1mTRANSPORT_UDP[31;1m Error] [37mError creating socket: Operation not permitted[34;1m -> Function [36minit[m
+[37;1m2026-11-23 17:36:11.341 [31;1m[[37;1mRTPS_PARTICIPANT[31;1m Error] [37mUser transport failed to register.[34;1m -> Function [36mRTPSParticipantImpl[m
+collision_candidate_recall=pass fk_error=4.44089e-16 gradient_error=9.1104e-11 body_collision=1 self_collision=0
+getifaddrs: Operation not permitted
+getifaddrs: Operation not permitted
+getifaddrs: Operation not permitted
+getifaddrs: Operation not permitted
+[INFO] [1795426571.359315422] [mm_config]: [MMConfig] URDF chain loaded: 6 joints, base collision samples=1599
+Model validation failed

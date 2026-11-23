@@ -1,0 +1,46 @@
+<robot name="rangermini_xarm6">
+  <group name="arm">
+    <chain base_link="xarm6_link_base" tip_link="xarm6_link_eef" />
+  </group>
+  <group_state name="stow" group="arm">
+    <joint name="xarm6_joint1" value="0.0" />
+    <joint name="xarm6_joint2" value="-0.76" />
+    <joint name="xarm6_joint3" value="-1.62" />
+    <joint name="xarm6_joint4" value="-0.06" />
+    <joint name="xarm6_joint5" value="1.11" />
+    <joint name="xarm6_joint6" value="0.02" />
+  </group_state>
+  <disable_collisions link1="base_link" link2="steering_fl" reason="Adjacent" />
+  <disable_collisions link1="steering_fl" link2="wheel_fl" reason="Adjacent" />
+  <disable_collisions link1="base_link" link2="steering_fr" reason="Adjacent" />
+  <disable_collisions link1="steering_fr" link2="wheel_fr" reason="Adjacent" />
+  <disable_collisions link1="base_link" link2="steering_rl" reason="Adjacent" />
+  <disable_collisions link1="steering_rl" link2="wheel_rl" reason="Adjacent" />
+  <disable_collisions link1="base_link" link2="steering_rr" reason="Adjacent" />
+  <disable_collisions link1="steering_rr" link2="wheel_rr" reason="Adjacent" />
+  <disable_collisions link1="xarm6_link_base" link2="xarm6_link1" reason="Adjacent" />
+  <disable_collisions link1="xarm6_link1" link2="xarm6_link2" reason="Adjacent" />
+  <disable_collisions link1="xarm6_link2" link2="xarm6_link3" reason="Adjacent" />
+  <disable_collisions link1="xarm6_link3" link2="xarm6_link4" reason="Adjacent" />
+  <disable_collisions link1="xarm6_link4" link2="xarm6_link5" reason="Adjacent" />
+  <disable_collisions link1="xarm6_link5" link2="xarm6_link6" reason="Adjacent" />
+  <disable_collisions link1="xarm6_link6" link2="xarm6_link_eef" reason="Adjacent" />
+  <disable_collisions link1="arm_mount_link" link2="xarm6_link_base" reason="Adjacent" />
+  <disable_collisions link1="xarm6_link_eef" link2="head_link" reason="Adjacent" />
+  <disable_collisions link1="base_link" link2="lidar_link" reason="Adjacent" />
+  <disable_collisions link1="base_link" link2="arm_mount_link" reason="Adjacent" />
+  <disable_collisions link1="base_link" link2="front_camera_link" reason="Adjacent" />
+  <disable_collisions link1="base_link" link2="imu_link" reason="Adjacent" />
+  <disable_collisions link1="front_camera_link" link2="camera_depth_optical_frame" reason="Adjacent" />
+  <disable_collisions link1="front_camera_link" link2="camera_color_optical_frame" reason="Adjacent" />
+  <disable_collisions link1="front_camera_link" link2="camera_imu_link" reason="Adjacent" />
+  <disable_collisions link1="head_link" link2="head_camera_link" reason="Adjacent" />
+  <disable_collisions link1="head_camera_link" link2="head_camera_optical_frame" reason="Adjacent" />
+  <disable_collisions link1="xarm6_link1" link2="xarm6_link3" reason="Default" />
+  <disable_collisions link1="xarm6_link2" link2="xarm6_link4" reason="Default" />
+  <disable_collisions link1="xarm6_link3" link2="xarm6_link5" reason="Default" />
+  <disable_collisions link1="xarm6_link3" link2="xarm6_link6" reason="Default" />
+  <disable_collisions link1="xarm6_link4" link2="xarm6_link6" reason="Default" />
+  <disable_collisions link1="xarm6_link_base" link2="xarm6_link2" reason="Default" />
+  <disable_collisions link1="xarm6_link6" link2="head_link" reason="FixedAttachment" />
+</robot>
