@@ -28,6 +28,7 @@ class ControlPanel final : public QWidget {
   using Twist=geometry_msgs::msg::TwistStamped;
   using Clock=std::chrono::steady_clock;
   rclcpp::Node::SharedPtr node_;
+  rclcpp::executors::SingleThreadedExecutor executor_;
   rclcpp::Publisher<JointState>::SharedPtr arm_pub_;
   rclcpp::Publisher<Twist>::SharedPtr base_pub_;
   std::vector<rclcpp::SubscriptionBase::SharedPtr> subscriptions_;
@@ -48,7 +49,7 @@ class ControlPanel final : public QWidget {
   void sync() {enabled_->setChecked(false);for(size_t i=0;i<6;++i)boxes_[i]->setValue(values_[i]);}
   void tick() {
     if(!rclcpp::ok()){close();return;}
-    rclcpp::spin_some(node_,std::chrono::milliseconds(8));
+    executor_.spin_some(std::chrono::milliseconds(8));
     const auto now=Clock::now();
     if(!initialized_ || !ready_ || now-feedback_>std::chrono::seconds(1) || now-status_time_>std::chrono::seconds(1)) {
       velocity_.fill(0.);enabled_->setChecked(false);status_->setText("HOLD | waiting for fresh simulator feedback");
@@ -68,6 +69,7 @@ protected:
   void closeEvent(QCloseEvent *event) override {stop();timer_.stop();QWidget::closeEvent(event);}
 public:
   explicit ControlPanel(rclcpp::Node::SharedPtr node):node_(std::move(node)),enabled_(nullptr) {
+    executor_.add_node(node_);
     setWindowTitle("Rangermini + xArm6 | C++ Gazebo control");
     arm_pub_=node_->create_publisher<JointState>("/simulation/arm_command",10);
     base_pub_=node_->create_publisher<Twist>("/simulation/cmd_vel",10);
