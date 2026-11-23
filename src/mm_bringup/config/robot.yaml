@@ -17,4 +17,4 @@ stow_tolerance_rad: 0.03
 stow_source: current planning q_ready; full-scene motion validation required
 # Visualization / simulator initialization only; never an ARM_FIRST target.
 # Lens +X faces chassis front (-base X); camera +Z points up.
-display_arm: [-0.00304854, -1.65888096, -1.76230338, -0.54100105, 0.25919855, -0.73050608]
+display_arm: [-0.38912379, -1.02165088, -1.64735153, -2.83482129, 0.49408283, 2.00265523]

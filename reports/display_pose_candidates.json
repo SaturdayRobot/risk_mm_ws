@@ -1,74 +1,56 @@
 [
   {
     "target": [
-      -0.48,
+      0.1,
       0,
-      1.35
+      1.45
     ],
     "q": [
-      3.066864424832572,
-      0.1836113593125527,
-      -1.7353583981529528,
-      3.005492871831844,
-      1.5436772073673406,
-      -1.1806736035970378
+      0.5539778936834765,
+      -1.151637709305624,
+      -1.0455499567614037,
+      -3.046896249743144,
+      1.0639386595468558,
+      1.280711848085
     ],
     "returncode": 1,
-    "stdout": "\u001b[37;1m2026-11-23 17:36:54.720 \u001b[31;1m[\u001b[37;1mTRANSPORT\u001b[31;1m Error] \u001b[37mAll whitelist interfaces were filtered out\u001b[34;1m -> Function \u001b[36mUDPv4Transport\u001b[m\n\u001b[37;1m2026-11-23 17:36:54.721 \u001b[31;1m[\u001b[37;1mTRANSPORT_UDP\u001b[31;1m Error] \u001b[37mError creating socket: Operation not permitted\u001b[34;1m -> Function \u001b[36minit\u001b[m\n\u001b[37;1m2026-11-23 17:36:54.721 \u001b[31;1m[\u001b[37;1mRTPS_PARTICIPANT\u001b[31;1m Error] \u001b[37mUser transport failed to register.\u001b[34;1m -> Function \u001b[36mRTPSParticipantImpl\u001b[m\ncollision_candidate_recall=pass fk_error=3.33067e-16 gradient_error=1.40721e-10 body_collision=1 self_collision=0\n",
-    "stderr": "getifaddrs: Operation not permitted\ngetifaddrs: Operation not permitted\ngetifaddrs: Operation not permitted\ngetifaddrs: Operation not permitted\n[INFO] [1795426614.731149657] [mm_config]: [MMConfig] URDF chain loaded: 6 joints, base collision samples=1599\nModel validation failed\n"
+    "stdout": "\u001b[37;1m2026-11-23 17:37:51.352 \u001b[31;1m[\u001b[37;1mTRANSPORT\u001b[31;1m Error] \u001b[37mAll whitelist interfaces were filtered out\u001b[34;1m -> Function \u001b[36mUDPv4Transport\u001b[m\n\u001b[37;1m2026-11-23 17:37:51.352 \u001b[31;1m[\u001b[37;1mTRANSPORT_UDP\u001b[31;1m Error] \u001b[37mError creating socket: Operation not permitted\u001b[34;1m -> Function \u001b[36minit\u001b[m\n\u001b[37;1m2026-11-23 17:37:51.352 \u001b[31;1m[\u001b[37;1mRTPS_PARTICIPANT\u001b[31;1m Error] \u001b[37mUser transport failed to register.\u001b[34;1m -> Function \u001b[36mRTPSParticipantImpl\u001b[m\ncollision_candidate_recall=pass fk_error=2.22045e-16 gradient_error=1.39957e-10 body_collision=1 self_collision=0\n",
+    "stderr": "getifaddrs: Operation not permitted\ngetifaddrs: Operation not permitted\ngetifaddrs: Operation not permitted\ngetifaddrs: Operation not permitted\n[INFO] [1795426671.362583698] [mm_config]: [MMConfig] URDF chain loaded: 6 joints, base collision samples=1599\nModel validation failed\n"
   },
   {
     "target": [
-      -0.4,
+      0.25,
       0,
-      1.4
+      1.45
     ],
     "q": [
-      3.0555870423247584,
-      -0.07153059887228645,
-      -1.5746244969548802,
-      3.0040472529254907,
-      1.4516862509754893,
-      -1.1565692228004154
+      -2.88427036818686,
+      -1.3763579037286924,
+      -1.1545483252945064,
+      -0.2245979603320312,
+      -0.533391640891191,
+      1.8175260598205953
     ],
     "returncode": 1,
-    "stdout": "\u001b[37;1m2026-11-23 17:36:55.038 \u001b[31;1m[\u001b[37;1mTRANSPORT\u001b[31;1m Error] \u001b[37mAll whitelist interfaces were filtered out\u001b[34;1m -> Function \u001b[36mUDPv4Transport\u001b[m\n\u001b[37;1m2026-11-23 17:36:55.038 \u001b[31;1m[\u001b[37;1mTRANSPORT_UDP\u001b[31;1m Error] \u001b[37mError creating socket: Operation not permitted\u001b[34;1m -> Function \u001b[36minit\u001b[m\n\u001b[37;1m2026-11-23 17:36:55.038 \u001b[31;1m[\u001b[37;1mRTPS_PARTICIPANT\u001b[31;1m Error] \u001b[37mUser transport failed to register.\u001b[34;1m -> Function \u001b[36mRTPSParticipantImpl\u001b[m\ncollision_candidate_recall=pass fk_error=1.94289e-16 gradient_error=1.35515e-10 body_collision=1 self_collision=0\n",
-    "stderr": "getifaddrs: Operation not permitted\ngetifaddrs: Operation not permitted\ngetifaddrs: Operation not permitted\ngetifaddrs: Operation not permitted\n[INFO] [1795426615.049066104] [mm_config]: [MMConfig] URDF chain loaded: 6 joints, base collision samples=1599\nModel validation failed\n"
+    "stdout": "\u001b[37;1m2026-11-23 17:37:51.683 \u001b[31;1m[\u001b[37;1mTRANSPORT\u001b[31;1m Error] \u001b[37mAll whitelist interfaces were filtered out\u001b[34;1m -> Function \u001b[36mUDPv4Transport\u001b[m\n\u001b[37;1m2026-11-23 17:37:51.683 \u001b[31;1m[\u001b[37;1mTRANSPORT_UDP\u001b[31;1m Error] \u001b[37mError creating socket: Operation not permitted\u001b[34;1m -> Function \u001b[36minit\u001b[m\n\u001b[37;1m2026-11-23 17:37:51.683 \u001b[31;1m[\u001b[37;1mRTPS_PARTICIPANT\u001b[31;1m Error] \u001b[37mUser transport failed to register.\u001b[34;1m -> Function \u001b[36mRTPSParticipantImpl\u001b[m\ncollision_candidate_recall=pass fk_error=2.22045e-16 gradient_error=1.09796e-10 body_collision=1 self_collision=0\n",
+    "stderr": "getifaddrs: Operation not permitted\ngetifaddrs: Operation not permitted\ngetifaddrs: Operation not permitted\ngetifaddrs: Operation not permitted\n[INFO] [1795426671.694738425] [mm_config]: [MMConfig] URDF chain loaded: 6 joints, base collision samples=1599\nModel validation failed\n"
   },
   {
     "target": [
-      -0.4,
       0,
-      1.2
+      0,
+      1.55
     ],
     "q": [
-      3.041422017133766,
-      -0.07779708256158178,
-      -0.9923134088470026,
-      2.988897129342771,
-      2.023931724065512,
-      -1.2260025312556073
+      -0.38912379012075937,
+      -1.0216508799568174,
+      -1.647351532929185,
+      -2.8348212904450025,
+      0.49408283476725695,
+      2.0026552308919845
     ],
-    "returncode": 1,
-    "stdout": "\u001b[37;1m2026-11-23 17:36:55.354 \u001b[31;1m[\u001b[37;1mTRANSPORT\u001b[31;1m Error] \u001b[37mAll whitelist interfaces were filtered out\u001b[34;1m -> Function \u001b[36mUDPv4Transport\u001b[m\n\u001b[37;1m2026-11-23 17:36:55.354 \u001b[31;1m[\u001b[37;1mTRANSPORT_UDP\u001b[31;1m Error] \u001b[37mError creating socket: Operation not permitted\u001b[34;1m -> Function \u001b[36minit\u001b[m\n\u001b[37;1m2026-11-23 17:36:55.354 \u001b[31;1m[\u001b[37;1mRTPS_PARTICIPANT\u001b[31;1m Error] \u001b[37mUser transport failed to register.\u001b[34;1m -> Function \u001b[36mRTPSParticipantImpl\u001b[m\ncollision_candidate_recall=pass fk_error=2.22045e-16 gradient_error=1.49247e-10 body_collision=1 self_collision=0\n",
-    "stderr": "getifaddrs: Operation not permitted\ngetifaddrs: Operation not permitted\ngetifaddrs: Operation not permitted\ngetifaddrs: Operation not permitted\n[INFO] [1795426615.364145366] [mm_config]: [MMConfig] URDF chain loaded: 6 joints, base collision samples=1599\nModel validation failed\n"
-  },
-  {
-    "target": [
-      -0.35,
-      0,
-      1.5
-    ],
-    "q": [
-      3.0536677000683783,
-      -0.07472294286697244,
-      -1.888004884311346,
-      2.9910011516167554,
-      1.138597506590691,
-      -1.10760726102397
-    ],
-    "returncode": 1,
-    "stdout": "\u001b[37;1m2026-11-23 17:36:55.669 \u001b[31;1m[\u001b[37;1mTRANSPORT\u001b[31;1m Error] \u001b[37mAll whitelist interfaces were filtered out\u001b[34;1m -> Function \u001b[36mUDPv4Transport\u001b[m\n\u001b[37;1m2026-11-23 17:36:55.669 \u001b[31;1m[\u001b[37;1mTRANSPORT_UDP\u001b[31;1m Error] \u001b[37mError creating socket: Operation not permitted\u001b[34;1m -> Function \u001b[36minit\u001b[m\n\u001b[37;1m2026-11-23 17:36:55.669 \u001b[31;1m[\u001b[37;1mRTPS_PARTICIPANT\u001b[31;1m Error] \u001b[37mUser transport failed to register.\u001b[34;1m -> Function \u001b[36mRTPSParticipantImpl\u001b[m\ncollision_candidate_recall=pass fk_error=1.11022e-16 gradient_error=1.37114e-10 body_collision=1 self_collision=0\n",
-    "stderr": "getifaddrs: Operation not permitted\ngetifaddrs: Operation not permitted\ngetifaddrs: Operation not permitted\ngetifaddrs: Operation not permitted\n[INFO] [1795426615.680143233] [mm_config]: [MMConfig] URDF chain loaded: 6 joints, base collision samples=1599\nModel validation failed\n"
+    "returncode": 0,
+    "stdout": "\u001b[37;1m2026-11-23 17:37:52.031 \u001b[31;1m[\u001b[37;1mTRANSPORT\u001b[31;1m Error] \u001b[37mAll whitelist interfaces were filtered out\u001b[34;1m -> Function \u001b[36mUDPv4Transport\u001b[m\n\u001b[37;1m2026-11-23 17:37:52.031 \u001b[31;1m[\u001b[37;1mTRANSPORT_UDP\u001b[31;1m Error] \u001b[37mError creating socket: Operation not permitted\u001b[34;1m -> Function \u001b[36minit\u001b[m\n\u001b[37;1m2026-11-23 17:37:52.031 \u001b[31;1m[\u001b[37;1mRTPS_PARTICIPANT\u001b[31;1m Error] \u001b[37mUser transport failed to register.\u001b[34;1m -> Function \u001b[36mRTPSParticipantImpl\u001b[m\ncollision_candidate_recall=pass fk_error=7.77156e-16 gradient_error=1.36085e-10 body_collision=0 self_collision=0\n",
+    "stderr": "getifaddrs: Operation not permitted\ngetifaddrs: Operation not permitted\ngetifaddrs: Operation not permitted\ngetifaddrs: Operation not permitted\n[INFO] [1795426672.043688583] [mm_config]: [MMConfig] URDF chain loaded: 6 joints, base collision samples=1599\n"
   }
 ]
