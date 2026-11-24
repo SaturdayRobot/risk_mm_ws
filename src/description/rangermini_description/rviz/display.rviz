@@ -28,6 +28,22 @@ Visualization Manager:
       Reference Frame: head_camera_optical_frame
       Length: 0.18
       Radius: 0.004
+    - Class: rviz_default_plugins/Path
+      Name: Coupled candidate
+      Enabled: true
+      Topic:
+        Value: /coupled/candidate_path
+        Durability Policy: Transient Local
+      Color: 255; 160; 20
+      Line Width: 0.01
+    - Class: rviz_default_plugins/Path
+      Name: Validated coupled path
+      Enabled: true
+      Topic:
+        Value: /coupled/validated_path
+        Durability Policy: Transient Local
+      Color: 30; 230; 80
+      Line Width: 0.015
   Global Options:
     Background Color: 48; 48; 48
     Fixed Frame: base_link

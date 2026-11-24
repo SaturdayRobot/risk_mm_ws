@@ -135,6 +135,22 @@ std::vector<int> MMConfig::armNeighbors(int link,const Eigen::Vector3d &point,do
   return indices;
 }
 
+std::vector<int> MMConfig::collisionCostNeighbors(int link,const Eigen::Vector3d &point,double radius) const {
+  const auto &index=link<0?body_index_:arm_indices_.at(link);
+  if(index->outside(point,radius))return {};
+  auto result=index->unsortedNeighbors(point,radius+1e-5);
+  // Preserve the floating-point accumulation order of the original full loop.
+  std::sort(result.begin(),result.end());
+  return result;
+}
+
+bool MMConfig::collisionCostBoxClear(int link,const Eigen::Matrix4d &transform,double threshold,double floor) const {
+  if(!grid_map_)return false;
+  const auto &index=link<0?body_index_:arm_indices_.at(link);
+  const auto box=transformedBox(index->minimum,index->maximum,transform);
+  return box.minimum.z()>floor+1e-9 && grid_map_->interpolationBoxClear(box.minimum,box.maximum,threshold);
+}
+
 
 void MMConfig::setParam(rclcpp::Node::SharedPtr &nh,
                         const std::shared_ptr<GridMap> &env) {
@@ -177,7 +193,17 @@ void MMConfig::setParam(rclcpp::Node::SharedPtr &nh) {
   auto axes = required("mm.arm_joint_axes", 18);
   auto lower = required("mm.manipulator_min_pos", 6);
   auto upper = required("mm.manipulator_max_pos", 6);
+  // The retained CAD base_link need not point along the operator's chassis
+  // front. Re-express root geometry in the planning frame without moving any
+  // physical mesh or changing the public odometry/URDF convention.
+  double planning_yaw=0.;
+  nh->get_parameter_or("mm.planning_frame_yaw_in_base_rad",planning_yaw,0.);
+  if(!std::isfinite(planning_yaw) || std::abs(std::sin(planning_yaw))>1e-8)
+    throw std::runtime_error("planning frame must preserve the longitudinal base axis");
+  Eigen::Matrix4d planning_from_base=Eigen::Matrix4d::Identity();
+  planning_from_base.topLeftCorner<3,3>()=Eigen::AngleAxisd(-planning_yaw,Eigen::Vector3d::UnitZ()).toRotationMatrix();
   for (int r=0; r<4; ++r) for (int c=0; c<4; ++c) T_q_0_(r,c)=mount[4*r+c];
+  T_q_0_=planning_from_base*T_q_0_;
   manipulator_min_pos_ = Eigen::Map<Eigen::VectorXd>(lower.data(), 6);
   manipulator_max_pos_ = Eigen::Map<Eigen::VectorXd>(upper.data(), 6);
   manipulator_config_ = Eigen::VectorXd::Zero(6);
@@ -227,7 +253,8 @@ void MMConfig::setParam(rclcpp::Node::SharedPtr &nh) {
     throw std::runtime_error("Missing base collision samples");
   base_collision_points_.clear();
   for (size_t i=0; i<base_points.size(); i+=3)
-    base_collision_points_.emplace_back(base_points[i],base_points[i+1],base_points[i+2]);
+    base_collision_points_.push_back(planning_from_base.topLeftCorner<3,3>()*
+      Eigen::Vector3d(base_points[i],base_points[i+1],base_points[i+2]));
   for(const auto &point:base_collision_points_)
     body_index_->points->push_back(pcl::PointXYZ(point.x(),point.y(),point.z()));
   body_index_->tree.setInputCloud(body_index_->points);
@@ -368,23 +395,15 @@ Eigen::Vector2d MMConfig::regularizeBaseVelocity(const Eigen::Vector2d &vel_car,
 Eigen::Matrix2d MMConfig::caldRldv(const Eigen::Vector2d &vel_car,
                                    const Eigen::Vector2d &delta_p,
                                    int traj_dir) {
-  const Eigen::Vector2d vel_reg = regularizeBaseVelocity(vel_car, traj_dir);
-  const double v_norm = std::max(vel_reg.norm(), std::max(1.0e-3, mobile_base_non_singul_vel_));
-  const double v_sq = std::max(vel_reg.squaredNorm(), v_norm * v_norm);
-  Eigen::Matrix2d dRldv;
-  dRldv << delta_p, B_h_ * delta_p;
-  dRldv = dRldv * traj_dir / v_norm -
-          calR(vel_reg, traj_dir) * delta_p * vel_reg.transpose() / v_sq;
-  return dRldv;
+  return (calR(vel_car,traj_dir)*B_h_*delta_p)*caldYawdV(vel_car).transpose();
 }
 
 Eigen::Vector2d MMConfig::caldYawdV(const Eigen::Vector2d &vel_car) {
-  const Eigen::Vector2d vel_reg = regularizeBaseVelocity(vel_car, 1);
-  const double v_sq = std::max(vel_reg.squaredNorm(),
-                               std::pow(std::max(1.0e-3, mobile_base_non_singul_vel_), 2));
-  Eigen::Vector2d dYawdV;
-  dYawdV = B_h_ * vel_reg / v_sq;
-  return dYawdV;
+  // calYaw preserves atan2 for every nonzero direction above its existing
+  // 1e-6 constant-heading branch. Radial regularization must not scale down
+  // this angular derivative at low speed.
+  if(vel_car.squaredNorm()<1e-12)return Eigen::Vector2d::Zero();
+  return B_h_*vel_car/vel_car.squaredNorm();
 }
 
 void MMConfig::getCarPts(const Eigen::Vector3d &car_state,

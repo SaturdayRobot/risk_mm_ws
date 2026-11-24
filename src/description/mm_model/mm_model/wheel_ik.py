@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """4WIS-4WID 底盘运动学 (规划器/控制器共用参考实现).
 
-几何与限幅全部取自 `matlab_modeling`:
-  wheel_params.csv     : 轮心 x/y、轮半径、转向极限
-  chassis_params.csv   : 轴距 0.494、轮距 0.3365、轮半径 0.1、
+几何来自当前 URDF / Gazebo 轮胎接触代理，速度限幅保留当前设计配置：
+  base_link +X 为激光雷达侧正前方，+Y 为左，+Z 为上。
+  fl/fr/rl/rr 是保留的 CAD 关节标识，不按字面重新推断物理方位。
+  名义轴距 0.494、接触轮距约 0.3732、轮半径 0.1、
                          转向 ±90 deg、轮缘速度 2 m/s、转向速率 90 deg/s、
                          底盘设计速度 1.2 m/s、偏航率 1.2 rad/s
 对应学位论文第 2 章 "四轮独立转向驱动建模":
@@ -21,10 +22,10 @@ from typing import Dict, List, Optional, Sequence, Tuple
 
 # 轮心相对 base_link (m), 顺序固定 fl, fr, rl, rr
 WHEEL_POSITIONS: Dict[str, Tuple[float, float]] = {
-    "fl": (0.246999, 0.167833),
-    "fr": (0.246999, -0.167452),
-    "rl": (-0.247004, 0.167405),
-    "rr": (-0.247001, -0.168634),
+    "fl": (-0.246999, -0.185333),
+    "fr": (-0.246999, 0.184952),
+    "rl": (0.247004, -0.187405),
+    "rr": (0.247001, 0.188634),
 }
 WHEEL_ORDER: List[str] = ["fl", "fr", "rl", "rr"]
 
@@ -38,8 +39,8 @@ class ChassisLimits:
     base_speed_max: float = 1.2               # m/s
     base_yaw_max: float = 1.2                 # rad/s
     wheelbase: float = 0.494003
-    track: float = 0.336467
-    origin_radius: float = math.hypot(0.247, 0.1686)   # 轮心到原点最大距离
+    track: float = 0.373162
+    origin_radius: float = max(math.hypot(*p) for p in WHEEL_POSITIONS.values())
 
 
 @dataclass

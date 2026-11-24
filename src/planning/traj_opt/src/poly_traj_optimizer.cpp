@@ -1,4 +1,8 @@
 #include "optimizer/poly_traj_optimizer.hpp"
+#include "optimizer/four_wheel_constraint.hpp"
+#include <algorithm>
+#include <chrono>
+#include <numeric>
 
 namespace remani_planner
 {
@@ -29,6 +33,26 @@ namespace remani_planner
     nh->get_parameter_or("optimization.ground_safe_dis", ground_safe_dis_, 0.1);
     nh->get_parameter_or("optimization.ground_safe_margin", ground_safe_margin_, 0.1);
     nh->get_parameter_or("optimization.mobile_base_opt_gear", opt_gear_, true);
+    nh->get_parameter_or("optimization.four_wheel_min_turning_radius",four_wheel_min_turning_radius_,0.);
+    nh->get_parameter_or("optimization.collision_cost_index",collision_cost_index_,true);
+    nh->get_parameter_or("optimization.solve_budget_ms",solve_budget_ms_,0.);
+    nh->get_parameter_or("optimization.check_initial_gradient",check_initial_gradient_,false);
+    std::vector<double> wheel_positions;
+    double planning_yaw=0.,steer_rate=0.;
+    nh->get_parameter("controller.wheel_positions",wheel_positions);
+    nh->get_parameter_or("mm.planning_frame_yaw_in_base_rad",planning_yaw,0.);
+    nh->get_parameter_or("validation.steer_rate",steer_rate,M_PI_2);
+    four_wheel_geometry_valid_=wheel_positions.size()==8 && std::isfinite(planning_yaw) &&
+        std::isfinite(steer_rate) && steer_rate>0.;
+    if(four_wheel_geometry_valid_) {
+      const double c=std::cos(planning_yaw),s=std::sin(planning_yaw);
+      for(int i=0;i<4;++i) {
+        const double x=wheel_positions[2*i],y=wheel_positions[2*i+1];
+        four_wheel_geometry_valid_=four_wheel_geometry_valid_ && std::isfinite(x) && std::isfinite(y);
+        four_wheel_positions_[2*i]=c*x+s*y;four_wheel_positions_[2*i+1]=-s*x+c*y;
+      }
+      four_wheel_steer_rate_=.9*steer_rate;
+    }
 
     nh->get_parameter_or("mm.mobile_base_dof", mobile_base_dof_, -1);
     nh->get_parameter_or("mm.mobile_base_non_singul_vel", non_singul_v_, -1.0);
@@ -178,10 +202,34 @@ namespace remani_planner
     double final_cost;
     
     iter_num_ = 0;
+    solve_wall_s_=check_wall_s_=0.;
+    solve_budget_hit_=false;
     force_stop_type_ = DONT_STOP;
+
+    // Explicit offline diagnostic. It runs before the solve timer and is never
+    // enabled by the runtime configuration. Check every waypoint/time variable.
+    if(check_initial_gradient_) {
+      const auto check_begin=std::chrono::steady_clock::now();
+      Eigen::VectorXd analytic(variable_num_),scratch(variable_num_);
+      const double value=costFunctionCallback(this,x,analytic);
+      double maximum_error=0.;
+      for(int i=0;i<variable_num_;++i) {
+        const double epsilon=1e-6*std::max(1.,std::abs(x[i]));
+        Eigen::VectorXd plus=x,minus=x;plus[i]+=epsilon;minus[i]-=epsilon;
+        const double numeric=(costFunctionCallback(this,plus,scratch)-costFunctionCallback(this,minus,scratch))/(2.*epsilon);
+        const double error=std::abs(numeric-analytic[i])/(1.+std::abs(numeric)+std::abs(analytic[i]));
+        maximum_error=std::max(maximum_error,error);
+        RCLCPP_INFO(rclcpp::get_logger("remani_gradient"),"variable=%d x=%.9g analytic=%.9g numeric=%.9g relative_error=%.9g",i,x[i],analytic[i],numeric,error);
+      }
+      costFunctionCallback(this,x,scratch);iter_num_=0;
+      RCLCPP_INFO(rclcpp::get_logger("remani_gradient"),"initial_cost=%.9g max_relative_error=%.9g diagnostic_wall_s=%.6f",value,maximum_error,
+        std::chrono::duration<double>(std::chrono::steady_clock::now()-check_begin).count());
+    }
 
     /* ---------- optimize ---------- */
     // rclcpp::Time t1 = rclcpp::Clock(RCL_STEADY_TIME).now();
+    const auto solve_start=std::chrono::steady_clock::now();
+    solve_begin_=solve_start;
     int result = lbfgs::lbfgs_optimize(
         x,
         final_cost,
@@ -190,9 +238,16 @@ namespace remani_planner
         PolyTrajOptimizer::earlyExitCallback,
         this,
         lbfgs_params);
+    // L-BFGS restores x after a rejected line search. Its last callback may
+    // still describe a rejected trial, so regenerate the exact returned state.
+    Eigen::VectorXd returned_gradient(variable_num_);
+    final_cost=costFunctionCallback(this,x,returned_gradient);
+    solve_wall_s_=std::chrono::duration<double>(std::chrono::steady_clock::now()-solve_start).count();
 
     // printf("\033[32miter = %d, time = %5.3f(ms), \n\033[0m", iter_num_, (rclcpp::Clock(RCL_STEADY_TIME).now() - t1).seconds() * 1000.0);
-    if((result != lbfgs::LBFGS_CONVERGENCE)&&(result != lbfgs::LBFGS_STOP)&&(result != lbfgs::LBFGSERR_MAXIMUMLINESEARCH)){
+    if(solve_budget_hit_){
+      RCLCPP_INFO(rclcpp::get_logger("remani"),"optimization budget reached after %.3f ms; candidate still requires source/public checks",solve_wall_s_*1000.);
+    }else if((result != lbfgs::LBFGS_CONVERGENCE)&&(result != lbfgs::LBFGS_STOP)&&(result != lbfgs::LBFGSERR_MAXIMUMLINESEARCH)){
       RCLCPP_ERROR(rclcpp::get_logger("remani"), "The optimization result is : %s", lbfgs::lbfgs_strerror(result));      
     }else if(result == lbfgs::LBFGSERR_MAXIMUMLINESEARCH){
       RCLCPP_WARN(rclcpp::get_logger("remani"), "The optimization result is : %s", lbfgs::lbfgs_strerror(result));
@@ -209,7 +264,9 @@ namespace remani_planner
       traj_start_time = singul_traj_data.singul_traj.back().end_time;
     }
     bool good_traj = true;
+    const auto check_start=std::chrono::steady_clock::now();
     good_traj = IsTrajSafe(singul_traj_data);
+    check_wall_s_=std::chrono::duration<double>(std::chrono::steady_clock::now()-check_start).count();
     if(result == lbfgs::LBFGSERR_INVALID_FUNCVAL){
       return false;
     }
@@ -389,9 +446,7 @@ namespace remani_planner
         return false;
       }
 
-      if(IsNotFeasibie(traj_data, t)){
-        return false;
-      }
+      if(!external_kinematics_ && IsNotFeasibie(traj_data, t))return false;
       
       t += dt;
     }
@@ -532,7 +587,9 @@ namespace remani_planner
   {
     PolyTrajOptimizer *opt = reinterpret_cast<PolyTrajOptimizer *>(func_data);
 
-    return (opt->force_stop_type_ == STOP_FOR_ERROR || opt->force_stop_type_ == STOP_FOR_REBOUND);
+    opt->solve_budget_hit_=opt->solve_budget_ms_>0. &&
+      std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-opt->solve_begin_).count()>=opt->solve_budget_ms_;
+    return opt->solve_budget_hit_ || opt->force_stop_type_ == STOP_FOR_ERROR || opt->force_stop_type_ == STOP_FOR_REBOUND;
   }
 
   /* mappings between real world time and unconstrained virtual time */
@@ -834,6 +891,13 @@ namespace remani_planner
     std::vector<Eigen::Matrix2d> car_dPtsdv_list;
     std::vector<Eigen::Vector2d> car_dPtsdYaw_list;
     Eigen::Vector2d dYawdV = mm_config_->caldYawdV(vel.head(2));
+    Eigen::Matrix4d T_w_q = Eigen::Matrix4d::Identity(), T_w_q_grad_x, T_w_q_grad_y;
+    Eigen::Matrix2d R = mm_config_->calR(vel.head(2), singul_container_[trajid]);
+    T_w_q.block(0, 0, 2, 2) = R;
+    T_w_q.block(0, 3, 2, 1) = pos.head(2);
+    const bool body_clear=collision_cost_index_ && mm_config_->collisionCostBoxClear(-1,T_w_q,
+        mobile_base_check_radius_+safe_margin_,-std::numeric_limits<double>::infinity());
+    if(!body_clear) {
     mm_config_->getCarPtsGradNew(pos.head(2), vel.head(2), singul_container_[trajid], Eigen::Vector3d(0, 0, 0), car_pts, car_dPtsdYaw_list);
     for(unsigned int i = 0; i < car_pts.size(); ++i){
       Eigen::Vector3d dist_grad;
@@ -848,12 +912,9 @@ namespace remani_planner
         gradv.head(mobile_base_dof_) -= wei_obs_ * 3.0 * dist_err_2 * dist_grad.head(2).transpose() * car_dPtsdYaw_list[i] * dYawdV;
       }
     }
+    }
 
     if(manipulator_dof_ < 1) return ret;
-    Eigen::Matrix4d T_w_q = Eigen::Matrix4d::Identity(), T_w_q_grad_x, T_w_q_grad_y;
-    Eigen::Matrix2d R = mm_config_->calR(vel.head(2), singul_container_[trajid]);
-    T_w_q.block(0, 0, 2, 2) = R;
-    T_w_q.block(0, 3, 2, 1) = pos.head(2);
     T_w_q_grad_x.setZero();
     T_w_q_grad_x(0, 3) = 1;
     T_w_q_grad_y.setZero();
@@ -892,6 +953,9 @@ namespace remani_planner
       T_grad_list[i + 2] = T_now * T_joint_grad[i];
       T_now = T_now * T_joint[i];
       dTdYaw = dTdYaw * T_joint[i];
+      if(collision_cost_index_ && mm_config_->collisionCostBoxClear(i,T_now,
+          manipulator_thickness_+safe_margin_mani_,
+          manipulator_thickness_+ground_safe_dis_+ground_safe_margin_+map_resolution_))continue;
       
       // get ESDF value & grad
       int pts_size = manipulator_link_pts_[i].cols();
@@ -957,7 +1021,11 @@ namespace remani_planner
       for(int j = 0; j < pts_size; ++j){
         // with car
         pt_on_link = (T_now * manipulator_link_pts_[i].col(j)).head(3);
-        for(unsigned int m = 0; m < car_pts.size(); ++m){
+        std::vector<int> body_candidates;
+        if(collision_cost_index_)body_candidates=mm_config_->collisionCostNeighbors(-1,pt_on_link,
+            manipulator_thickness_+mobile_base_check_radius_+self_safe_margin_);
+        else {body_candidates.resize(car_pts.size());std::iota(body_candidates.begin(),body_candidates.end(),0);}
+        for(int m : body_candidates){
           dist = (car_pts[m] - pt_on_link).norm(); // coarse distance
           dist_err = manipulator_thickness_ + mobile_base_check_radius_ + self_safe_margin_ - dist; //refine distance
           if(dist_err > 0){
@@ -991,7 +1059,11 @@ namespace remani_planner
           pt_on_link_m = (T_now_self_mani * manipulator_link_pts_[i].col(j)).head(3);
           int pts_size_temp = manipulator_link_pts_[m].cols();
           double factor = 1.0 / (double)pts_size_temp;
-          for(int n = 0; n < pts_size_temp; ++n){
+          std::vector<int> arm_candidates;
+          if(collision_cost_index_)arm_candidates=mm_config_->collisionCostNeighbors(m,pt_on_link_m,
+              2*manipulator_thickness_+self_safe_margin_);
+          else {arm_candidates.resize(pts_size_temp);std::iota(arm_candidates.begin(),arm_candidates.end(),0);}
+          for(int n : arm_candidates){
             pt_on_link_to_check_m = (manipulator_link_pts_[m].col(n)).head(3);
             dist = (pt_on_link_m - pt_on_link_to_check_m).norm(); // coarse distance
             dist_err = 2 * manipulator_thickness_ + self_safe_margin_ - dist; //refine distance
@@ -1016,6 +1088,25 @@ namespace remani_planner
     return ret;
   }
 
+  double PolyTrajOptimizer::checkCollisionCostIndex(const Eigen::VectorXd &pos,const Eigen::VectorXd &vel) {
+    const auto saved_directions=singul_container_;const bool saved_index=collision_cost_index_;
+    singul_container_.assign(1,1);
+    Eigen::VectorXd dense_p(traj_dim_),dense_v(traj_dim_),fast_p(traj_dim_),fast_v(traj_dim_);
+    Eigen::Vector3d dense_cost,fast_cost;
+    collision_cost_index_=false;
+    obstacleGradCostforMM(0,pos,vel,0,dense_p,dense_v,dense_cost[0],dense_cost[1],dense_cost[2]);
+    collision_cost_index_=true;
+    obstacleGradCostforMM(0,pos,vel,0,fast_p,fast_v,fast_cost[0],fast_cost[1],fast_cost[2]);
+    collision_cost_index_=saved_index;singul_container_=saved_directions;
+    if(!dense_cost.allFinite() || !fast_cost.allFinite() || !dense_p.allFinite() || !fast_p.allFinite() ||
+       !dense_v.allFinite() || !fast_v.allFinite())throw std::runtime_error("nonfinite collision cost reference");
+    double error=0.;
+    auto compare=[&](const auto &a,const auto &b){for(int i=0;i<a.size();++i)
+      error=std::max(error,std::abs(a[i]-b[i])/(1.+std::abs(a[i])));};
+    compare(dense_cost,fast_cost);compare(dense_p,fast_p);compare(dense_v,fast_v);
+    return error;
+  }
+
   bool PolyTrajOptimizer::feasibilityGradCostCar(const Eigen::Vector2d &vel, const Eigen::Vector2d &acc, const Eigen::Vector2d &jer, const int trajid,
                                                  Eigen::Vector2d &gradv_2d, Eigen::Vector2d &grada_2d, Eigen::Vector2d &gradj_2d,
                                                  double &cost_mm_feasible, bool dense_sample){
@@ -1030,6 +1121,19 @@ namespace remani_planner
     const double v_norm = vel.norm();
     const double vTv_inv = 1.0 / vTv; // avoid siguality vel = 0
     const double vTv_inv2 = vTv_inv * vTv_inv;
+
+    // Explicit Rangermini four-wheel model adaptation, disabled by default for
+    // the original differential model. Public validation remains authoritative.
+    if(four_wheel_min_turning_radius_>0.) {
+      const auto constraint=risk_mm::fourWheelCurvature(vel,acc,four_wheel_min_turning_radius_);
+      f=0.;df=0.;
+      if(smoothedL1(constraint.value,.005,f,df)) {
+        cost_mm_feasible+=wei_feas_*f;
+        gradv_2d+=wei_feas_*df*constraint.velocity_gradient;
+        grada_2d+=wei_feas_*df*constraint.acceleration_gradient;
+        ret=true;
+      }
+    }
 
     
     // Check minimum speed
@@ -1050,6 +1154,24 @@ namespace remani_planner
       cost_mm_feasible += wei_feas_ * f;
       gradv_2d += wei_feas_ * df * 2.0 * vel;
       ret = true;
+    }
+
+    if(external_kinematics_) {
+      const auto wheels=risk_mm::fourWheelDifferentials(vel,acc,jer,singul_container_[trajid],
+          four_wheel_positions_,mobile_base_wheel_radius_);
+      const std::array<double,3> bounds{max_wheel_omega_*max_wheel_omega_,
+          max_wheel_alpha_*max_wheel_alpha_,four_wheel_steer_rate_*four_wheel_steer_rate_};
+      for(int row=0;row<12;++row) {
+        if(smoothedL1(wheels.squared[row]-bounds[row%3],.005,f,df)) {
+          const double weight=wei_feas_*df;
+          cost_mm_feasible+=wei_feas_*f;
+          gradv_2d+=weight*wheels.jacobian.row(row).head<2>().transpose();
+          grada_2d+=weight*wheels.jacobian.row(row).segment<2>(2).transpose();
+          gradj_2d+=weight*wheels.jacobian.row(row).tail<2>().transpose();
+          ret=true;
+        }
+      }
+      return ret;
     }
 
     double omega = aTBv * vTv_inv;
@@ -1204,26 +1326,42 @@ namespace remani_planner
     tailState.resize(traj_dim_, 4);
     frontendMJ_container.resize(simple_path_container.size());
     for(unsigned int i = 0; i < simple_path_container.size(); ++i){
-
-      int piece_num = simple_path_container[i].size() - 1;
+      auto seed_path=simple_path_container[i];
+      Eigen::VectorXd seed_times=t_list_container[i];
+      const bool final_end=i+1==simple_path_container.size() && status!=KinoAstar::REACH_HORIZON;
+      const bool moving_end=final_end && end_vel.head(2).norm()>non_singul_v_+1e-6;
+      bool merged_terminal=false;
+      if(final_end && external_kinematics_ && four_wheel_min_turning_radius_>0. && seed_path.size()>2 &&
+          std::abs(std::remainder(yaw_list_container[i][seed_path.size()-2]-end_yaw,2.*M_PI))>1e-3) {
+        // A tiny final interpolation interval cannot smoothly remove steering
+        // curvature while retaining nonzero endpoint speed. Prepare one seed
+        // with a full turning-radius span; the original search path is kept.
+        while(seed_path.size()>3 &&
+            (finState.col(0).head(2)-seed_path[seed_path.size()-2].head(2)).norm()<four_wheel_min_turning_radius_) {
+          const int last=seed_times.size()-1;
+          seed_times[last-1]+=seed_times[last];seed_times.conservativeResize(last);
+          seed_path.erase(seed_path.end()-2);merged_terminal=true;
+        }
+      }
+      if(final_end)seed_path.back()=finState.col(0);
+      int piece_num = seed_path.size() - 1;
       if (piece_num > 1){
         innerPts.resize(traj_dim_, piece_num - 1);
         for (int j = 0; j < piece_num - 1; ++j){
-          innerPts.col(j) = (simple_path_container[i])[j + 1]; // front end
+          innerPts.col(j) = seed_path[j + 1]; // front end
         }
       }
       else{
         // RCLCPP_WARN(rclcpp::get_logger("remani"), "simple path is too short");
         piece_num = 2;
         innerPts.resize(traj_dim_, 1);
-        innerPts.col(0) = ((simple_path_container[i])[0] + (simple_path_container[i])[1]) / 2;
-        simple_path_container[i].insert(simple_path_container[i].begin() + 1, innerPts.col(0));
-        t_list.resize(2);
-        t_list.setConstant((t_list_container[i])[0] / 2);
-        t_list_container[i] = t_list;
+        innerPts.col(0) = (seed_path[0] + seed_path[1]) / 2;
+        seed_path.insert(seed_path.begin() + 1, innerPts.col(0));
+        const double total=seed_times[0];seed_times.resize(2);seed_times.setConstant(total/2.);
       }
 
-      t_list = t_list_container[i];
+      t_list = seed_times;
+      double terminal_joint_time=0.;
       // t_list = t_list * 1.2;
       Eigen::VectorXd angle1, angle2;
       double err;
@@ -1232,8 +1370,8 @@ namespace remani_planner
       double dist_acc = max_joint_acc_ * t_acc * t_acc;
       // std::cout << "astarWithMinTraj 8 " << i << "\n";
       for (int j = 0; j < piece_num; ++j){
-        angle1 = (simple_path_container[i])[j].tail(manipulator_dof_);
-        angle2 = (simple_path_container[i])[j + 1].tail(manipulator_dof_);
+        angle1 = seed_path[j].tail(manipulator_dof_);
+        angle2 = seed_path[j + 1].tail(manipulator_dof_);
         double max_t = t_list[j];
         for(int k = 0; k < manipulator_dof_; ++k){
           if(angle1(k) - angle2(k) >= 0)
@@ -1250,12 +1388,21 @@ namespace remani_planner
           }else{
             t_acc_vel = err / max_joint_vel_;
           }
+          if(j==piece_num-1)terminal_joint_time=std::max(terminal_joint_time,t_acc_vel);
           max_t = max(t_acc_vel, max_t);
         }
         t_list[j] = max_t;
       }
       t_list[0] *= 1.5;
       t_list[piece_num - 1] *= 1.5;
+
+      // The search time profile ends nearly stopped. A moving through endpoint
+      // must instead seed its final piece with the requested tangent speed;
+      // retaining the stop time can force MINCO to reverse before the endpoint.
+      if(moving_end && !merged_terminal) {
+        const double distance=(finState.col(0).head(2)-seed_path[piece_num-1].head(2)).norm();
+        if(distance>1e-6)t_list[piece_num-1]=std::max(terminal_joint_time,distance/end_vel.head(2).norm());
+      }
 
       if(i > 0){
         headState.setZero();
@@ -1277,8 +1424,27 @@ namespace remani_planner
         tailState.col(2).head(2) = singul_container[i] * tailState.col(2).head(2);
         tailState.col(3).head(2) = singul_container[i] * tailState.col(3).head(2);
       }
+      if(merged_terminal) {
+        // Keep the original number of optimization pieces and constraint
+        // samples. Refine the same coarse MINCO curve over the wider closing
+        // interval, rather than leaving one long, sparsely sampled piece.
+        poly_traj::MinSnapOpt<8> coarse;
+        coarse.reset(headState,tailState,piece_num);coarse.generate(innerPts,t_list);
+        const auto curve=coarse.getTraj(singul_container[i]);
+        const int restored=static_cast<int>(simple_path_container[i].size())-1;
+        const int split=restored-piece_num+1;
+        Eigen::VectorXd refined_times(restored);
+        refined_times.head(piece_num-1)=t_list.head(piece_num-1);
+        refined_times.tail(split).setConstant(t_list[piece_num-1]/split);
+        Eigen::MatrixXd refined_points(traj_dim_,restored-1);
+        double time=0.;
+        for(int k=0;k<restored-1;++k) {
+          time+=refined_times[k];refined_points.col(k)=curve.getPos(time);
+        }
+        innerPts=std::move(refined_points);t_list=std::move(refined_times);piece_num=restored;
+      }
       frontendMJ_container[i].reset(headState, tailState, piece_num);
-      frontendMJ_container[i].generate(innerPts, t_list_container[i]);
+      frontendMJ_container[i].generate(innerPts, t_list);
     }
     return status;
   }

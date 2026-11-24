@@ -18,6 +18,7 @@
 #include <iostream>
 #include <map>
 #include <string>
+#include <cstdint>
 
 #include "traj_utils/plan_container.hpp"
 #include "plan_env/grid_map.h"
@@ -145,6 +146,7 @@ class KinoAstar{
     // ompl::base::StateSpacePtr shotptr_;
     std::vector<ompl::base::StateSpacePtr> shotptr_list_;
     int shotptrindex_;
+    bool forward_only_{false};
 
     bool is_shot_succ_= false;
 
@@ -173,6 +175,8 @@ class KinoAstar{
     void setParam(rclcpp::Node::SharedPtr& nh, const std::shared_ptr<GridMap> &env, const std::shared_ptr<MMConfig> &mm_config);
     // void init();
     void reset();
+    void setForwardOnly(bool enabled,double turning_radius=.55);
+    void setRandomSeed(std::uint32_t seed) { if(mani_sample_)mani_sample_->setRandomSeed(seed); }
 
 
     int KinoAstarSearchAndGetSimplePath(const Eigen::VectorXd &start_pos, const Eigen::VectorXd &start_vel, const double start_yaw, const int start_singul, const bool start_gripper,

@@ -1,10 +1,16 @@
 # Simulator manual interface; these do not replace planner/executor constraints.
 rate_hz: 50.0
+# User-confirmed chassis front, expressed relative to the retained CAD/model
+# base_link. This transform is also used for the GUI planning goal heading.
+control_frame_yaw_in_base_rad: 3.141592653589793
 command_timeout_s: 0.30
 feedback_timeout_s: 0.50
-arm_rate_rad_s: 0.30
-steer_rate_rad_s: 0.80
+arm_rate_rad_s: 0.80
+steer_rate_rad_s: 1.20
 wheel_accel_rad_s2: 4.0
-base_speed_max_m_s: 0.25
-base_yaw_max_rad_s: 0.35
-wheel_rate_max_rad_s: 2.5
+base_speed_max_m_s: 0.80
+base_yaw_max_rad_s: 1.00
+wheel_rate_max_rad_s: 8.0
+default_base_speed_m_s: 0.40
+default_base_yaw_rad_s: 0.60
+default_arm_speed_rad_s: 0.50

@@ -1,6 +1,6 @@
 {
   "returncode": 0,
-  "stdout": "...................                                                      [100%]\n--------- generated xml file: /home/ubuntu/risk_mm_ws/reports/core.xml ---------\n19 passed in 0.04s\n",
+  "stdout": "...................                                                      [100%]\n--------- generated xml file: /home/ubuntu/risk_mm_ws/reports/core.xml ---------\n19 passed in 0.05s\n",
   "stderr": "",
   "scope": "risk / switching / arm-first contracts; test doubles do not establish real planning or execution success"
 }

@@ -3,9 +3,9 @@
 -- Up-to-date: /home/ubuntu/risk_mm_ws/install/mm_bringup/lib/mm_bringup/sim_control
 -- Up-to-date: /home/ubuntu/risk_mm_ws/install/mm_bringup/lib/mm_bringup/sim_control_gui
 -- Up-to-date: /home/ubuntu/risk_mm_ws/install/mm_bringup/share/mm_bringup/config
--- Up-to-date: /home/ubuntu/risk_mm_ws/install/mm_bringup/share/mm_bringup/config/remani.yaml
+-- Installing: /home/ubuntu/risk_mm_ws/install/mm_bringup/share/mm_bringup/config/remani.yaml
 -- Up-to-date: /home/ubuntu/risk_mm_ws/install/mm_bringup/share/mm_bringup/config/ros2_control.yaml
--- Installing: /home/ubuntu/risk_mm_ws/install/mm_bringup/share/mm_bringup/config/robot.yaml
+-- Up-to-date: /home/ubuntu/risk_mm_ws/install/mm_bringup/share/mm_bringup/config/robot.yaml
 -- Up-to-date: /home/ubuntu/risk_mm_ws/install/mm_bringup/share/mm_bringup/config/gazebo.yaml
 -- Up-to-date: /home/ubuntu/risk_mm_ws/install/mm_bringup/share/mm_bringup/config/simulation_collision.yaml
 -- Up-to-date: /home/ubuntu/risk_mm_ws/install/mm_bringup/share/mm_bringup/config/supervisor.yaml

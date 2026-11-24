@@ -8,12 +8,14 @@
     mm.mobile_base_wheel_radius: 0.1
     mm.mobile_base_non_singul_vel: 0.02
     mm.mobile_base_max_wheel_omega: 3.5
-    mm.mobile_base_max_wheel_alpha: 5.0
+    # Optimization headroom; execution still validates the physical 5 rad/s² cap.
+    mm.mobile_base_max_wheel_alpha: 4.0
     mm.mobile_base_check_radius: 0.04
     mm.manipulator_dof: 6
     mm.manipulator_max_vel: 0.35
     mm.manipulator_max_acc: 0.7
-    mm.manipulator_thickness: 0.044
+    # Same effective radius as URDF-derived load_model; avoids a stale 0.044 override.
+    mm.manipulator_thickness: 0.03
     search.oneshot_check_len: 0.02
     search.traj_forward_penalty: 1.0
     search.traj_back_penalty: 2.0
@@ -33,23 +35,29 @@
     search.allocate_num: 50000
     search.oneshot_range: 8.0
     search.goal_rate: 0.5
+    # Explicit seed makes repeated patrol searches from the same task reproducible.
+    search.random_seed: 42
     search.max_loop_num: 12000
     search.max_sample_time: 0.15
     search.max_mani_search_time: 0.08
     optimization.weight_obstacle: 20000.0
     optimization.weight_manipulator_self: 1000.0
     optimization.weight_base_feasibility: 100.0
+    # Physical extension for this four-wheel robot; source REMANI is preserved.
+    # 0.30 m exceeds the largest lateral contact offset (~0.251 m).
+    optimization.four_wheel_min_turning_radius: 0.30
     optimization.weight_manipulator_feasibility: 150.0
     optimization.weight_time: 1.0
     optimization.ground_safe_dis: 0.03
-    optimization.safe_margin: 0.03
+    # Cost activates at 0.17 m, before the source geometry gate at 0.14 m
+    # (0.04 m body sample radius + 0.10 m map resolution).
+    optimization.safe_margin: 0.13
     optimization.safe_margin_mani: 0.02
     optimization.self_safe_margin: 0.01
     optimization.ground_safe_margin: 0.02
     optimization.mobile_base_opt_gear: true
     optimization.constrain_points_perPiece: 8
     optimization.dense_sample_resolution: 4
-    optimization.max_iterations: 60
     grid_map.use_load_map: true
     grid_map.use_global_map: true
     grid_map.resolution: 0.1

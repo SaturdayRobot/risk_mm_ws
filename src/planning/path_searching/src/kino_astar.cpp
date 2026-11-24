@@ -1,11 +1,21 @@
 #include "path_searching/kino_astar.h"
 #include <sstream>
 #include <plan_env/grid_map.h>
+#include <ompl/base/spaces/SO2StateSpace.h>
 
 using namespace std;
 using namespace Eigen;
 
 namespace remani_planner{
+namespace {
+// Only enforce the angular subspace. Enforcing SE(2) would also clamp XY
+// against unused OMPL sampling bounds, changing the original query geometry.
+void enforceShotYaw(ompl::base::State *state) {
+  static const ompl::base::SO2StateSpace angles;
+  auto *angle=state->as<ompl::base::CompoundState>()->as<ompl::base::SO2StateSpace::StateType>(1);
+  angles.enforceBounds(angle);
+}
+}
 
 void KinoAstar::setParam(rclcpp::Node::SharedPtr& nh, const std::shared_ptr<GridMap> &env, const std::shared_ptr<MMConfig> &mm_config){
   sdf_map_ = env;
@@ -313,7 +323,7 @@ int KinoAstar::search(Eigen::VectorXd &start_state, const Eigen::VectorXd &end_s
     if((cur_node->state.head(2) - end_state_.head(2)).norm() < oneshot_range_ && initsearch){
       int last_dir;
       if(cur_node->parent != NULL){
-        bool is_forward = Eigen::Vector2d(cos(cur_node->parent->state(2)), sin(cos(cur_node->parent->state(2)))).transpose() * (cur_node->state - cur_node->parent->state).head(2) > 0;
+        bool is_forward = Eigen::Vector2d(cos(cur_node->parent->state(2)), sin(cur_node->parent->state(2))).transpose() * (cur_node->state - cur_node->parent->state).head(2) > 0;
         last_dir = is_forward ? 1 : -1;
       }else{
         last_dir = 0;
@@ -364,6 +374,7 @@ int KinoAstar::search(Eigen::VectorXd &start_state, const Eigen::VectorXd &end_s
       initsearch = true;
     }else{
       for (double arc = -max_arc_; arc <= max_arc_ + 1e-3; arc += res_arc * max_arc_){
+        if(forward_only_ && arc<0.)continue;
         if(fabs(arc) < 1.0e-2){
           continue;
         }
@@ -486,6 +497,12 @@ inline int KinoAstar::getSingularity(const double &vel){
   return singul;
 }
 
+void KinoAstar::setForwardOnly(bool enabled,double turning_radius) {
+  forward_only_=enabled;shotptr_list_.clear();
+  if(enabled)shotptr_list_.push_back(std::make_shared<ompl::base::DubinsStateSpace>(turning_radius));
+  else for(double radius:{.4,.2,.1})shotptr_list_.push_back(std::make_shared<ompl::base::ReedsSheppStateSpace>(radius));
+}
+
 inline double KinoAstar::getHeu(const Eigen::Vector3d &x1, const Eigen::Vector3d &x2){
   return (x1 - x2).head(2).norm();
 }
@@ -503,6 +520,8 @@ bool KinoAstar::is_shot_sucess(const Eigen::Vector3d &state1, const Eigen::Vecto
     from[0] = state1[0]; from[1] = state1[1]; from[2] = state1[2];
     to[0]   = state2[0]; to[1]   = state2[1]; to[2]   = state2[2];
     std::vector<double> reals;
+    enforceShotYaw(from());
+    enforceShotYaw(to());
     len = shotptr->distance(from(), to());
 
     for (double l = 0.0; l <= len; l += oneshot_check_len_ / 2.0){
@@ -515,13 +534,13 @@ bool KinoAstar::is_shot_sucess(const Eigen::Vector3d &state1, const Eigen::Vecto
     double min_dist;
     int traj_pieces = 0;
     double traj_len = 0;
-    bool is_forward = Eigen::Vector2d(cos(path_list[0](2)), sin(cos(path_list[0](2)))).transpose() * (path_list[1] - path_list[0]).head(2) > 0;
+    bool is_forward = Eigen::Vector2d(cos(path_list[0](2)), sin(path_list[0](2))).transpose() * (path_list[1] - path_list[0]).head(2) > 0;
     int dir_last = is_forward ? 1 : -1;
     if(last_dir != dir_last) ++traj_pieces;
     ++traj_pieces;
     for(unsigned int j = 0; j < path_list.size(); ++j){
       if(j < path_list.size() - 1){
-        is_forward = Eigen::Vector2d(cos(path_list[j](2)), sin(cos(path_list[j](2)))).transpose() * (path_list[j + 1] - path_list[j]).head(2) > 0;
+        is_forward = Eigen::Vector2d(cos(path_list[j](2)), sin(path_list[j](2))).transpose() * (path_list[j + 1] - path_list[j]).head(2) > 0;
         int dir_now = is_forward ? 1 : -1;
         if(dir_last != dir_now){
           traj_len = 0.0;
@@ -558,6 +577,8 @@ double KinoAstar::computeShotTraj(const Eigen::Vector3d &state1, const Eigen::Ve
   from[0] = state1[0]; from[1] = state1[1]; from[2] = state1[2];
   to[0]   = state2[0]; to[1]   = state2[1]; to[2]   = state2[2];
   std::vector<double> reals;
+  enforceShotYaw(from());
+  enforceShotYaw(to());
   len = shotptr->distance(from(), to());
   double sum_T = len / max_vel_;
 
@@ -610,7 +631,7 @@ void KinoAstar::simplifyRoute(const std::vector<Eigen::Vector3d> &node_path,
   }
   Eigen::Vector3d end_state = node_path.back();
   std::vector<Eigen::Vector3d> SampleList_temp;
-  if(!is_shot_succ_){shotptrindex_ = 2;}
+  if(!is_shot_succ_){shotptrindex_ = forward_only_?0:2;}
   for(unsigned int i = 0; i < node_path.size() - 1; ++i){ // from
     SampleList.push_back(node_path[i]);
     bool shot_succ = false;
@@ -623,6 +644,8 @@ void KinoAstar::simplifyRoute(const std::vector<Eigen::Vector3d> &node_path,
     for(j = node_path.size() - 1; j > i + 1; --j){
       if(i == 0) break;
       to[0] = node_path[j][0]; to[1] = node_path[j][1]; to[2] = node_path[j][2];
+      enforceShotYaw(from());
+      enforceShotYaw(to());
       double shotLength = shotptr->distance(from(), to());//oneshot的距离
       std::vector<double> reals;
       piece_num_temp = std::max(ceil(shotLength / oneshot_check_len_), 2.0);
@@ -688,6 +711,8 @@ void KinoAstar::getSampleTrajs(){
     state2 = end_state_.head(3);
     from[0] = state1[0]; from[1] = state1[1]; from[2] = state1[2];
     to[0] = state2[0]; to[1] = state2[1]; to[2] = state2[2];
+    enforceShotYaw(from());
+    enforceShotYaw(to());
     double shotLength = shotptr->distance(from(), to());
     shotptr->validSegmentCount(from(), to());
     std::vector<double> reals;

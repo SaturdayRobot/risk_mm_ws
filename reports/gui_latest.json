@@ -11,6 +11,7 @@
   ],
   "report_dir": "/home/ubuntu/risk_mm_ws/reports/gui_20261123_164301",
   "scope": "RViz2 model display and synthetic joint state GUI; no motion execution",
-  "status": "running",
-  "returncode": null
+  "status": "replaced_by_gazebo",
+  "returncode": null,
+  "replacement_session": "/home/ubuntu/risk_mm_ws/reports/gazebo_20261123_180656"
 }

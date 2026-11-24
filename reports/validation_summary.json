@@ -1,15 +1,26 @@
 {
-  "date": "2026-11-23",
+  "date": "2026-11-24",
   "workspace": "/home/ubuntu/risk_mm_ws",
   "baseline": "Rangermini + xArm6",
   "build": {
     "status": "passed",
-    "packages": 13,
-    "log": "build.log"
+    "packages": 15,
+    "logs": [
+      "four_wheel_curvature_model_build.log",
+      "gui_replan_fix_build.log",
+      "planning_frame_host_build.log",
+      "planning_gui_cleanup_build.log",
+      "collision_cost_box_build.log",
+      "compact_speed_local_timing_build.log",
+      "compact_gui_settings_preservation_build.log",
+      "compact_final_cleanup_build.log"
+    ],
+    "environment": "system ROS Humble plus this workspace only"
   },
   "core": {
     "status": "passed",
-    "tests": 19
+    "tests": 30,
+    "report": "compact_final_core.xml"
   },
   "model": {
     "status": "passed",
@@ -21,10 +32,13 @@
   },
   "independence": {
     "status": "passed",
-    "packages": 13,
+    "packages": 15,
     "local_mesh_references": 35,
     "verified_upstream_files": 31,
-    "ament_prefix_path": "/home/ubuntu/risk_mm_ws/install/rangermini_moveit_config:/home/ubuntu/risk_mm_ws/install/mm_bringup:/home/ubuntu/risk_mm_ws/install/mm_model:/home/ubuntu/risk_mm_ws/install/rangermini_description:/home/ubuntu/risk_mm_ws/install/xarm_description:/home/ubuntu/risk_mm_ws/install/remani_adapter:/home/ubuntu/risk_mm_ws/install/traj_opt:/home/ubuntu/risk_mm_ws/install/path_searching:/home/ubuntu/risk_mm_ws/install/traj_utils:/home/ubuntu/risk_mm_ws/install/risk_mm:/home/ubuntu/risk_mm_ws/install/mm_config:/home/ubuntu/risk_mm_ws/install/plan_env:/home/ubuntu/risk_mm_ws/install/mm_utils:/opt/ros/humble"
+    "remani_patch_matches_sources": true,
+    "local_world_assets": 3,
+    "native_sim_executables": 4,
+    "ament_prefix_path": "/home/ubuntu/risk_mm_ws/install/mm_bringup:/home/ubuntu/risk_mm_ws/install/risk_mm_runtime:/home/ubuntu/risk_mm_ws/install/rangermini_moveit_config:/home/ubuntu/risk_mm_ws/install/mm_model:/home/ubuntu/risk_mm_ws/install/rangermini_description:/home/ubuntu/risk_mm_ws/install/xarm_description:/home/ubuntu/risk_mm_ws/install/remani_adapter:/home/ubuntu/risk_mm_ws/install/traj_opt:/home/ubuntu/risk_mm_ws/install/path_searching:/home/ubuntu/risk_mm_ws/install/traj_utils:/home/ubuntu/risk_mm_ws/install/risk_mm_interfaces:/home/ubuntu/risk_mm_ws/install/risk_mm:/home/ubuntu/risk_mm_ws/install/mm_config:/home/ubuntu/risk_mm_ws/install/plan_env:/home/ubuntu/risk_mm_ws/install/mm_utils:/opt/ros/humble"
   },
   "moveit": {
     "installed_version": "2.5.10-1jammy.20261110.153319",
@@ -33,14 +47,13 @@
     "shutdown_success": false,
     "report": "moveit.json"
   },
-  "execution_success": null,
-  "actual_executed_mode": null,
+  "execution_success": true,
+  "actual_executed_mode": "coupled",
   "remaining": [
-    "base planner implementation",
-    "common trajectory validator / codec",
-    "ROS supervisor and execution adapter",
-    "Gazebo closed loop",
-    "MoveIt teardown crash investigation"
+    "ARM_FIRST independent base planner and online two-stage assembly",
+    "online risk-driven mode switching acceptance",
+    "standalone MoveIt service teardown crash investigation; not observed in the composed runtime",
+    "broader task coverage; no arbitrary-goal or continuous-safety claim"
   ],
   "gui": {
     "status": "passed",
@@ -51,9 +64,522 @@
       "RViz2",
       "Joint State Publisher"
     ],
-    "left_running": true,
+    "left_running": false,
     "report": "gui_20261123_164301/validation.json",
     "visual_review": "gui_20261123_164301/visual_review.json",
-    "scope": "Model GUI and synthetic joint states / TF; no Gazebo execution"
+    "scope": "Model GUI and synthetic joint states / TF; no Gazebo execution",
+    "replaced_by": "gazebo_manual_control"
+  },
+  "gazebo_manual_control": {
+    "status": "passed",
+    "controllers": {
+      "joint_state_broadcaster": "active",
+      "arm_position_controller": "active",
+      "steer_position_controller": "active",
+      "wheel_velocity_controller": "active"
+    },
+    "manual_motion_started": true,
+    "manual_motion_completed": true,
+    "base_forward_projected_m": 0.21825004332591352,
+    "base_reverse_projected_m": -0.21717368286504385,
+    "unsupported_lateral_drift_m": 7.900339080578933e-05,
+    "initial_arm_error_rad": 0.004535915319773265,
+    "camera_axis_error_deg": 0.0,
+    "camera_image_orientation_rgb": {
+      "top": [
+        255.0,
+        0.0,
+        0.0
+      ],
+      "right": [
+        0.0,
+        255.0,
+        0.0
+      ],
+      "bottom": [
+        255.0,
+        255.0,
+        0.0
+      ],
+      "left": [
+        255.0,
+        0.0,
+        255.0
+      ]
+    },
+    "session_report": "gazebo_headless_20261124_091608/validation.json",
+    "ros_domain_id": 186,
+    "gazebo_master_uri": "http://127.0.0.1:11486",
+    "left_running": false,
+    "historical_frame_scope": "model base_link X regression; physical front was later corrected and confirmed by the user as base_control +X"
+  },
+  "collision_configuration": {
+    "status": "passed",
+    "report": "collision_model.json",
+    "bodies_csv": "gazebo_collision_bodies.csv",
+    "gazebo_self_collision": false,
+    "base_samples": 1606
+  },
+  "native_simulation": {
+    "build_status": "passed",
+    "executables": [
+      "prepare_sim",
+      "sim_control",
+      "sim_control_gui",
+      "simulation_runtime"
+    ],
+    "runtime_libraries": [
+      "world_scene",
+      "trajectory_validation",
+      "coupled_execution",
+      "coupled_runtime"
+    ],
+    "abandoned_python_package_removed": true
+  },
+  "wheel_model_tests": {
+    "status": "passed",
+    "tests": 11,
+    "log": "wheel_model_tests.log"
+  },
+  "coupled_goal_execution": {
+    "report": "reports/gazebo_20261124_113219/gui_checks/20261124_113727/validation.json",
+    "status": "passed",
+    "scenario": "execute",
+    "input_method": "native Qt mouse/key event path; no ROS command/service publisher",
+    "window": "0x1a00006",
+    "requested_speed_limits": [
+      0.5,
+      0.7,
+      0.6
+    ],
+    "preset_id": "corridor_s",
+    "gui_service_accepted_plan_id": "coupled_1",
+    "candidate_generated": true,
+    "validation_passed": true,
+    "planner_reason": "explicit local time profile; duration ratio=1.374801 max local scale=6.460000; sampled full-mesh and four-wheel validation passed; no continuous-safety claim",
+    "planning_wait_wall_s": 1.2970131320000746,
+    "planning_wall_s": 1.123456736,
+    "validation_wall_s": 0.337563722,
+    "duration_s": 11.290458772309517,
+    "validated_goal": [
+      -4.75,
+      0.45,
+      -3.141592653589793,
+      0.12,
+      -0.56,
+      -1.02,
+      -0.1325,
+      -1.5057,
+      -1.251
+    ],
+    "execution_started": true,
+    "execution_completed": true,
+    "execution_success": true,
+    "execution_reason": "",
+    "endpoint_error_m": 0.012764439739594699,
+    "arm_endpoint_error_rad": 0.00800213185803611,
+    "front_projection_m": 1.3713196672607764,
+    "wall_s": 15.997709824999902,
+    "planning_report": "reports/gazebo_20261124_113219/coupled/coupled_1/planning.yaml",
+    "execution_report": "reports/gazebo_20261124_113219/coupled/coupled_1/execution.yaml"
+  },
+  "coupled_scene_abort": {
+    "status": "passed",
+    "expected_abort": true,
+    "report": "gazebo_headless_20261124_092036/coupled_validation_1.json",
+    "plan_id": "coupled_1",
+    "execution_started": true,
+    "execution_completed": false,
+    "reason": "unknown Gazebo object: scene_lease_probe",
+    "stopped_drift_m": 3.852009159347219e-05,
+    "wrong_model_rejected": true,
+    "wrong_map_rejected": true,
+    "wrong_plan_rejected": true,
+    "stopped_token_rejected": true
+  },
+  "coupled_planning": {
+    "status": "passed",
+    "report": "compact_short_goal_regression/validation.json",
+    "planner_variant": "locked REMANI ROS2 + exact conservative collision cost acceleration + four-wheel curvature term + explicit local time map",
+    "four_wheel_min_turning_radius_m": 0.3,
+    "four_wheel_curvature_gradient_passed": true,
+    "time_scaling_regression_passed": true,
+    "validation_samples": 222,
+    "terminal_yaw_error_rad": 0.0,
+    "raw_duration_s": 4.292530506972809,
+    "planning_frame_geometry_invariant_passed": true,
+    "public_frame_velocity_consistency_passed": true,
+    "time_scale": 1
+  },
+  "live_gui": {
+    "status": "running",
+    "session_report": "reports/gazebo_20261124_113219",
+    "ros_domain_id": 182,
+    "gazebo_master_uri": "http://127.0.0.1:11482",
+    "default_spawn_yaw_rad": 3.140447251111284,
+    "gui_replan_fix_loaded": true,
+    "preserved_user_targets": [
+      -4.8484,
+      -0.1368,
+      1.5166926535897929,
+      0.04,
+      -0.5588,
+      -1.012,
+      -0.1325,
+      -1.5057,
+      -1.251
+    ],
+    "screenshots": [
+      "control.png",
+      "gazebo.png",
+      "rviz.png"
+    ],
+    "temporary_test_simulator_stopped": true,
+    "drive_frame": "base_control",
+    "drive_yaw_in_base_rad": 3.141592653589793,
+    "actual_button_execution_report": "reports/gazebo_20261124_103235/gui_checks/20261124_103318/validation.json",
+    "persistent_rejection_report": "reports/gazebo_20261124_103235/gui_checks/20261124_103254/validation.json",
+    "visual_review": "reports/gazebo_20261124_113219/visual_review.json",
+    "gui_cleanup_loaded": true,
+    "panel_pid": 15146,
+    "speed_controls": [
+      0.4,
+      0.6,
+      0.5
+    ],
+    "default_compact_arm": [
+      0.0,
+      -0.56,
+      -1.02,
+      -0.13249348115,
+      -1.50566988238,
+      -1.25102699388
+    ],
+    "post_reload_runtime_check": "reports/gazebo_20261124_113219/final_compact_runtime.json",
+    "current_state": "held after regression tests; actuator released and Plan available"
+  },
+  "known_rejections": [
+    {
+      "report": "gazebo_headless_20261124_091722/coupled/coupled_2/planning.yaml",
+      "reason": "subsequent reverse candidate rejected by original optimizer wheel acceleration check; not executed"
+    },
+    {
+      "report": "gazebo_20261124_091301/gui_checks/20261124_100117/validation.json",
+      "reason": "actual GUI request reached old backend, but forward candidate used the opposite model heading and was rejected; corrected by explicit C++ planning-frame adaptation"
+    }
+  ],
+  "previous_coupled_goal_execution": {
+    "candidate_generated": true,
+    "validation_passed": true,
+    "execution_started": true,
+    "execution_completed": true,
+    "execution_success": true,
+    "actual_mode": "coupled",
+    "endpoint_error_m": 0.0020030153591014586,
+    "arm_endpoint_error_rad": 0.004613660585376378,
+    "initial_yaw_error_rad": 0.00011047446053247256,
+    "planning_wall_s": 16.296908413,
+    "validation_wall_s": 0.397430089,
+    "duration_s": 20.97379324251162,
+    "model_signature": "rangermini_xarm6:4ffbdadb77d911abf4398f5d4be2c68b962068f02c51ee4915f7cfb9e52150bf",
+    "map_revision": 22745393069324,
+    "wrong_model_rejected": true,
+    "wrong_map_rejected": true,
+    "wrong_plan_rejected": true,
+    "status": "passed",
+    "scope": "first 0.6 m coupled goal only; subsequent reverse planning refusal is preserved separately",
+    "source_report": "reports/gazebo_headless_20261124_091722/coupled_validation_1.json",
+    "execution_report": "reports/gazebo_headless_20261124_091722/coupled/coupled_1/execution.yaml",
+    "raw_validation_passed": false,
+    "time_scale": 4.61,
+    "raw_duration_s": 4.549629770609895
+  },
+  "compact_camera_speed_update": {
+    "status": "passed",
+    "scope": "compact camera default, explicit goal presets, GUI speed limits, exact collision cost acceleration, local timing and actual coupled execution; sampled safety only",
+    "session": "reports/gazebo_20261124_113219",
+    "model_signature": "rangermini_xarm6:9ab6626e8c9bfcdbcbb9a286d2ea2d73be1600d0a7f46a07420503c48df3b2fa",
+    "display_arm": [
+      0.0,
+      -0.56,
+      -1.02,
+      -0.13249348115,
+      -1.50566988238,
+      -1.25102699388
+    ],
+    "camera": {
+      "report": "reports/gazebo_20261124_113219/speed_camera_validation_2.json",
+      "level_error_deg": 1.0570506722634292,
+      "measured_position_in_base_control": [
+        0.3742825076826133,
+        0.04048589265483127,
+        1.3606569953350458
+      ]
+    },
+    "public_limits": {
+      "validation.arm_velocity": 0.8,
+      "validation.arm_acceleration": 1.6,
+      "validation.base_velocity": 1.0,
+      "validation.base_yaw_rate": 1.2,
+      "validation.wheel_velocity": 10.0,
+      "validation.wheel_acceleration": 5.0,
+      "validation.steer_rate": 1.5707963267948966,
+      "validation.collision_padding": 0.01,
+      "coupled_time_scaling.enabled": true,
+      "coupled_time_scaling.profile": "local",
+      "coupled_time_scaling.max_scale": 8.0
+    },
+    "native_presets": {
+      "corridor_s": {
+        "report": "reports/compact_local_coordinate/corridor_s/validation.json",
+        "status": "passed",
+        "planning_wall_s": 1.869997952,
+        "duration_s": 11.433460926387681,
+        "uniform_reference_duration_s": 52.969916374128296,
+        "collision_cost_index_relative_error": 0,
+        "local_geometry_error": 0,
+        "local_velocity_fd_error": 1.3015001298910533e-09,
+        "local_acceleration_fd_error": 1.230840140642453e-07,
+        "base_path_length_m": 1.5603709426137577
+      },
+      "north_door": {
+        "report": "reports/compact_north_final/validation.json",
+        "status": "passed",
+        "planning_wall_s": 4.855849472,
+        "duration_s": 14.836994607249594,
+        "uniform_reference_duration_s": 57.709034558507796,
+        "collision_cost_index_relative_error": 0,
+        "local_geometry_error": 0,
+        "local_velocity_fd_error": 7.974962912271621e-10,
+        "local_acceleration_fd_error": 4.854244950447395e-08,
+        "base_path_length_m": 2.814299150666869
+      },
+      "south_door": {
+        "report": "reports/compact_local_coordinate/south_door/validation.json",
+        "status": "passed",
+        "planning_wall_s": 3.774954766,
+        "duration_s": 12.919471720583113,
+        "uniform_reference_duration_s": 45.7215918437729,
+        "collision_cost_index_relative_error": 0,
+        "local_geometry_error": 0,
+        "local_velocity_fd_error": 1.9346779733808717e-09,
+        "local_acceleration_fd_error": 1.882304605654861e-07,
+        "base_path_length_m": 2.5210311160099668
+      }
+    },
+    "gui": {
+      "presets": {
+        "report": "reports/gazebo_20261124_113219/gui_checks/20261124_113648/validation.json",
+        "status": "passed",
+        "scenario": "presets",
+        "input_method": "native Qt mouse/key event path; no ROS command/service publisher",
+        "window": "0x1a00006",
+        "loaded_goals": [
+          {
+            "id": "corridor_s",
+            "backend_goal": [
+              -4.75,
+              0.45,
+              -3.141592653589793,
+              0.12,
+              -0.56,
+              -1.02,
+              -0.1325,
+              -1.5057,
+              -1.251
+            ]
+          },
+          {
+            "id": "north_door",
+            "backend_goal": [
+              -5,
+              2.3,
+              -1.5707926535897931,
+              -0.18,
+              -0.56,
+              -1.02,
+              -0.1325,
+              -1.5057,
+              -1.251
+            ]
+          },
+          {
+            "id": "south_door",
+            "backend_goal": [
+              -5,
+              -2.05,
+              1.570792653589793,
+              0.18,
+              -0.56,
+              -1.02,
+              -0.1325,
+              -1.5057,
+              -1.251
+            ]
+          }
+        ],
+        "selection_drift_m": 1.1174716230404793e-06,
+        "wall_s": 5.4239626419998785
+      },
+      "execute": {
+        "report": "reports/gazebo_20261124_113219/gui_checks/20261124_113727/validation.json",
+        "status": "passed",
+        "scenario": "execute",
+        "input_method": "native Qt mouse/key event path; no ROS command/service publisher",
+        "window": "0x1a00006",
+        "requested_speed_limits": [
+          0.5,
+          0.7,
+          0.6
+        ],
+        "preset_id": "corridor_s",
+        "gui_service_accepted_plan_id": "coupled_1",
+        "candidate_generated": true,
+        "validation_passed": true,
+        "planner_reason": "explicit local time profile; duration ratio=1.374801 max local scale=6.460000; sampled full-mesh and four-wheel validation passed; no continuous-safety claim",
+        "planning_wait_wall_s": 1.2970131320000746,
+        "planning_wall_s": 1.123456736,
+        "validation_wall_s": 0.337563722,
+        "duration_s": 11.290458772309517,
+        "validated_goal": [
+          -4.75,
+          0.45,
+          -3.141592653589793,
+          0.12,
+          -0.56,
+          -1.02,
+          -0.1325,
+          -1.5057,
+          -1.251
+        ],
+        "execution_started": true,
+        "execution_completed": true,
+        "execution_success": true,
+        "execution_reason": "",
+        "endpoint_error_m": 0.012764439739594699,
+        "arm_endpoint_error_rad": 0.00800213185803611,
+        "front_projection_m": 1.3713196672607764,
+        "wall_s": 15.997709824999902
+      },
+      "drive": {
+        "report": "reports/gazebo_20261124_113219/gui_checks/20261124_113823/validation.json",
+        "status": "passed",
+        "scenario": "drive",
+        "input_method": "native Qt mouse/key event path; no ROS command/service publisher",
+        "window": "0x1a00006",
+        "requested_speed_limits": [
+          0.4,
+          0.6,
+          0.5
+        ],
+        "wall_s": 8.148069620000115
+      },
+      "speed_invalidation": {
+        "report": "reports/gazebo_20261124_113219/gui_checks/20261124_114145/validation.json",
+        "status": "passed",
+        "scenario": "speed_invalidation",
+        "input_method": "native Qt mouse/key event path; no ROS command/service publisher",
+        "window": "0x1a00006",
+        "requested_speed_limits": [
+          0.4,
+          0.6,
+          0.5
+        ],
+        "gui_service_accepted_plan_id": "coupled_2",
+        "candidate_generated": true,
+        "validation_passed": true,
+        "planner_reason": "explicit local time profile; duration ratio=1.346592 max local scale=4.820000; sampled full-mesh and four-wheel validation passed; no continuous-safety claim",
+        "planning_wait_wall_s": 0.8543539429997509,
+        "planning_wall_s": 0.705185568,
+        "validation_wall_s": 0.194486155,
+        "duration_s": 6.63475562887141,
+        "validated_goal": [
+          -4.8484,
+          -0.1368,
+          1.5166926535897929,
+          0.04,
+          -0.5588,
+          -1.012,
+          -0.1325,
+          -1.5057,
+          -1.251
+        ],
+        "speed_edit_invalidated_gui_execution": true,
+        "wall_s": 5.019828961999792
+      }
+    },
+    "failed_gui_attempts": [
+      "reports/gazebo_20261124_113219/gui_checks/20261124_113515/validation.json",
+      "reports/gazebo_20261124_113219/gui_checks/20261124_113531/validation.json",
+      "reports/gazebo_20261124_113219/gui_checks/20261124_113709/validation.json"
+    ],
+    "execution": {
+      "execution_started": true,
+      "execution_completed": true,
+      "success": true,
+      "actual_mode": "coupled",
+      "max_base_error_m": 0.04659304400928224,
+      "max_arm_error_rad": 0.009120031819009666
+    },
+    "planning": {
+      "search_wall_s": 0.095070384,
+      "optimization_wall_s": 0.945694928,
+      "source_check_wall_s": 0.082223818,
+      "cost_evaluations": 200,
+      "planning_wall_s": 1.123456736,
+      "validation_wall_s": 0.337563722,
+      "raw_validation_passed": false,
+      "raw_duration_s": 8.212433577326065,
+      "duration_s": 11.290458772309517,
+      "timing_profile": "local",
+      "time_scale": 1.3748006198164764,
+      "maximum_local_time_scale": 6.46,
+      "requested_speed_limits": [
+        0.5,
+        0.7,
+        0.6
+      ]
+    },
+    "core": {
+      "status": "passed",
+      "tests": 30,
+      "report": "reports/compact_final_core.xml"
+    },
+    "independence": {
+      "status": "passed",
+      "packages": 15,
+      "local_mesh_references": 35,
+      "verified_upstream_files": 31,
+      "remani_patch_matches_sources": true,
+      "local_world_assets": 3,
+      "native_sim_executables": 4,
+      "ament_prefix_path": "/home/ubuntu/risk_mm_ws/install/mm_bringup:/home/ubuntu/risk_mm_ws/install/risk_mm_runtime:/home/ubuntu/risk_mm_ws/install/rangermini_moveit_config:/home/ubuntu/risk_mm_ws/install/mm_model:/home/ubuntu/risk_mm_ws/install/rangermini_description:/home/ubuntu/risk_mm_ws/install/xarm_description:/home/ubuntu/risk_mm_ws/install/remani_adapter:/home/ubuntu/risk_mm_ws/install/traj_opt:/home/ubuntu/risk_mm_ws/install/path_searching:/home/ubuntu/risk_mm_ws/install/traj_utils:/home/ubuntu/risk_mm_ws/install/risk_mm_interfaces:/home/ubuntu/risk_mm_ws/install/risk_mm:/home/ubuntu/risk_mm_ws/install/mm_config:/home/ubuntu/risk_mm_ws/install/plan_env:/home/ubuntu/risk_mm_ws/install/mm_utils:/opt/ros/humble"
+    },
+    "failures_preserved": [
+      "reports/compact_local_validation/corridor_s/validation.json",
+      "reports/compact_local_coordinate/north_door/validation.json",
+      "reports/goal_presets_20261124_104330/attempt2/cnc_staging/validation.json"
+    ],
+    "performance_rejection": {
+      "report": "reports/compact_local_validation/corridor_s/validation.json",
+      "reason": "first safe local profile remained 32.27 s; replaced by checked local coordinate shortening"
+    }
+  },
+  "autonomous_patrol_current": {
+    "status": "incomplete",
+    "snapshot": "reports/patrol_status_snapshot.json",
+    "progress": "agent/current_work_progress.md",
+    "single_goal_historical_success_does_not_imply_patrol_success": true,
+    "actual_attempts": 10,
+    "successful_loops": 0,
+    "max_visited_in_attempts": 0,
+    "latest_source_build": "failed; correction not rebuilt",
+    "source_installed_configuration_match": false,
+    "warm_offline_ms": {
+      "min": 138.09997199999998,
+      "median": 157.539832,
+      "max": 219.518397
+    },
+    "next": "restore reproducible build, diagnose fixed turning fixture, satisfy four-wheel constraints, then complete real continuous loops and GUI acceptance"
   }
 }

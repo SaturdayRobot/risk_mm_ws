@@ -138,6 +138,7 @@ namespace remani_planner{
                 const std::vector<double>& start_g_score_list, const std::vector<int>& start_layer_list, const std::vector<double>& end_g_score_list, const std::vector<int>& end_layer_list,
                 const std::vector<int>& start_singul_list, const std::vector<int>& end_singul_list);
     void setParam(rclcpp::Node::SharedPtr& nh, const std::shared_ptr<MMConfig> &mm_config);
+    void setRandomSeed(std::uint32_t seed) { random_gen_.seed(seed); }
     void init(const std::vector<Eigen::VectorXd>& start_pt_list, const std::vector<Eigen::VectorXd>& end_pt_list);
     void reset();
     bool smooth(PathNodeRRTPtr smooth_node);

@@ -1,0 +1,10 @@
+string task_id
+string model_signature
+uint64 map_revision
+float64[9] goal
+# Requested maxima [base m/s, yaw rad/s, joint rad/s]; zeros use configured maxima.
+float64[3] speed_limits
+---
+bool accepted
+string plan_id
+string reason

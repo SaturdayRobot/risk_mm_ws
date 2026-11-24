@@ -1,7 +1,8 @@
 <robot name="rangermini_xarm6">
+    <!-- Body axes +X toward lidar/front, +Y left, +Z up. CAD joint IDs are retained. -->
     <link name="base_link">
         <visual>
-            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <origin rpy="0 0 3.14159265358979" xyz="0 0 0"/>
             <geometry>
                 <mesh filename="file:///home/ubuntu/risk_mm_ws/install/rangermini_description/share/rangermini_description/meshes/base_link.stl"/>
             </geometry>
@@ -10,48 +11,48 @@
             </material>
         </visual>
         <inertial>
-            <origin xyz="-0.018621757 -0.005896705 0.271407712" rpy="0 0 0"/>
+            <origin xyz="0.018621757 0.005896705 0.271407712" rpy="0 0 3.14159265358979"/>
             <mass value="63.204716271"/>
             <inertia ixx="2.195479133031" ixy="-0.009096831742" ixz="-0.000399046675" iyy="2.743178181310" iyz="-0.000116029484" izz="2.420468701317"/>
         </inertial>
         <collision>
-            <origin xyz="-0.012 0 0.576"/>
+            <origin xyz="0.012 0 0.576"/>
             <geometry>
                 <box size="0.752 0.512 0.52"/>
             </geometry>
         </collision>
         <collision>
-            <origin xyz="0.004 0 0.196"/>
+            <origin xyz="-0.004 0 0.196"/>
             <geometry>
                 <box size="0.248 0.5 0.24"/>
             </geometry>
         </collision>
         <collision>
-            <origin xyz="-0.362 0 0.23"/>
+            <origin xyz="0.362 0 0.23"/>
             <geometry>
                 <box size="0.052 0.248 0.196"/>
             </geometry>
         </collision>
         <collision>
-            <origin xyz="0.246999 0.185333 0.268"/>
+            <origin xyz="-0.246999 -0.185333 0.268"/>
             <geometry>
                 <box size="0.141 0.135 0.096"/>
             </geometry>
         </collision>
         <collision>
-            <origin xyz="0.246999 -0.184952 0.268"/>
+            <origin xyz="-0.246999 0.184952 0.268"/>
             <geometry>
                 <box size="0.141 0.135 0.096"/>
             </geometry>
         </collision>
         <collision>
-            <origin xyz="-0.247004 0.187405 0.268"/>
+            <origin xyz="0.247004 -0.187405 0.268"/>
             <geometry>
                 <box size="0.141 0.135 0.096"/>
             </geometry>
         </collision>
         <collision>
-            <origin xyz="-0.247001 -0.188634 0.268"/>
+            <origin xyz="0.247001 0.188634 0.268"/>
             <geometry>
                 <box size="0.141 0.135 0.096"/>
             </geometry>
@@ -236,7 +237,7 @@
     <joint name="joint_steer_fl" type="revolute">
         <parent link="base_link"/>
         <child link="steering_fl"/>
-        <origin rpy="0 0 0" xyz="0.246999 0.185333 0.100000"/>
+        <origin rpy="0 0 3.14159265358979" xyz="-0.246999 -0.185333 0.1"/>
         <axis xyz="0 0 1"/>
         <limit effort="30" lower="-1.5708" upper="1.5708" velocity="2.0"/>
         <dynamics damping=".1" friction="0"/>
@@ -245,14 +246,14 @@
         <parent link="steering_fl"/>
         <child link="wheel_fl"/>
         <origin rpy="0 0 0" xyz="0 -0.017500 0"/>
-        <axis xyz="0 1 0"/>
+        <axis xyz="0 -1 0"/>
         <limit effort="20" velocity="10.0"/>
         <dynamics damping=".02" friction="0"/>
     </joint>
     <joint name="joint_steer_fr" type="revolute">
         <parent link="base_link"/>
         <child link="steering_fr"/>
-        <origin rpy="0 0 0" xyz="0.246999 -0.184952 0.100000"/>
+        <origin rpy="0 0 3.14159265358979" xyz="-0.246999 0.184952 0.1"/>
         <axis xyz="0 0 1"/>
         <limit effort="30" lower="-1.5708" upper="1.5708" velocity="2.0"/>
         <dynamics damping=".1" friction="0"/>
@@ -261,14 +262,14 @@
         <parent link="steering_fr"/>
         <child link="wheel_fr"/>
         <origin rpy="0 0 0" xyz="0 0.017500 0"/>
-        <axis xyz="0 1 0"/>
+        <axis xyz="0 -1 0"/>
         <limit effort="20" velocity="10.0"/>
         <dynamics damping=".02" friction="0"/>
     </joint>
     <joint name="joint_steer_rl" type="revolute">
         <parent link="base_link"/>
         <child link="steering_rl"/>
-        <origin rpy="0 0 0" xyz="-0.247004 0.187405 0.100000"/>
+        <origin rpy="0 0 3.14159265358979" xyz="0.247004 -0.187405 0.1"/>
         <axis xyz="0 0 1"/>
         <limit effort="30" lower="-1.5708" upper="1.5708" velocity="2.0"/>
         <dynamics damping=".1" friction="0"/>
@@ -277,14 +278,14 @@
         <parent link="steering_rl"/>
         <child link="wheel_rl"/>
         <origin rpy="0 0 0" xyz="0 -0.020000 0"/>
-        <axis xyz="0 1 0"/>
+        <axis xyz="0 -1 0"/>
         <limit effort="20" velocity="10.0"/>
         <dynamics damping=".02" friction="0"/>
     </joint>
     <joint name="joint_steer_rr" type="revolute">
         <parent link="base_link"/>
         <child link="steering_rr"/>
-        <origin rpy="0 0 0" xyz="-0.247001 -0.188634 0.100000"/>
+        <origin rpy="0 0 3.14159265358979" xyz="0.247001 0.188634 0.1"/>
         <axis xyz="0 0 1"/>
         <limit effort="30" lower="-1.5708" upper="1.5708" velocity="2.0"/>
         <dynamics damping=".1" friction="0"/>
@@ -293,7 +294,7 @@
         <parent link="steering_rr"/>
         <child link="wheel_rr"/>
         <origin rpy="0 0 0" xyz="0 0.020000 0"/>
-        <axis xyz="0 1 0"/>
+        <axis xyz="0 -1 0"/>
         <limit effort="20" velocity="10.0"/>
         <dynamics damping=".02" friction="0"/>
     </joint>
@@ -511,7 +512,7 @@
     <joint name="head_mount" type="fixed">
         <parent link="xarm6_link_eef"/>
         <child link="head_link"/>
-        <origin xyz="0.0117 0.0072 0.0570" rpy="0 0 0"/>
+        <origin xyz="-0.0117 -0.0072 0.057" rpy="0 0 3.141592653589793"/>
     </joint>
     <link name="head_link">
         <visual>
@@ -545,13 +546,13 @@
     <joint name="lidar_mount" type="fixed">
         <parent link="base_link"/>
         <child link="lidar_link"/>
-        <origin xyz="-0.139 -0.125 0.796" rpy="0 0 0"/>
+        <origin xyz="0.139 0.125 0.796" rpy="0 0 0"/>
     </joint>
     <link name="arm_mount_link"/>
     <joint name="arm_mount_frame" type="fixed">
         <parent link="base_link"/>
         <child link="arm_mount_link"/>
-        <origin xyz="0.126 0.0002 0.6622" rpy="0 0 0"/>
+        <origin xyz="-0.126 -0.0002 0.6622" rpy="0 0 3.14159265358979"/>
     </joint>
     <ros2_control name="RangerminiGazebo" type="system">
         <hardware>
@@ -668,7 +669,7 @@
         <joint name="xarm6_joint1">
             <command_interface name="position"/>
             <state_interface name="position">
-                <param name="initial_value">-0.38912379000000002</param>
+                <param name="initial_value">0</param>
             </state_interface>
             <state_interface name="velocity"/>
             <state_interface name="effort"/>
@@ -681,7 +682,7 @@
         <joint name="xarm6_joint2">
             <command_interface name="position"/>
             <state_interface name="position">
-                <param name="initial_value">-1.0216508799999999</param>
+                <param name="initial_value">-0.56000000000000005</param>
             </state_interface>
             <state_interface name="velocity"/>
             <state_interface name="effort"/>
@@ -694,7 +695,7 @@
         <joint name="xarm6_joint3">
             <command_interface name="position"/>
             <state_interface name="position">
-                <param name="initial_value">-1.6473515299999999</param>
+                <param name="initial_value">-1.02</param>
             </state_interface>
             <state_interface name="velocity"/>
             <state_interface name="effort"/>
@@ -707,7 +708,7 @@
         <joint name="xarm6_joint4">
             <command_interface name="position"/>
             <state_interface name="position">
-                <param name="initial_value">-2.8348212899999998</param>
+                <param name="initial_value">-0.13249348115000001</param>
             </state_interface>
             <state_interface name="velocity"/>
             <state_interface name="effort"/>
@@ -720,7 +721,7 @@
         <joint name="xarm6_joint5">
             <command_interface name="position"/>
             <state_interface name="position">
-                <param name="initial_value">0.49408282999999997</param>
+                <param name="initial_value">-1.5056698823800001</param>
             </state_interface>
             <state_interface name="velocity"/>
             <state_interface name="effort"/>
@@ -733,7 +734,7 @@
         <joint name="xarm6_joint6">
             <command_interface name="position"/>
             <state_interface name="position">
-                <param name="initial_value">2.0026552299999998</param>
+                <param name="initial_value">-1.25102699388</param>
             </state_interface>
             <state_interface name="velocity"/>
             <state_interface name="effort"/>
@@ -835,13 +836,13 @@
     <joint name="front_camera_link_joint" type="fixed">
         <parent link="base_link"/>
         <child link="front_camera_link"/>
-        <origin xyz="-0.324 0.048 0.542" rpy="0.0 0.0 3.141592653589793"/>
+        <origin xyz="0.324 -0.048 0.542" rpy="0 0 0"/>
     </joint>
     <link name="imu_link"/>
     <joint name="imu_link_joint" type="fixed">
         <parent link="base_link"/>
         <child link="imu_link"/>
-        <origin xyz="0.0 0.0 0.35" rpy="0.0 0.0 0.0"/>
+        <origin xyz="0 0 0.35" rpy="0 0 0"/>
     </joint>
     <link name="camera_depth_optical_frame"/>
     <joint name="camera_depth_optical_frame_joint" type="fixed">
@@ -861,7 +862,6 @@
         <child link="camera_imu_link"/>
         <origin xyz="0 0 0" rpy="0 0 0"/>
     </joint>
-    <!-- CAD lens center on the face with the square panel and circular lens. -->
     <link name="head_camera_link"/>
     <joint name="head_camera_mount" type="fixed">
         <parent link="head_link"/>

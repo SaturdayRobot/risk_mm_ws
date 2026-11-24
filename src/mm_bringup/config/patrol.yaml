@@ -1,0 +1,28 @@
+# Forward continuous loop in the factory corridor. The captured start is the
+# final return target; no image capture or original REMANI FSM is invoked.
+schema_version: 1
+world: s6_factory_inspection_v1
+world_sha256: 14afd312fd0c3f870eb5829357d349eccee3f273721fb382476627fea6632d48
+position_frame: world
+heading_frame: base_control
+angle_unit: rad
+through_speed_m_s: 0.15
+optimizer_budget_ms: 100.0
+forward_only: true
+min_turning_radius_m: 0.40
+goals:
+  - id: pipe_west
+    label: '管线西侧巡检'
+    description: '主通道南侧，车臂联动不停步通过。'
+    base: [-5.8, -0.55, 0.0]
+    arm: [0.12, -0.56, -1.02, -0.13249348115, -1.50566988238, -1.25102699388]
+  - id: corridor_east
+    label: '通道东侧巡检'
+    description: '前向转弯绕至主通道北侧，转向与机械臂同步规划。'
+    base: [-4.4, 0.30, 3.141592653589793]
+    arm: [-0.12, -0.56, -1.02, -0.13249348115, -1.50566988238, -1.25102699388]
+  - id: pipe_return
+    label: '管线回程巡检'
+    description: '沿北侧返回，随后规划回到启动时记录的起点。'
+    base: [-6.6, 0.30, 3.141592653589793]
+    arm: [0.08, -0.56, -1.02, -0.13249348115, -1.50566988238, -1.25102699388]

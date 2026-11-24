@@ -1,0 +1,8 @@
+string task_id
+string model_signature
+uint64 map_revision
+float64[3] speed_limits
+---
+bool accepted
+string mission_id
+string reason

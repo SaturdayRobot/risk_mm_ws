@@ -1,0 +1,16 @@
+/**:
+  ros__parameters:
+    # Public validation and actuator limits; distinct from optimizer soft penalties.
+    validation.arm_velocity: 0.8
+    validation.arm_acceleration: 1.6
+    validation.base_velocity: 1.0
+    validation.base_yaw_rate: 1.2
+    validation.wheel_velocity: 10.0
+    validation.wheel_acceleration: 5.0
+    validation.steer_rate: 1.5707963267948966
+    validation.collision_padding: 0.01
+    # Explicit physical timing after REMANI. Keep the original candidate and
+    # the C2 local time map; validate the exact mapped derivatives and geometry.
+    coupled_time_scaling.enabled: true
+    coupled_time_scaling.profile: local
+    coupled_time_scaling.max_scale: 8.0

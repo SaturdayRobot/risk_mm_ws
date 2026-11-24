@@ -157,16 +157,33 @@
 -}  //namespace remani_planner+}  //namespace remani_planner
 --- remani_planner/path_searching/src/kino_astar.cpp
 +++ src/planning/path_searching/src/kino_astar.cpp
-@@ -7,7 +7,7 @@
+@@ -1,13 +1,23 @@
+ #include "path_searching/kino_astar.h"
+ #include <sstream>
+ #include <plan_env/grid_map.h>
++#include <ompl/base/spaces/SO2StateSpace.h>
+ 
+ using namespace std;
+ using namespace Eigen;
  
  namespace remani_planner{
- 
+-
 -void KinoAstar::setParam(ros::NodeHandle& nh, const std::shared_ptr<GridMap> &env, const std::shared_ptr<MMConfig> &mm_config){
++namespace {
++// Only enforce the angular subspace. Enforcing SE(2) would also clamp XY
++// against unused OMPL sampling bounds, changing the original query geometry.
++void enforceShotYaw(ompl::base::State *state) {
++  static const ompl::base::SO2StateSpace angles;
++  auto *angle=state->as<ompl::base::CompoundState>()->as<ompl::base::SO2StateSpace::StateType>(1);
++  angles.enforceBounds(angle);
++}
++}
++
 +void KinoAstar::setParam(rclcpp::Node::SharedPtr& nh, const std::shared_ptr<GridMap> &env, const std::shared_ptr<MMConfig> &mm_config){
    sdf_map_ = env;
    Eigen::Vector3i map_size;
    sdf_map_->getVoxelNum(map_size);
-@@ -20,40 +20,39 @@
+@@ -20,40 +30,39 @@
    mobile_base_wheel_base_ = mm_config_->getBaseWheelBase();
  
    double yaw_resolution;
@@ -230,7 +247,7 @@
  
    use_node_num_ = 0;
    iter_num_ = 0;
-@@ -133,16 +132,16 @@
+@@ -133,16 +142,16 @@
    end_state(3) = 0.0;
    end_state.tail(manipulator_dof_) = end_pos.tail(manipulator_dof_);
  
@@ -251,7 +268,7 @@
      has_path_ = false;
    }
    sdf_map_->resetAstarBuffer();
-@@ -205,8 +204,8 @@
+@@ -205,8 +214,8 @@
  
      car_statept_disp.push_back(car_statelist);
      car_statelist_disp.push_back(car_statelist_check);
@@ -262,7 +279,7 @@
  
      std::vector<Eigen::VectorXd> final_state;
      std::vector<double> final_yaw_list, final_t_list;
-@@ -272,111 +271,22 @@
+@@ -272,111 +281,22 @@
    }
  }
  
@@ -380,7 +397,16 @@
      return GOAL_COLLISION;
    }
  
-@@ -417,8 +327,8 @@
+@@ -403,7 +323,7 @@
+     if((cur_node->state.head(2) - end_state_.head(2)).norm() < oneshot_range_ && initsearch){
+       int last_dir;
+       if(cur_node->parent != NULL){
+-        bool is_forward = Eigen::Vector2d(cos(cur_node->parent->state(2)), sin(cos(cur_node->parent->state(2)))).transpose() * (cur_node->state - cur_node->parent->state).head(2) > 0;
++        bool is_forward = Eigen::Vector2d(cos(cur_node->parent->state(2)), sin(cur_node->parent->state(2))).transpose() * (cur_node->state - cur_node->parent->state).head(2) > 0;
+         last_dir = is_forward ? 1 : -1;
+       }else{
+         last_dir = 0;
+@@ -417,8 +337,8 @@
        }
      }
      
@@ -391,7 +417,89 @@
        has_path_ = false;
        return NO_PATH;
      }
-@@ -957,7 +867,7 @@
+@@ -454,6 +374,7 @@
+       initsearch = true;
+     }else{
+       for (double arc = -max_arc_; arc <= max_arc_ + 1e-3; arc += res_arc * max_arc_){
++        if(forward_only_ && arc<0.)continue;
+         if(fabs(arc) < 1.0e-2){
+           continue;
+         }
+@@ -576,6 +497,12 @@
+   return singul;
+ }
+ 
++void KinoAstar::setForwardOnly(bool enabled,double turning_radius) {
++  forward_only_=enabled;shotptr_list_.clear();
++  if(enabled)shotptr_list_.push_back(std::make_shared<ompl::base::DubinsStateSpace>(turning_radius));
++  else for(double radius:{.4,.2,.1})shotptr_list_.push_back(std::make_shared<ompl::base::ReedsSheppStateSpace>(radius));
++}
++
+ inline double KinoAstar::getHeu(const Eigen::Vector3d &x1, const Eigen::Vector3d &x2){
+   return (x1 - x2).head(2).norm();
+ }
+@@ -593,6 +520,8 @@
+     from[0] = state1[0]; from[1] = state1[1]; from[2] = state1[2];
+     to[0]   = state2[0]; to[1]   = state2[1]; to[2]   = state2[2];
+     std::vector<double> reals;
++    enforceShotYaw(from());
++    enforceShotYaw(to());
+     len = shotptr->distance(from(), to());
+ 
+     for (double l = 0.0; l <= len; l += oneshot_check_len_ / 2.0){
+@@ -605,13 +534,13 @@
+     double min_dist;
+     int traj_pieces = 0;
+     double traj_len = 0;
+-    bool is_forward = Eigen::Vector2d(cos(path_list[0](2)), sin(cos(path_list[0](2)))).transpose() * (path_list[1] - path_list[0]).head(2) > 0;
++    bool is_forward = Eigen::Vector2d(cos(path_list[0](2)), sin(path_list[0](2))).transpose() * (path_list[1] - path_list[0]).head(2) > 0;
+     int dir_last = is_forward ? 1 : -1;
+     if(last_dir != dir_last) ++traj_pieces;
+     ++traj_pieces;
+     for(unsigned int j = 0; j < path_list.size(); ++j){
+       if(j < path_list.size() - 1){
+-        is_forward = Eigen::Vector2d(cos(path_list[j](2)), sin(cos(path_list[j](2)))).transpose() * (path_list[j + 1] - path_list[j]).head(2) > 0;
++        is_forward = Eigen::Vector2d(cos(path_list[j](2)), sin(path_list[j](2))).transpose() * (path_list[j + 1] - path_list[j]).head(2) > 0;
+         int dir_now = is_forward ? 1 : -1;
+         if(dir_last != dir_now){
+           traj_len = 0.0;
+@@ -648,6 +577,8 @@
+   from[0] = state1[0]; from[1] = state1[1]; from[2] = state1[2];
+   to[0]   = state2[0]; to[1]   = state2[1]; to[2]   = state2[2];
+   std::vector<double> reals;
++  enforceShotYaw(from());
++  enforceShotYaw(to());
+   len = shotptr->distance(from(), to());
+   double sum_T = len / max_vel_;
+ 
+@@ -700,7 +631,7 @@
+   }
+   Eigen::Vector3d end_state = node_path.back();
+   std::vector<Eigen::Vector3d> SampleList_temp;
+-  if(!is_shot_succ_){shotptrindex_ = 2;}
++  if(!is_shot_succ_){shotptrindex_ = forward_only_?0:2;}
+   for(unsigned int i = 0; i < node_path.size() - 1; ++i){ // from
+     SampleList.push_back(node_path[i]);
+     bool shot_succ = false;
+@@ -713,6 +644,8 @@
+     for(j = node_path.size() - 1; j > i + 1; --j){
+       if(i == 0) break;
+       to[0] = node_path[j][0]; to[1] = node_path[j][1]; to[2] = node_path[j][2];
++      enforceShotYaw(from());
++      enforceShotYaw(to());
+       double shotLength = shotptr->distance(from(), to());//oneshot的距离
+       std::vector<double> reals;
+       piece_num_temp = std::max(ceil(shotLength / oneshot_check_len_), 2.0);
+@@ -778,6 +711,8 @@
+     state2 = end_state_.head(3);
+     from[0] = state1[0]; from[1] = state1[1]; from[2] = state1[2];
+     to[0] = state2[0]; to[1] = state2[1]; to[2] = state2[2];
++    enforceShotYaw(from());
++    enforceShotYaw(to());
+     double shotLength = shotptr->distance(from(), to());
+     shotptr->validSegmentCount(from(), to());
+     std::vector<double> reals;
+@@ -957,7 +892,7 @@
  double KinoAstar::evaluateDuration(const double &length, const double &startV, const double &endV){
    double critical_len; 
    if(startV > max_vel_ || endV > max_vel_){
@@ -400,7 +508,7 @@
    }
    double temp_max_acc = max_acc_ * 0.7;
    double temp_max_vel = max_vel_ * 1.0;
-@@ -978,7 +888,7 @@
+@@ -978,7 +913,7 @@
    double critical_len; 
    if(startV > max_vel_ || endV > max_vel_){
      // std::cout << startV << ", " << endV << ", " << max_vel_ << std::endl;
@@ -409,7 +517,7 @@
    }
    double startv2 = pow(startV, 2);
    double endv2 = pow(endV, 2);
-@@ -1031,7 +941,7 @@
+@@ -1031,7 +966,7 @@
  Eigen::Vector3d KinoAstar::evaluatePos(const double &input_t){
    double t = input_t;
    if(t < 0 || t > totalTrajTime){
@@ -467,25 +575,55 @@
      // std::cout << "test 1" << std::endl; 
      // 出意外了，需要补上中间的
      std::vector<Eigen::VectorXd> start_list, end_list;
-@@ -256,7 +256,7 @@
+@@ -214,9 +214,11 @@
+                                                       path_fill, yaw_list_fill, t_list_fill);
+     // std::cout << "test 4" << std::endl; 
+     if(!status){
+-      goal_gen_.seed(std::random_device{}());
+-      state_gen_.seed(std::random_device{}());
+-      node_gen_.seed(std::random_device{}());
++      if(!fixed_random_seed_) {
++        goal_gen_.seed(std::random_device{}());
++        state_gen_.seed(std::random_device{}());
++        node_gen_.seed(std::random_device{}());
++      }
+       return false;
+     }
+       
+@@ -256,20 +258,24 @@
      if(it != node_pool_.end()){
        q_t = it->second;
      }else{
 -      ROS_ERROR("find part_idx_begin, short_mani_start fail!");
+-      goal_gen_.seed(std::random_device{}());
+-      state_gen_.seed(std::random_device{}());
+-      node_gen_.seed(std::random_device{}());
 +      RCLCPP_ERROR(rclcpp::get_logger("remani"), "find part_idx_begin, short_mani_start fail!");
-       goal_gen_.seed(std::random_device{}());
-       state_gen_.seed(std::random_device{}());
-       node_gen_.seed(std::random_device{}());
-@@ -266,7 +266,7 @@
++      if(!fixed_random_seed_) {
++        goal_gen_.seed(std::random_device{}());
++        state_gen_.seed(std::random_device{}());
++        node_gen_.seed(std::random_device{}());
++      }
+       return false;
+     }
+     it = node_pool_.find(calculateValue(part_idx_end, short_mani_end));
      if(it != node_pool_.end()){
        q_an_t = it->second;
      }else{
 -      ROS_ERROR("find part_idx_end, short_mani_end fail!");
+-      goal_gen_.seed(std::random_device{}());
+-      state_gen_.seed(std::random_device{}());
+-      node_gen_.seed(std::random_device{}());
 +      RCLCPP_ERROR(rclcpp::get_logger("remani"), "find part_idx_end, short_mani_end fail!");
-       goal_gen_.seed(std::random_device{}());
-       state_gen_.seed(std::random_device{}());
-       node_gen_.seed(std::random_device{}());
-@@ -390,7 +390,7 @@
++      if(!fixed_random_seed_) {
++        goal_gen_.seed(std::random_device{}());
++        state_gen_.seed(std::random_device{}());
++        node_gen_.seed(std::random_device{}());
++      }
+       return false;
+     }
+     // std::cout << "test 7" << std::endl; 
+@@ -390,7 +396,7 @@
  
    bool SampleMani::search(const Eigen::VectorXd &start_state, const Eigen::VectorXd &end_state){
      // std::cout << "[sample mani]: Search begin. start: " << start_state.transpose() << " end: " << end_state.transpose() << std::endl;
@@ -494,7 +632,7 @@
      std::uniform_real_distribution<double> goal_dis(0.0, 1.0);
      // std::uniform_int_distribution<int> node_dis(1, max_index_-1);
      ManiPathNodePtr start_node, end_node;
-@@ -415,15 +415,15 @@
+@@ -415,15 +421,15 @@
      // std::cout << "++++++++++++++++++++++++2.1" << std::endl;
      
      organizeTree(start_node);
@@ -513,7 +651,7 @@
        return true;
      }
      end_node->node_state = ManiPathNode::NODE_STATE::IN_ANTI_TREE;
-@@ -468,10 +468,10 @@
+@@ -468,10 +474,10 @@
      double c_min = 1.0e6;
  
      bool dir = false;
@@ -526,7 +664,7 @@
          break;
        }
  
-@@ -517,7 +517,7 @@
+@@ -517,7 +523,7 @@
            // std::cout << "min: " << c_min << std::endl;
          } 
          // mergeTrees(q_new, q_near);
@@ -535,7 +673,7 @@
          // return true;
          continue;
        }
-@@ -541,7 +541,7 @@
+@@ -541,7 +547,7 @@
        // {
        //   this->end_node_ = q_new;
        //   have_path_ = true;
@@ -544,7 +682,7 @@
        //   return true;
        // }
  
-@@ -561,7 +561,7 @@
+@@ -561,7 +567,7 @@
            // std::cout << "min: " << c_min << std::endl;
          } 
          // mergeTrees(q_new_1, q_near_1);
@@ -553,7 +691,7 @@
          // return true;
          continue;
        }
-@@ -595,7 +595,7 @@
+@@ -595,7 +601,7 @@
                // std::cout << "min: " << c_min << std::endl;
              } 
              // mergeTrees(q_new_2, q_new_1);
@@ -562,7 +700,7 @@
              // return true;
              break;
            }
-@@ -624,7 +624,7 @@
+@@ -624,7 +630,7 @@
          }
        }
      }
@@ -571,7 +709,7 @@
      // std::cout << "tree: " << tree_count_ << " max: " << tree_max_index_ <<std::endl;
      // for(auto &node : node_pool_)
      //   if(node.second->node_state == ManiPathNode::NODE_STATE::IN_TREE)
-@@ -639,9 +639,9 @@
+@@ -639,9 +645,9 @@
      
      if(have_path_){
        mergeTrees(path_node_1, path_node_2);
@@ -583,7 +721,7 @@
      }
        
      return have_path_;
-@@ -1047,7 +1047,7 @@
+@@ -1047,7 +1053,7 @@
  
    void SampleMani::linkNode(ManiPathNodePtr &parent, ManiPathNodePtr &child){
      // if(parent->index != child->index - 1){
@@ -592,7 +730,7 @@
      //   return;
      // }
      ManiPathNodePtr pre_parent = child->parent;
-@@ -1228,42 +1228,42 @@
+@@ -1228,42 +1234,42 @@
      node_pool_.clear();
    }
  
@@ -652,7 +790,7 @@
 -}  //namespace mani_sample+}  //namespace mani_sample
 --- remani_planner/path_searching/include/path_searching/kino_astar.h
 +++ src/planning/path_searching/include/path_searching/kino_astar.h
-@@ -12,8 +12,8 @@
+@@ -12,12 +12,13 @@
  #include <queue>
  #include <algorithm>
  
@@ -663,7 +801,12 @@
  #include <Eigen/Eigen>
  #include <iostream>
  #include <map>
-@@ -100,7 +100,7 @@
+ #include <string>
++#include <cstdint>
+ 
+ #include "traj_utils/plan_container.hpp"
+ #include "plan_env/grid_map.h"
+@@ -100,7 +101,7 @@
  
  class KinoAstar{
    private:
@@ -672,7 +815,15 @@
  	  int manipulator_dof_;
      int try_astar_times_;
  
-@@ -153,8 +153,7 @@
+@@ -145,6 +146,7 @@
+     // ompl::base::StateSpacePtr shotptr_;
+     std::vector<ompl::base::StateSpacePtr> shotptr_list_;
+     int shotptrindex_;
++    bool forward_only_{false};
+ 
+     bool is_shot_succ_= false;
+ 
+@@ -153,8 +155,7 @@
      std::vector<int> shotindex;
      std::vector<int> shot_SList;
  
@@ -682,7 +833,7 @@
      double mobile_base_wheel_base_;
      std::vector<PathNodePtr> path_nodes_;
      std::vector<CarFlatTrajData> flat_trajs_;
-@@ -171,13 +170,11 @@
+@@ -171,13 +172,13 @@
      enum { REACH_HORIZON = 1, REACH_END = 2,  NO_PATH = 3, REACH_END_BUT_SHOT_FAILS = 4, START_COLLISION = 5, GOAL_COLLISION = 6};
      KinoAstar(){}
      ~KinoAstar();
@@ -694,12 +845,14 @@
 -    void displayMarkerList(ros::Publisher &pub, const vector<Eigen::Vector3d> &list, double scale,
 -                                                Eigen::Vector4d color, int id, bool show_sphere /* = true */ );
 -    void displayLocalStartGoal(ros::Publisher &pub, const vector<Eigen::VectorXd> &list);
++    void setForwardOnly(bool enabled,double turning_radius=.55);
++    void setRandomSeed(std::uint32_t seed) { if(mani_sample_)mani_sample_->setRandomSeed(seed); }
 +
 +
      int KinoAstarSearchAndGetSimplePath(const Eigen::VectorXd &start_pos, const Eigen::VectorXd &start_vel, const double start_yaw, const int start_singul, const bool start_gripper,
                                          const Eigen::VectorXd &end_pos, const Eigen::VectorXd &end_vel, double end_yaw, const bool end_gripper, const Eigen::Vector2d &init_ctrl, const int continous_failures_count,
                                          std::vector<std::vector<Eigen::VectorXd>> &simple_path_container, std::vector<std::vector<double>> &yaw_list_container, 
-@@ -211,4 +208,4 @@
+@@ -211,4 +212,4 @@
  };
  
  } // namespace remani_planner
@@ -717,11 +870,26 @@
  #include <Eigen/Eigen>
  #include <iostream>
  #include <map>
-@@ -124,7 +124,7 @@
+@@ -82,6 +82,7 @@
+     std::mt19937 goal_gen_;
+     std::mt19937 state_gen_;
+     std::mt19937 node_gen_;
++    bool fixed_random_seed_{false};
+ 
+     bool checkcollision(const ManiPathNodePtr& cur_state, const ManiPathNodePtr& next_state);
+     int doubleIdx2int(double idx);
+@@ -124,7 +125,14 @@
      }
  
      bool search(const Eigen::VectorXd &start_state, const Eigen::VectorXd &end_state);
 -    void setParam(ros::NodeHandle& nh, const std::shared_ptr<remani_planner::MMConfig> &mm_config);
++    void setRandomSeed(std::uint32_t seed) {
++      fixed_random_seed_=true;
++      goal_gen_.seed(seed);
++      state_gen_.seed(seed+1U);
++      node_gen_.seed(seed+2U);
++      if(rrt_plan_)rrt_plan_->setRandomSeed(seed+3U);
++    }
 +    void setParam(rclcpp::Node::SharedPtr& nh, const std::shared_ptr<remani_planner::MMConfig> &mm_config);
      void init(const std::vector<Eigen::Vector3d> &car_state_list, const std::vector<Eigen::Vector3d> &car_state_list_check, const std::vector<double> &t_list);
      void reset();
@@ -739,18 +907,24 @@
  #include <Eigen/Eigen>
  #include <iostream>
  #include <map>
-@@ -137,7 +137,7 @@
+@@ -137,7 +137,8 @@
                  const std::vector<Eigen::VectorXd>& end_pt_list, const std::vector<double>& end_yaw_list,
                  const std::vector<double>& start_g_score_list, const std::vector<int>& start_layer_list, const std::vector<double>& end_g_score_list, const std::vector<int>& end_layer_list,
                  const std::vector<int>& start_singul_list, const std::vector<int>& end_singul_list);
 -    void setParam(ros::NodeHandle& nh, const std::shared_ptr<MMConfig> &mm_config);
 +    void setParam(rclcpp::Node::SharedPtr& nh, const std::shared_ptr<MMConfig> &mm_config);
++    void setRandomSeed(std::uint32_t seed) { random_gen_.seed(seed); }
      void init(const std::vector<Eigen::VectorXd>& start_pt_list, const std::vector<Eigen::VectorXd>& end_pt_list);
      void reset();
      bool smooth(PathNodeRRTPtr smooth_node);
 --- remani_planner/traj_opt/src/poly_traj_optimizer.cpp
 +++ src/planning/traj_opt/src/poly_traj_optimizer.cpp
-@@ -2,7 +2,7 @@
+@@ -1,8 +1,12 @@
+ #include "optimizer/poly_traj_optimizer.hpp"
++#include "optimizer/four_wheel_constraint.hpp"
++#include <algorithm>
++#include <chrono>
++#include <numeric>
  
  namespace remani_planner
  {
@@ -759,7 +933,7 @@
      grid_map_ = map;
      map_resolution_ = grid_map_->getResolution();
  
-@@ -13,52 +13,52 @@
+@@ -13,52 +17,72 @@
      T_q_0_ = mm_config_->getTq0();
      manipulator_link_pts_ = mm_config_->getLinkPoint();
  
@@ -808,6 +982,26 @@
 +    nh->get_parameter_or("optimization.ground_safe_dis", ground_safe_dis_, 0.1);
 +    nh->get_parameter_or("optimization.ground_safe_margin", ground_safe_margin_, 0.1);
 +    nh->get_parameter_or("optimization.mobile_base_opt_gear", opt_gear_, true);
++    nh->get_parameter_or("optimization.four_wheel_min_turning_radius",four_wheel_min_turning_radius_,0.);
++    nh->get_parameter_or("optimization.collision_cost_index",collision_cost_index_,true);
++    nh->get_parameter_or("optimization.solve_budget_ms",solve_budget_ms_,0.);
++    nh->get_parameter_or("optimization.check_initial_gradient",check_initial_gradient_,false);
++    std::vector<double> wheel_positions;
++    double planning_yaw=0.,steer_rate=0.;
++    nh->get_parameter("controller.wheel_positions",wheel_positions);
++    nh->get_parameter_or("mm.planning_frame_yaw_in_base_rad",planning_yaw,0.);
++    nh->get_parameter_or("validation.steer_rate",steer_rate,M_PI_2);
++    four_wheel_geometry_valid_=wheel_positions.size()==8 && std::isfinite(planning_yaw) &&
++        std::isfinite(steer_rate) && steer_rate>0.;
++    if(four_wheel_geometry_valid_) {
++      const double c=std::cos(planning_yaw),s=std::sin(planning_yaw);
++      for(int i=0;i<4;++i) {
++        const double x=wheel_positions[2*i],y=wheel_positions[2*i+1];
++        four_wheel_geometry_valid_=four_wheel_geometry_valid_ && std::isfinite(x) && std::isfinite(y);
++        four_wheel_positions_[2*i]=c*x+s*y;four_wheel_positions_[2*i+1]=-s*x+c*y;
++      }
++      four_wheel_steer_rate_=.9*steer_rate;
++    }
 +
 +    nh->get_parameter_or("mm.mobile_base_dof", mobile_base_dof_, -1);
 +    nh->get_parameter_or("mm.mobile_base_non_singul_vel", non_singul_v_, -1.0);
@@ -845,7 +1039,7 @@
  
      firs_plot_ = true;
  
-@@ -72,10 +72,10 @@
+@@ -72,10 +96,10 @@
      // kino_a_star_->init();
  
      traj_dim_ = mobile_base_dof_ + manipulator_dof_;
@@ -860,7 +1054,7 @@
    }
  
    /* main planning API */
-@@ -98,7 +98,7 @@
+@@ -98,7 +122,7 @@
      SnapOpt_container_.resize(traj_num_);
      piece_num_container_.resize(traj_num_);
      if (traj_num_ != (int)initT_container.size()){
@@ -869,7 +1063,7 @@
        return false;
      }
  
-@@ -107,7 +107,7 @@
+@@ -107,7 +131,7 @@
      for(int i = 0; i < traj_num_; i++){
        //check
        if(initInnerPts_container[i].cols()==0){
@@ -878,23 +1072,60 @@
          return false;
        }
        piece_num = initInnerPts_container[i].cols() + 1;
-@@ -181,7 +181,7 @@
+@@ -178,10 +202,34 @@
+     double final_cost;
+     
+     iter_num_ = 0;
++    solve_wall_s_=check_wall_s_=0.;
++    solve_budget_hit_=false;
      force_stop_type_ = DONT_STOP;
  
++    // Explicit offline diagnostic. It runs before the solve timer and is never
++    // enabled by the runtime configuration. Check every waypoint/time variable.
++    if(check_initial_gradient_) {
++      const auto check_begin=std::chrono::steady_clock::now();
++      Eigen::VectorXd analytic(variable_num_),scratch(variable_num_);
++      const double value=costFunctionCallback(this,x,analytic);
++      double maximum_error=0.;
++      for(int i=0;i<variable_num_;++i) {
++        const double epsilon=1e-6*std::max(1.,std::abs(x[i]));
++        Eigen::VectorXd plus=x,minus=x;plus[i]+=epsilon;minus[i]-=epsilon;
++        const double numeric=(costFunctionCallback(this,plus,scratch)-costFunctionCallback(this,minus,scratch))/(2.*epsilon);
++        const double error=std::abs(numeric-analytic[i])/(1.+std::abs(numeric)+std::abs(analytic[i]));
++        maximum_error=std::max(maximum_error,error);
++        RCLCPP_INFO(rclcpp::get_logger("remani_gradient"),"variable=%d x=%.9g analytic=%.9g numeric=%.9g relative_error=%.9g",i,x[i],analytic[i],numeric,error);
++      }
++      costFunctionCallback(this,x,scratch);iter_num_=0;
++      RCLCPP_INFO(rclcpp::get_logger("remani_gradient"),"initial_cost=%.9g max_relative_error=%.9g diagnostic_wall_s=%.6f",value,maximum_error,
++        std::chrono::duration<double>(std::chrono::steady_clock::now()-check_begin).count());
++    }
++
      /* ---------- optimize ---------- */
 -    // ros::Time t1 = ros::Time::now();
 +    // rclcpp::Time t1 = rclcpp::Clock(RCL_STEADY_TIME).now();
++    const auto solve_start=std::chrono::steady_clock::now();
++    solve_begin_=solve_start;
      int result = lbfgs::lbfgs_optimize(
          x,
          final_cost,
-@@ -191,13 +191,13 @@
+@@ -190,14 +238,21 @@
+         PolyTrajOptimizer::earlyExitCallback,
          this,
          lbfgs_params);
- 
+-
 -    // printf("\033[32miter = %d, time = %5.3f(ms), \n\033[0m", iter_num_, (ros::Time::now() - t1).toSec() * 1000.0);
-+    // printf("\033[32miter = %d, time = %5.3f(ms), \n\033[0m", iter_num_, (rclcpp::Clock(RCL_STEADY_TIME).now() - t1).seconds() * 1000.0);
-     if((result != lbfgs::LBFGS_CONVERGENCE)&&(result != lbfgs::LBFGS_STOP)&&(result != lbfgs::LBFGSERR_MAXIMUMLINESEARCH)){
+-    if((result != lbfgs::LBFGS_CONVERGENCE)&&(result != lbfgs::LBFGS_STOP)&&(result != lbfgs::LBFGSERR_MAXIMUMLINESEARCH)){
 -      ROS_ERROR("The optimization result is : %s", lbfgs::lbfgs_strerror(result));      
++    // L-BFGS restores x after a rejected line search. Its last callback may
++    // still describe a rejected trial, so regenerate the exact returned state.
++    Eigen::VectorXd returned_gradient(variable_num_);
++    final_cost=costFunctionCallback(this,x,returned_gradient);
++    solve_wall_s_=std::chrono::duration<double>(std::chrono::steady_clock::now()-solve_start).count();
++
++    // printf("\033[32miter = %d, time = %5.3f(ms), \n\033[0m", iter_num_, (rclcpp::Clock(RCL_STEADY_TIME).now() - t1).seconds() * 1000.0);
++    if(solve_budget_hit_){
++      RCLCPP_INFO(rclcpp::get_logger("remani"),"optimization budget reached after %.3f ms; candidate still requires source/public checks",solve_wall_s_*1000.);
++    }else if((result != lbfgs::LBFGS_CONVERGENCE)&&(result != lbfgs::LBFGS_STOP)&&(result != lbfgs::LBFGSERR_MAXIMUMLINESEARCH)){
 +      RCLCPP_ERROR(rclcpp::get_logger("remani"), "The optimization result is : %s", lbfgs::lbfgs_strerror(result));      
      }else if(result == lbfgs::LBFGSERR_MAXIMUMLINESEARCH){
 -      ROS_WARN("The optimization result is : %s", lbfgs::lbfgs_strerror(result));
@@ -905,7 +1136,17 @@
      }
  
      // test collision
-@@ -227,35 +227,7 @@
+@@ -209,7 +264,9 @@
+       traj_start_time = singul_traj_data.singul_traj.back().end_time;
+     }
+     bool good_traj = true;
++    const auto check_start=std::chrono::steady_clock::now();
+     good_traj = IsTrajSafe(singul_traj_data);
++    check_wall_s_=std::chrono::duration<double>(std::chrono::steady_clock::now()-check_start).count();
+     if(result == lbfgs::LBFGSERR_INVALID_FUNCVAL){
+       return false;
+     }
+@@ -227,35 +284,7 @@
      return good_traj;
    }
  
@@ -942,7 +1183,7 @@
  
    bool PolyTrajOptimizer::smoothedL1(const double &x, const double &mu, double &f, double &df){
      if (x < 0.0)
-@@ -341,7 +313,7 @@
+@@ -341,7 +370,7 @@
      // Check minimum speed
      // pen =  non_singul_v_ *  non_singul_v_ * (1.0 - feas_tol_percent_) * (1.0 - feas_tol_percent_) - vel.squaredNorm();
      // if(pen > 0.0){
@@ -951,7 +1192,7 @@
      //   return true;
      // }
  
-@@ -350,7 +322,7 @@
+@@ -350,7 +379,7 @@
      double wheel_omega_left = (2.0 * singul * v_norm - mobile_base_wheel_base_ * omega) / (2 * mobile_base_wheel_radius_);
      pen =  wheel_omega_left * wheel_omega_left - max_wheel_omega_ * max_wheel_omega_ * (1.0 + feas_tol_percent_) * (1.0 + feas_tol_percent_);
      if(pen > 0.0){
@@ -960,7 +1201,7 @@
        return true;
      }
  
-@@ -358,7 +330,7 @@
+@@ -358,7 +387,7 @@
      double wheel_omega_right = (2.0 * singul * v_norm + mobile_base_wheel_base_ * omega) / (2 * mobile_base_wheel_radius_);
      pen =  wheel_omega_right * wheel_omega_right - max_wheel_omega_ * max_wheel_omega_ * (1.0 + feas_tol_percent_) * (1.0 + feas_tol_percent_);
      if(pen > 0.0){
@@ -969,7 +1210,7 @@
        return true;
      }
  
-@@ -367,7 +339,7 @@
+@@ -367,7 +396,7 @@
      double wheel_alpha_left = (2.0 * singul * aTv / v_norm - mobile_base_wheel_base_ * alpha) / (2 * mobile_base_wheel_radius_);
      pen =  wheel_alpha_left * wheel_alpha_left - max_wheel_alpha_ * max_wheel_alpha_ * (1.0 + feas_tol_percent_) * (1.0 + feas_tol_percent_);
      if(pen > 0.0){
@@ -978,7 +1219,7 @@
        return true;
      }
  
-@@ -375,7 +347,7 @@
+@@ -375,7 +404,7 @@
      double wheel_alpha_right = (2.0 * singul * aTv / v_norm + mobile_base_wheel_base_ * alpha) / (2 * mobile_base_wheel_radius_);
      pen =  wheel_alpha_right * wheel_alpha_right - max_wheel_alpha_ * max_wheel_alpha_ * (1.0 + feas_tol_percent_) * (1.0 + feas_tol_percent_);
      if(pen > 0.0){
@@ -987,7 +1228,7 @@
        return true;
      }
  
-@@ -383,12 +355,12 @@
+@@ -383,12 +412,12 @@
      vel = traj_data.getVel(t).tail(manipulator_dof_);
      acc = traj_data.getAcc(t).tail(manipulator_dof_);
      if(vel.lpNorm<Eigen::Infinity>() - max_joint_vel_ * (1.0 + feas_tol_percent_) > 0){
@@ -1002,7 +1243,7 @@
        return true;
      }
  
-@@ -405,15 +377,15 @@
+@@ -405,21 +434,19 @@
      for (int i = 5; i < i_end; i++){
        if(checkCollision(traj_data, t, coll_type)){
          if(coll_type == 0){
@@ -1024,7 +1265,25 @@
          return false;
        }
  
-@@ -856,7 +828,7 @@
+-      if(IsNotFeasibie(traj_data, t)){
+-        return false;
+-      }
++      if(!external_kinematics_ && IsNotFeasibie(traj_data, t))return false;
+       
+       t += dt;
+     }
+@@ -560,7 +587,9 @@
+   {
+     PolyTrajOptimizer *opt = reinterpret_cast<PolyTrajOptimizer *>(func_data);
+ 
+-    return (opt->force_stop_type_ == STOP_FOR_ERROR || opt->force_stop_type_ == STOP_FOR_REBOUND);
++    opt->solve_budget_hit_=opt->solve_budget_ms_>0. &&
++      std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-opt->solve_begin_).count()>=opt->solve_budget_ms_;
++    return opt->solve_budget_hit_ || opt->force_stop_type_ == STOP_FOR_ERROR || opt->force_stop_type_ == STOP_FOR_REBOUND;
+   }
+ 
+   /* mappings between real world time and unconstrained virtual time */
+@@ -856,12 +885,19 @@
      Eigen::Vector4d dist_grad4 = Eigen::Vector4d::Zero();
      Eigen::VectorXd curr_grad(traj_dim_);
      curr_grad.setZero();
@@ -1033,7 +1292,169 @@
  
      std::vector<Eigen::Vector3d> car_pts;
      std::vector<Eigen::Matrix2d> car_dPtsdv_list;
-@@ -1241,7 +1213,7 @@
+     std::vector<Eigen::Vector2d> car_dPtsdYaw_list;
+     Eigen::Vector2d dYawdV = mm_config_->caldYawdV(vel.head(2));
++    Eigen::Matrix4d T_w_q = Eigen::Matrix4d::Identity(), T_w_q_grad_x, T_w_q_grad_y;
++    Eigen::Matrix2d R = mm_config_->calR(vel.head(2), singul_container_[trajid]);
++    T_w_q.block(0, 0, 2, 2) = R;
++    T_w_q.block(0, 3, 2, 1) = pos.head(2);
++    const bool body_clear=collision_cost_index_ && mm_config_->collisionCostBoxClear(-1,T_w_q,
++        mobile_base_check_radius_+safe_margin_,-std::numeric_limits<double>::infinity());
++    if(!body_clear) {
+     mm_config_->getCarPtsGradNew(pos.head(2), vel.head(2), singul_container_[trajid], Eigen::Vector3d(0, 0, 0), car_pts, car_dPtsdYaw_list);
+     for(unsigned int i = 0; i < car_pts.size(); ++i){
+       Eigen::Vector3d dist_grad;
+@@ -876,12 +912,9 @@
+         gradv.head(mobile_base_dof_) -= wei_obs_ * 3.0 * dist_err_2 * dist_grad.head(2).transpose() * car_dPtsdYaw_list[i] * dYawdV;
+       }
+     }
++    }
+ 
+     if(manipulator_dof_ < 1) return ret;
+-    Eigen::Matrix4d T_w_q = Eigen::Matrix4d::Identity(), T_w_q_grad_x, T_w_q_grad_y;
+-    Eigen::Matrix2d R = mm_config_->calR(vel.head(2), singul_container_[trajid]);
+-    T_w_q.block(0, 0, 2, 2) = R;
+-    T_w_q.block(0, 3, 2, 1) = pos.head(2);
+     T_w_q_grad_x.setZero();
+     T_w_q_grad_x(0, 3) = 1;
+     T_w_q_grad_y.setZero();
+@@ -920,6 +953,9 @@
+       T_grad_list[i + 2] = T_now * T_joint_grad[i];
+       T_now = T_now * T_joint[i];
+       dTdYaw = dTdYaw * T_joint[i];
++      if(collision_cost_index_ && mm_config_->collisionCostBoxClear(i,T_now,
++          manipulator_thickness_+safe_margin_mani_,
++          manipulator_thickness_+ground_safe_dis_+ground_safe_margin_+map_resolution_))continue;
+       
+       // get ESDF value & grad
+       int pts_size = manipulator_link_pts_[i].cols();
+@@ -985,7 +1021,11 @@
+       for(int j = 0; j < pts_size; ++j){
+         // with car
+         pt_on_link = (T_now * manipulator_link_pts_[i].col(j)).head(3);
+-        for(unsigned int m = 0; m < car_pts.size(); ++m){
++        std::vector<int> body_candidates;
++        if(collision_cost_index_)body_candidates=mm_config_->collisionCostNeighbors(-1,pt_on_link,
++            manipulator_thickness_+mobile_base_check_radius_+self_safe_margin_);
++        else {body_candidates.resize(car_pts.size());std::iota(body_candidates.begin(),body_candidates.end(),0);}
++        for(int m : body_candidates){
+           dist = (car_pts[m] - pt_on_link).norm(); // coarse distance
+           dist_err = manipulator_thickness_ + mobile_base_check_radius_ + self_safe_margin_ - dist; //refine distance
+           if(dist_err > 0){
+@@ -1019,7 +1059,11 @@
+           pt_on_link_m = (T_now_self_mani * manipulator_link_pts_[i].col(j)).head(3);
+           int pts_size_temp = manipulator_link_pts_[m].cols();
+           double factor = 1.0 / (double)pts_size_temp;
+-          for(int n = 0; n < pts_size_temp; ++n){
++          std::vector<int> arm_candidates;
++          if(collision_cost_index_)arm_candidates=mm_config_->collisionCostNeighbors(m,pt_on_link_m,
++              2*manipulator_thickness_+self_safe_margin_);
++          else {arm_candidates.resize(pts_size_temp);std::iota(arm_candidates.begin(),arm_candidates.end(),0);}
++          for(int n : arm_candidates){
+             pt_on_link_to_check_m = (manipulator_link_pts_[m].col(n)).head(3);
+             dist = (pt_on_link_m - pt_on_link_to_check_m).norm(); // coarse distance
+             dist_err = 2 * manipulator_thickness_ + self_safe_margin_ - dist; //refine distance
+@@ -1044,6 +1088,25 @@
+     return ret;
+   }
+ 
++  double PolyTrajOptimizer::checkCollisionCostIndex(const Eigen::VectorXd &pos,const Eigen::VectorXd &vel) {
++    const auto saved_directions=singul_container_;const bool saved_index=collision_cost_index_;
++    singul_container_.assign(1,1);
++    Eigen::VectorXd dense_p(traj_dim_),dense_v(traj_dim_),fast_p(traj_dim_),fast_v(traj_dim_);
++    Eigen::Vector3d dense_cost,fast_cost;
++    collision_cost_index_=false;
++    obstacleGradCostforMM(0,pos,vel,0,dense_p,dense_v,dense_cost[0],dense_cost[1],dense_cost[2]);
++    collision_cost_index_=true;
++    obstacleGradCostforMM(0,pos,vel,0,fast_p,fast_v,fast_cost[0],fast_cost[1],fast_cost[2]);
++    collision_cost_index_=saved_index;singul_container_=saved_directions;
++    if(!dense_cost.allFinite() || !fast_cost.allFinite() || !dense_p.allFinite() || !fast_p.allFinite() ||
++       !dense_v.allFinite() || !fast_v.allFinite())throw std::runtime_error("nonfinite collision cost reference");
++    double error=0.;
++    auto compare=[&](const auto &a,const auto &b){for(int i=0;i<a.size();++i)
++      error=std::max(error,std::abs(a[i]-b[i])/(1.+std::abs(a[i])));};
++    compare(dense_cost,fast_cost);compare(dense_p,fast_p);compare(dense_v,fast_v);
++    return error;
++  }
++
+   bool PolyTrajOptimizer::feasibilityGradCostCar(const Eigen::Vector2d &vel, const Eigen::Vector2d &acc, const Eigen::Vector2d &jer, const int trajid,
+                                                  Eigen::Vector2d &gradv_2d, Eigen::Vector2d &grada_2d, Eigen::Vector2d &gradj_2d,
+                                                  double &cost_mm_feasible, bool dense_sample){
+@@ -1058,6 +1121,19 @@
+     const double v_norm = vel.norm();
+     const double vTv_inv = 1.0 / vTv; // avoid siguality vel = 0
+     const double vTv_inv2 = vTv_inv * vTv_inv;
++
++    // Explicit Rangermini four-wheel model adaptation, disabled by default for
++    // the original differential model. Public validation remains authoritative.
++    if(four_wheel_min_turning_radius_>0.) {
++      const auto constraint=risk_mm::fourWheelCurvature(vel,acc,four_wheel_min_turning_radius_);
++      f=0.;df=0.;
++      if(smoothedL1(constraint.value,.005,f,df)) {
++        cost_mm_feasible+=wei_feas_*f;
++        gradv_2d+=wei_feas_*df*constraint.velocity_gradient;
++        grada_2d+=wei_feas_*df*constraint.acceleration_gradient;
++        ret=true;
++      }
++    }
+ 
+     
+     // Check minimum speed
+@@ -1078,6 +1154,24 @@
+       cost_mm_feasible += wei_feas_ * f;
+       gradv_2d += wei_feas_ * df * 2.0 * vel;
+       ret = true;
++    }
++
++    if(external_kinematics_) {
++      const auto wheels=risk_mm::fourWheelDifferentials(vel,acc,jer,singul_container_[trajid],
++          four_wheel_positions_,mobile_base_wheel_radius_);
++      const std::array<double,3> bounds{max_wheel_omega_*max_wheel_omega_,
++          max_wheel_alpha_*max_wheel_alpha_,four_wheel_steer_rate_*four_wheel_steer_rate_};
++      for(int row=0;row<12;++row) {
++        if(smoothedL1(wheels.squared[row]-bounds[row%3],.005,f,df)) {
++          const double weight=wei_feas_*df;
++          cost_mm_feasible+=wei_feas_*f;
++          gradv_2d+=weight*wheels.jacobian.row(row).head<2>().transpose();
++          grada_2d+=weight*wheels.jacobian.row(row).segment<2>(2).transpose();
++          gradj_2d+=weight*wheels.jacobian.row(row).tail<2>().transpose();
++          ret=true;
++        }
++      }
++      return ret;
+     }
+ 
+     double omega = aTBv * vTv_inv;
+@@ -1232,26 +1326,42 @@
+     tailState.resize(traj_dim_, 4);
+     frontendMJ_container.resize(simple_path_container.size());
+     for(unsigned int i = 0; i < simple_path_container.size(); ++i){
+-
+-      int piece_num = simple_path_container[i].size() - 1;
++      auto seed_path=simple_path_container[i];
++      Eigen::VectorXd seed_times=t_list_container[i];
++      const bool final_end=i+1==simple_path_container.size() && status!=KinoAstar::REACH_HORIZON;
++      const bool moving_end=final_end && end_vel.head(2).norm()>non_singul_v_+1e-6;
++      bool merged_terminal=false;
++      if(final_end && external_kinematics_ && four_wheel_min_turning_radius_>0. && seed_path.size()>2 &&
++          std::abs(std::remainder(yaw_list_container[i][seed_path.size()-2]-end_yaw,2.*M_PI))>1e-3) {
++        // A tiny final interpolation interval cannot smoothly remove steering
++        // curvature while retaining nonzero endpoint speed. Prepare one seed
++        // with a full turning-radius span; the original search path is kept.
++        while(seed_path.size()>3 &&
++            (finState.col(0).head(2)-seed_path[seed_path.size()-2].head(2)).norm()<four_wheel_min_turning_radius_) {
++          const int last=seed_times.size()-1;
++          seed_times[last-1]+=seed_times[last];seed_times.conservativeResize(last);
++          seed_path.erase(seed_path.end()-2);merged_terminal=true;
++        }
++      }
++      if(final_end)seed_path.back()=finState.col(0);
++      int piece_num = seed_path.size() - 1;
+       if (piece_num > 1){
+         innerPts.resize(traj_dim_, piece_num - 1);
+         for (int j = 0; j < piece_num - 1; ++j){
+-          innerPts.col(j) = (simple_path_container[i])[j + 1]; // front end
++          innerPts.col(j) = seed_path[j + 1]; // front end
          }
        }
        else{
@@ -1041,8 +1462,84 @@
 +        // RCLCPP_WARN(rclcpp::get_logger("remani"), "simple path is too short");
          piece_num = 2;
          innerPts.resize(traj_dim_, 1);
-         innerPts.col(0) = ((simple_path_container[i])[0] + (simple_path_container[i])[1]) / 2;
-@@ -1311,27 +1283,7 @@
+-        innerPts.col(0) = ((simple_path_container[i])[0] + (simple_path_container[i])[1]) / 2;
+-        simple_path_container[i].insert(simple_path_container[i].begin() + 1, innerPts.col(0));
+-        t_list.resize(2);
+-        t_list.setConstant((t_list_container[i])[0] / 2);
+-        t_list_container[i] = t_list;
+-      }
+-
+-      t_list = t_list_container[i];
++        innerPts.col(0) = (seed_path[0] + seed_path[1]) / 2;
++        seed_path.insert(seed_path.begin() + 1, innerPts.col(0));
++        const double total=seed_times[0];seed_times.resize(2);seed_times.setConstant(total/2.);
++      }
++
++      t_list = seed_times;
++      double terminal_joint_time=0.;
+       // t_list = t_list * 1.2;
+       Eigen::VectorXd angle1, angle2;
+       double err;
+@@ -1260,8 +1370,8 @@
+       double dist_acc = max_joint_acc_ * t_acc * t_acc;
+       // std::cout << "astarWithMinTraj 8 " << i << "\n";
+       for (int j = 0; j < piece_num; ++j){
+-        angle1 = (simple_path_container[i])[j].tail(manipulator_dof_);
+-        angle2 = (simple_path_container[i])[j + 1].tail(manipulator_dof_);
++        angle1 = seed_path[j].tail(manipulator_dof_);
++        angle2 = seed_path[j + 1].tail(manipulator_dof_);
+         double max_t = t_list[j];
+         for(int k = 0; k < manipulator_dof_; ++k){
+           if(angle1(k) - angle2(k) >= 0)
+@@ -1278,12 +1388,21 @@
+           }else{
+             t_acc_vel = err / max_joint_vel_;
+           }
++          if(j==piece_num-1)terminal_joint_time=std::max(terminal_joint_time,t_acc_vel);
+           max_t = max(t_acc_vel, max_t);
+         }
+         t_list[j] = max_t;
+       }
+       t_list[0] *= 1.5;
+       t_list[piece_num - 1] *= 1.5;
++
++      // The search time profile ends nearly stopped. A moving through endpoint
++      // must instead seed its final piece with the requested tangent speed;
++      // retaining the stop time can force MINCO to reverse before the endpoint.
++      if(moving_end && !merged_terminal) {
++        const double distance=(finState.col(0).head(2)-seed_path[piece_num-1].head(2)).norm();
++        if(distance>1e-6)t_list[piece_num-1]=std::max(terminal_joint_time,distance/end_vel.head(2).norm());
++      }
+ 
+       if(i > 0){
+         headState.setZero();
+@@ -1305,33 +1424,32 @@
+         tailState.col(2).head(2) = singul_container[i] * tailState.col(2).head(2);
+         tailState.col(3).head(2) = singul_container[i] * tailState.col(3).head(2);
+       }
++      if(merged_terminal) {
++        // Keep the original number of optimization pieces and constraint
++        // samples. Refine the same coarse MINCO curve over the wider closing
++        // interval, rather than leaving one long, sparsely sampled piece.
++        poly_traj::MinSnapOpt<8> coarse;
++        coarse.reset(headState,tailState,piece_num);coarse.generate(innerPts,t_list);
++        const auto curve=coarse.getTraj(singul_container[i]);
++        const int restored=static_cast<int>(simple_path_container[i].size())-1;
++        const int split=restored-piece_num+1;
++        Eigen::VectorXd refined_times(restored);
++        refined_times.head(piece_num-1)=t_list.head(piece_num-1);
++        refined_times.tail(split).setConstant(t_list[piece_num-1]/split);
++        Eigen::MatrixXd refined_points(traj_dim_,restored-1);
++        double time=0.;
++        for(int k=0;k<restored-1;++k) {
++          time+=refined_times[k];refined_points.col(k)=curve.getPos(time);
++        }
++        innerPts=std::move(refined_points);t_list=std::move(refined_times);piece_num=restored;
++      }
+       frontendMJ_container[i].reset(headState, tailState, piece_num);
+-      frontendMJ_container[i].generate(innerPts, t_list_container[i]);
++      frontendMJ_container[i].generate(innerPts, t_list);
+     }
      return status;
    }
  
@@ -1071,14 +1568,14 @@
  
    void PolyTrajOptimizer::clear_resize_Cps_container(int container_size){
      cps_container_.clear();
-@@ -1343,4 +1295,4 @@
+@@ -1343,4 +1461,4 @@
      cps_container_[trajid].points = points;
    }
  
 -}+}
 --- remani_planner/traj_opt/include/optimizer/poly_traj_optimizer.hpp
 +++ src/planning/traj_opt/include/optimizer/poly_traj_optimizer.hpp
-@@ -1,11 +1,11 @@
+@@ -1,14 +1,18 @@
  #ifndef _POLY_TRAJ_OPTIMIZER_H_
  #define _POLY_TRAJ_OPTIMIZER_H_
  
@@ -1093,7 +1590,32 @@
  #include <fstream>
  #include <sys/time.h>
  #include <ctime>
-@@ -121,15 +121,15 @@
++#include <chrono>
++#include <cstdint>
++#include <stdexcept>
++#include <array>
+ #include <math.h>
+ #include "optimizer/lbfgs.hpp"
+ #include "plan_env/grid_map.h"
+@@ -64,6 +68,17 @@
+     std::vector<double> gearVel_container_;
+     int traj_num_;
+     double non_singul_v_ = 0.01;
++    double four_wheel_min_turning_radius_ = 0.;
++    bool collision_cost_index_ = true;
++    double solve_wall_s_{0.},check_wall_s_{0.};
++    double solve_budget_ms_{0.};
++    bool solve_budget_hit_{false};
++    bool external_kinematics_{false};
++    bool four_wheel_geometry_valid_{false};
++    std::array<double,8> four_wheel_positions_{};
++    double four_wheel_steer_rate_{0.};
++    bool check_initial_gradient_{false};
++    std::chrono::steady_clock::time_point solve_begin_;
+     bool opt_gear_ = true;
+ 
+     std::shared_ptr<GridMap> grid_map_;
+@@ -121,15 +136,16 @@
      Eigen::Matrix2d B_h_;
      Eigen::MatrixXd C_h_;
  
@@ -1109,10 +1631,30 @@
      /* set variables */
 -    void setParam(ros::NodeHandle &nh, const std::shared_ptr<GridMap> &map, const std::shared_ptr<MMConfig> &mm_config);
 +    void setParam(rclcpp::Node::SharedPtr &nh, const std::shared_ptr<GridMap> &map, const std::shared_ptr<MMConfig> &mm_config);
++    void setRandomSeed(std::uint32_t seed) { if(kino_a_star_)kino_a_star_->setRandomSeed(seed); }
      void clear_resize_Cps_container(int container_size);
      void setControlPoints(const int trajid, const Eigen::MatrixXd &points);
  
-@@ -165,8 +165,7 @@
+@@ -140,6 +156,18 @@
+     inline const std::vector<poly_traj::MinSnapOpt<8>> *getMinSnapOptContainerPtr(void) { return &SnapOpt_container_; }
+     inline int get_cps_num_prePiece_(){return cps_num_prePiece_;};
+     bool checkCollision(const SingulTrajData &traj, double t, int &coll_type);
++    double solveWallSeconds() const {return solve_wall_s_;}
++    double checkWallSeconds() const {return check_wall_s_;}
++    int costEvaluations() const {return iter_num_;}
++    bool solveBudgetHit() const {return solve_budget_hit_;}
++    void setComputeBudgetMs(double value) {solve_budget_ms_=value;}
++    void setExternalKinematicValidation(bool value) {
++      if(value && !four_wheel_geometry_valid_)throw std::invalid_argument("current four-wheel geometry and steering limit required");
++      external_kinematics_=value;
++    }
++    bool externalKinematicValidation() const {return external_kinematics_;}
++    // Diagnostic comparison against the full original point-pair loops.
++    double checkCollisionCostIndex(const Eigen::VectorXd &pos,const Eigen::VectorXd &vel);
+ 
+     /* main planning API */
+     bool OptimizeTrajectory_lbfgs(const std::vector<Eigen::MatrixXd> &iniStates_container, 
+@@ -165,8 +193,7 @@
                            std::vector<vector<double>> &yaw_list_container,
                            std::vector<poly_traj::MinSnapOpt<8>> &frontendMJ_container,
                            std::vector<int> &singul_container);
@@ -1147,3 +1689,75 @@
  } // namespace remani_planner
  
 -#endif+#endif
+--- /dev/null
++++ src/planning/traj_opt/include/optimizer/four_wheel_constraint.hpp
+@@ -0,0 +1,69 @@
++#pragma once
++#include <Eigen/Core>
++#include <array>
++#include <cmath>
++
++namespace risk_mm {
++struct CurvatureResidual {
++  double value;
++  Eigen::Vector2d velocity_gradient,acceleration_gradient;
++};
++// Model-specific extension: keep turn radius beyond the largest lateral wheel
++// offset, avoiding +/-90 degree steering branch crossings while rolling.
++inline CurvatureResidual fourWheelCurvature(const Eigen::Vector2d &v,const Eigen::Vector2d &a,double radius) {
++  const double squared=v.squaredNorm()+1e-12;
++  const double cross=v.x()*a.y()-v.y()*a.x();
++  const double inverse=1./(squared*squared*squared);
++  return {cross*cross*inverse-1./(radius*radius),
++    2.*cross*inverse*Eigen::Vector2d(a.y(),-a.x())-6.*cross*cross*inverse/squared*v,
++    2.*cross*inverse*Eigen::Vector2d(-v.y(),v.x())};
++}
++
++struct FourWheelDifferentials {
++  // Three rows per wheel: drive speed², drive acceleration², steering rate².
++  Eigen::Matrix<double,12,1> squared;
++  Eigen::Matrix<double,12,6> jacobian; // vx, vy, ax, ay, jx, jy in world
++};
++inline FourWheelDifferentials fourWheelDifferentials(const Eigen::Vector2d &v,
++    const Eigen::Vector2d &a,const Eigen::Vector2d &j,int direction,
++    const std::array<double,8> &positions,double radius) {
++  using Gradient=Eigen::Matrix<double,6,1>;
++  const double vv=v.squaredNorm()+1e-12,speed=std::sqrt(vv),dot=v.dot(a);
++  const double cross=v.x()*a.y()-v.y()*a.x(),cross_jerk=v.x()*j.y()-v.y()*j.x();
++  Gradient gvv,gdot,gcross,gcross_jerk;
++  gvv<<2*v.x(),2*v.y(),0,0,0,0;
++  gdot<<a.x(),a.y(),v.x(),v.y(),0,0;
++  gcross<<a.y(),-a.x(),-v.y(),v.x(),0,0;
++  gcross_jerk<<j.y(),-j.x(),0,0,-v.y(),v.x();
++  const Gradient gspeed=gvv/(2.*speed);
++  const double omega=cross/vv,alpha=cross_jerk/vv-2.*cross*dot/(vv*vv);
++  const Gradient gomega=gcross/vv-cross*gvv/(vv*vv);
++  const Gradient galpha=gcross_jerk/vv-cross_jerk*gvv/(vv*vv)
++      -2.*(dot*gcross+cross*gdot)/(vv*vv)+4.*cross*dot*gvv/(vv*vv*vv);
++  const double longitudinal=direction*speed,acceleration=direction*dot/speed;
++  const Gradient glongitudinal=direction*gspeed;
++  const Gradient gacceleration=direction*(gdot/speed-dot*gspeed/vv);
++  FourWheelDifferentials result;
++  for(int wheel=0;wheel<4;++wheel) {
++    const double rx=positions[2*wheel],ry=positions[2*wheel+1];
++    const double x=longitudinal-omega*ry,y=omega*rx;
++    const double ax=acceleration-alpha*ry,ay=alpha*rx;
++    const Gradient gx=glongitudinal-ry*gomega,gy=rx*gomega;
++    const Gradient gax=gacceleration-ry*galpha,gay=rx*galpha;
++    const double squared=x*x+y*y+1e-12,numerator=x*ax+y*ay,turn=x*ay-y*ax;
++    const Gradient gsquared=2.*(x*gx+y*gy);
++    const Gradient gnumerator=ax*gx+x*gax+ay*gy+y*gay;
++    const Gradient gturn=ay*gx+x*gay-ax*gy-y*gax;
++    const int row=3*wheel;
++    result.squared[row]=squared/(radius*radius);
++    result.jacobian.row(row)=(gsquared/(radius*radius)).transpose();
++    result.squared[row+1]=numerator*numerator/(squared*radius*radius);
++    result.jacobian.row(row+1)=(2.*numerator*gnumerator/(squared*radius*radius)
++        -numerator*numerator*gsquared/(squared*squared*radius*radius)).transpose();
++    result.squared[row+2]=turn*turn/(squared*squared);
++    result.jacobian.row(row+2)=(2.*turn*gturn/(squared*squared)
++        -2.*turn*turn*gsquared/(squared*squared*squared)).transpose();
++  }
++  return result;
++}
++}

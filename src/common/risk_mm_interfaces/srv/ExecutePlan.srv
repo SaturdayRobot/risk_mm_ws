@@ -1,0 +1,6 @@
+string plan_id
+string model_signature
+uint64 map_revision
+---
+bool accepted
+string reason

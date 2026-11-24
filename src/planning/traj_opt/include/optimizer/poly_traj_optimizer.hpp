@@ -9,6 +9,10 @@
 #include <fstream>
 #include <sys/time.h>
 #include <ctime>
+#include <chrono>
+#include <cstdint>
+#include <stdexcept>
+#include <array>
 #include <math.h>
 #include "optimizer/lbfgs.hpp"
 #include "plan_env/grid_map.h"
@@ -64,6 +68,17 @@ namespace remani_planner
     std::vector<double> gearVel_container_;
     int traj_num_;
     double non_singul_v_ = 0.01;
+    double four_wheel_min_turning_radius_ = 0.;
+    bool collision_cost_index_ = true;
+    double solve_wall_s_{0.},check_wall_s_{0.};
+    double solve_budget_ms_{0.};
+    bool solve_budget_hit_{false};
+    bool external_kinematics_{false};
+    bool four_wheel_geometry_valid_{false};
+    std::array<double,8> four_wheel_positions_{};
+    double four_wheel_steer_rate_{0.};
+    bool check_initial_gradient_{false};
+    std::chrono::steady_clock::time_point solve_begin_;
     bool opt_gear_ = true;
 
     std::shared_ptr<GridMap> grid_map_;
@@ -130,6 +145,7 @@ namespace remani_planner
 
     /* set variables */
     void setParam(rclcpp::Node::SharedPtr &nh, const std::shared_ptr<GridMap> &map, const std::shared_ptr<MMConfig> &mm_config);
+    void setRandomSeed(std::uint32_t seed) { if(kino_a_star_)kino_a_star_->setRandomSeed(seed); }
     void clear_resize_Cps_container(int container_size);
     void setControlPoints(const int trajid, const Eigen::MatrixXd &points);
 
@@ -140,6 +156,18 @@ namespace remani_planner
     inline const std::vector<poly_traj::MinSnapOpt<8>> *getMinSnapOptContainerPtr(void) { return &SnapOpt_container_; }
     inline int get_cps_num_prePiece_(){return cps_num_prePiece_;};
     bool checkCollision(const SingulTrajData &traj, double t, int &coll_type);
+    double solveWallSeconds() const {return solve_wall_s_;}
+    double checkWallSeconds() const {return check_wall_s_;}
+    int costEvaluations() const {return iter_num_;}
+    bool solveBudgetHit() const {return solve_budget_hit_;}
+    void setComputeBudgetMs(double value) {solve_budget_ms_=value;}
+    void setExternalKinematicValidation(bool value) {
+      if(value && !four_wheel_geometry_valid_)throw std::invalid_argument("current four-wheel geometry and steering limit required");
+      external_kinematics_=value;
+    }
+    bool externalKinematicValidation() const {return external_kinematics_;}
+    // Diagnostic comparison against the full original point-pair loops.
+    double checkCollisionCostIndex(const Eigen::VectorXd &pos,const Eigen::VectorXd &vel);
 
     /* main planning API */
     bool OptimizeTrajectory_lbfgs(const std::vector<Eigen::MatrixXd> &iniStates_container, 

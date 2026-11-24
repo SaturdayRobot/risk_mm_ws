@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>risk_mm_runtime</name><version>0.1.0</version>
+  <description>C++ scene, validation and execution assembly for the original coupled planner.</description>
+  <maintainer email="user@example.com">user</maintainer><license>GPL-3.0-or-later</license>
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <depend>rclcpp</depend><depend>remani_adapter</depend><depend>plan_env</depend>
+  <depend>mm_config</depend><depend>mm_model</depend><depend>sensor_msgs</depend>
+  <depend>nav_msgs</depend><depend>geometry_msgs</depend><depend>gazebo_msgs</depend>
+  <depend>yaml-cpp</depend><depend>tinyxml2_vendor</depend><depend>openssl</depend>
+  <depend>eigen</depend>
+  <depend>std_msgs</depend><depend>moveit_core</depend><depend>geometric_shapes</depend>
+  <depend>std_srvs</depend><depend>risk_mm_interfaces</depend>
+  <depend>urdf</depend><depend>srdfdom</depend>
+  <export><build_type>ament_cmake</build_type></export>
+</package>

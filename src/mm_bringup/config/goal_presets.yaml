@@ -1,0 +1,24 @@
+# Explicit operator tasks, independent of policy/mode selection and ARM_FIRST stow.
+schema_version: 1
+world: s6_factory_inspection_v1
+world_sha256: 14afd312fd0c3f870eb5829357d349eccee3f273721fb382476627fea6632d48
+position_frame: world
+heading_frame: base_control
+angle_unit: rad
+# Each base is [world X, world Y, physical front heading]; arm is joint1..joint6.
+goals:
+  - id: corridor_s
+    label: '01 走廊错位联动 · 中等'
+    description: '沿主通道前进并错位，以转弯轨迹到达；机械臂保持紧凑，水平相机稍向侧面观察。'
+    base: [-4.75, 0.45, 0.0]
+    arm: [0.12, -0.56, -1.02, -0.13249348115, -1.50566988238, -1.25102699388]
+  - id: north_door
+    label: '02 北侧门洞进站 · 较高'
+    description: '向北转弯约 90 度并穿过 1.6 m 门洞，到达加工区入口；同时调整机械臂。'
+    base: [-5.0, 2.3, 1.5707963267948966]
+    arm: [-0.18, -0.56, -1.02, -0.13249348115, -1.50566988238, -1.25102699388]
+  - id: south_door
+    label: '03 南侧门洞进站 · 较高'
+    description: '向南转弯约 90 度穿过门洞，到达公用设施区入口，停在低净空检修区之前。'
+    base: [-5.0, -2.05, -1.5707963267948966]
+    arm: [0.18, -0.56, -1.02, -0.13249348115, -1.50566988238, -1.25102699388]

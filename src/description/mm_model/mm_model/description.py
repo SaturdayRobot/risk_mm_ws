@@ -3,20 +3,9 @@ from pathlib import Path
 import math
 import xml.etree.ElementTree as ET
 import numpy as np
-import yaml
 from ament_index_python.packages import get_package_share_directory
 
 ARM_NAMES = [f'xarm6_joint{i}' for i in range(1, 7)]
-
-
-def load_arm_posture(path, name='q_ready'):
-    postures = yaml.safe_load(Path(path).read_text())
-    if name not in postures:
-        raise ValueError(f'Unknown arm posture: {name}')
-    angles = [float(value) for value in postures[name]]
-    if len(angles) != len(ARM_NAMES) or not all(map(math.isfinite, angles)):
-        raise ValueError(f'Arm posture {name} requires six finite joint angles')
-    return angles
 
 
 def origin(element):

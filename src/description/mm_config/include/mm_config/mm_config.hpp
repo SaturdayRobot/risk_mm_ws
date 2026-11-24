@@ -43,6 +43,10 @@ namespace remani_planner
 
         std::vector<Eigen::Vector3d> baseNeighbors(const Eigen::Vector3d &point,double radius,int arm_link,bool sorted=true) const;
         std::vector<int> armNeighbors(int link,const Eigen::Vector3d &point,double radius,bool sorted=true) const;
+        // Conservative cost candidates in original point-index order. link=-1
+        // selects the base. No SRDF/owner exclusions alter the source objective.
+        std::vector<int> collisionCostNeighbors(int link,const Eigen::Vector3d &point,double radius) const;
+        bool collisionCostBoxClear(int link,const Eigen::Matrix4d &transform,double threshold,double floor) const;
         bool hasSelfCollisionPair(int a, int b) const { return active_self_link_pairs_[a][b]; }
         bool hasSelfCollisionPointPair(int a, int point, int b) const {
             return active_owner_link_pairs_[collision_owners_.at(a).at(point)][b];

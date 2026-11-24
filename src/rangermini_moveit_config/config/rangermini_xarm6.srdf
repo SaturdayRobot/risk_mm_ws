@@ -29,6 +29,8 @@
   <disable_collisions link1="xarm6_link_eef" link2="head_link" reason="Adjacent" />
   <disable_collisions link1="base_link" link2="lidar_link" reason="Adjacent" />
   <disable_collisions link1="base_link" link2="arm_mount_link" reason="Adjacent" />
+  <!-- The empty arm_mount_link joins these two collision meshes rigidly. -->
+  <disable_collisions link1="base_link" link2="xarm6_link_base" reason="FixedAttachment" />
   <disable_collisions link1="base_link" link2="front_camera_link" reason="Adjacent" />
   <disable_collisions link1="base_link" link2="imu_link" reason="Adjacent" />
   <disable_collisions link1="front_camera_link" link2="camera_depth_optical_frame" reason="Adjacent" />

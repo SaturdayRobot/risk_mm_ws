@@ -82,6 +82,7 @@ namespace mani_sample {
     std::mt19937 goal_gen_;
     std::mt19937 state_gen_;
     std::mt19937 node_gen_;
+    bool fixed_random_seed_{false};
 
     bool checkcollision(const ManiPathNodePtr& cur_state, const ManiPathNodePtr& next_state);
     int doubleIdx2int(double idx);
@@ -124,6 +125,13 @@ namespace mani_sample {
     }
 
     bool search(const Eigen::VectorXd &start_state, const Eigen::VectorXd &end_state);
+    void setRandomSeed(std::uint32_t seed) {
+      fixed_random_seed_=true;
+      goal_gen_.seed(seed);
+      state_gen_.seed(seed+1U);
+      node_gen_.seed(seed+2U);
+      if(rrt_plan_)rrt_plan_->setRandomSeed(seed+3U);
+    }
     void setParam(rclcpp::Node::SharedPtr& nh, const std::shared_ptr<remani_planner::MMConfig> &mm_config);
     void init(const std::vector<Eigen::Vector3d> &car_state_list, const std::vector<Eigen::Vector3d> &car_state_list_check, const std::vector<double> &t_list);
     void reset();

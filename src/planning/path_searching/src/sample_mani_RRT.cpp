@@ -214,9 +214,11 @@ namespace mani_sample{
                                                       path_fill, yaw_list_fill, t_list_fill);
     // std::cout << "test 4" << std::endl; 
     if(!status){
-      goal_gen_.seed(std::random_device{}());
-      state_gen_.seed(std::random_device{}());
-      node_gen_.seed(std::random_device{}());
+      if(!fixed_random_seed_) {
+        goal_gen_.seed(std::random_device{}());
+        state_gen_.seed(std::random_device{}());
+        node_gen_.seed(std::random_device{}());
+      }
       return false;
     }
       
@@ -257,9 +259,11 @@ namespace mani_sample{
       q_t = it->second;
     }else{
       RCLCPP_ERROR(rclcpp::get_logger("remani"), "find part_idx_begin, short_mani_start fail!");
-      goal_gen_.seed(std::random_device{}());
-      state_gen_.seed(std::random_device{}());
-      node_gen_.seed(std::random_device{}());
+      if(!fixed_random_seed_) {
+        goal_gen_.seed(std::random_device{}());
+        state_gen_.seed(std::random_device{}());
+        node_gen_.seed(std::random_device{}());
+      }
       return false;
     }
     it = node_pool_.find(calculateValue(part_idx_end, short_mani_end));
@@ -267,9 +271,11 @@ namespace mani_sample{
       q_an_t = it->second;
     }else{
       RCLCPP_ERROR(rclcpp::get_logger("remani"), "find part_idx_end, short_mani_end fail!");
-      goal_gen_.seed(std::random_device{}());
-      state_gen_.seed(std::random_device{}());
-      node_gen_.seed(std::random_device{}());
+      if(!fixed_random_seed_) {
+        goal_gen_.seed(std::random_device{}());
+        state_gen_.seed(std::random_device{}());
+        node_gen_.seed(std::random_device{}());
+      }
       return false;
     }
     // std::cout << "test 7" << std::endl; 
