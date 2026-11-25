@@ -2,6 +2,7 @@
 #include "remani_adapter/planner.hpp"
 #include "risk_mm_runtime/world_scene.hpp"
 #include <memory>
+#include <vector>
 
 namespace risk_mm {
 struct ValidationLimits {
@@ -17,17 +18,30 @@ struct ValidationReport {
   double wall_s{0}, max_arm_velocity{0},max_arm_acceleration{0};
   double max_wheel_velocity{0},max_wheel_acceleration{0},max_steer_rate{0};
   std::array<double,4> end_steer{},end_wheel_position{};
+  double initial_alignment_s{0};
+  std::array<double,4> initial_steer{};
 };
+struct SteeringAlignment {
+  std::array<double,4> target{};
+  double duration_s{0};
+};
+SteeringAlignment initialSteeringAlignment(const Plan &,const ValidationLimits &);
 
+struct MeshState {
+  std::array<double,9> position{};
+  std::array<double,4> steer{},wheels{};
+};
 class MeshScene {
   class Implementation;
-  std::unique_ptr<Implementation> impl_;
+  std::vector<std::unique_ptr<Implementation>> workers_;
  public:
-  MeshScene(const WorldScene &,const std::string &urdf_file,const std::string &srdf_file,double padding);
+  MeshScene(const WorldScene &,const std::string &urdf_file,const std::string &srdf_file,double padding,size_t batch_workers=1);
   ~MeshScene();
   bool valid(const std::array<double,9> &,const std::array<double,4> &steer,
              const std::array<double,4> &wheels,std::string &reason,
              double base_z=0.,double roll=0.,double pitch=0.);
+  // One result per input in original order; empty means the full mesh passed.
+  std::vector<std::string> checkBatch(const std::vector<MeshState> &);
 };
 
 class SampledValidator final : public Validator {

@@ -368,12 +368,17 @@ class CoupledRuntime::Implementation {
     std::string urdf,srdf;node_.get_parameter("robot_urdf_file",urdf);node_.get_parameter("robot_srdf_file",srdf);
     std::string expected_urdf;node_.get_parameter("robot_urdf_sha256",expected_urdf);
     if(expected_urdf.empty() || content_sha256(urdf)!=expected_urdf)throw std::runtime_error("robot URDF identity changed after launch configuration");
-    mesh_=std::make_shared<MeshScene>(*world_,urdf,srdf,validation_limits_.collision_padding);
+    const int mesh_workers=parameter("validation.mesh_workers",4);
+    if(mesh_workers<1 || mesh_workers>4)throw std::runtime_error("mesh workers must be in 1..4");
+    mesh_=std::make_shared<MeshScene>(*world_,urdf,srdf,validation_limits_.collision_padding,mesh_workers);
     validator_=std::make_unique<SampledValidator>(mesh_,validation_limits_,signature_,revision_);
     map_=std::make_shared<GridMap>();map_->initMap(backend_);
     model_=std::make_shared<remani_planner::MMConfig>();model_->setParam(backend_,map_);
     planner_=std::make_unique<RemaniPlanner>(backend_,map_,model_);
-    executor_=std::make_unique<CoupledExecutor>(actuator_,mesh_,validation_limits_,ExecutionLimits{});
+    // Batch validation must not monopolize the mutable MoveIt collision state
+    // used by the actuator tick. Both contexts use the same frozen geometry.
+    auto execution_mesh=std::make_shared<MeshScene>(*world_,urdf,srdf,validation_limits_.collision_padding);
+    executor_=std::make_unique<CoupledExecutor>(actuator_,std::move(execution_mesh),validation_limits_,ExecutionLimits{});
     map_odom_pub_=node_.create_publisher<nav_msgs::msg::Odometry>("grid_map/odom",10);
     status_pub_=node_.create_publisher<Status>("/coupled/status",10);
     patrol_pub_=node_.create_publisher<std_msgs::msg::String>("/coupled/patrol_status",10);

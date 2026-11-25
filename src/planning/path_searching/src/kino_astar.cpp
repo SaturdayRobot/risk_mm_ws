@@ -1,4 +1,5 @@
 #include "path_searching/kino_astar.h"
+#include <chrono>
 #include <sstream>
 #include <plan_env/grid_map.h>
 #include <ompl/base/spaces/SO2StateSpace.h>
@@ -155,7 +156,8 @@ int KinoAstar::KinoAstarSearchAndGetSimplePath(const Eigen::VectorXd &start_pos,
     has_path_ = false;
   }
   sdf_map_->resetAstarBuffer();
-  bool sample_succ;
+    bool sample_succ;
+    const auto arm_search_begin=std::chrono::steady_clock::now();
   
   if(has_path_){
     getKinoNode();
@@ -250,7 +252,9 @@ int KinoAstar::KinoAstarSearchAndGetSimplePath(const Eigen::VectorXd &start_pos,
         yaw_list_container, t_list_container);
   }
 
-  double path_length = 0.0, length_temp;
+    RCLCPP_INFO(rclcpp::get_logger("remani"),"coupled_search base_found=%d arm_found=%d arm_stage_ms=%.3f arm_tree_nodes=%d",
+        has_path_,sample_succ,std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-arm_search_begin).count(),mani_sample_->getTreeNum());
+    double path_length = 0.0, length_temp;
   bool achieve_hori = false;
   for(unsigned int trajid = 0; trajid < simple_path_container.size(); ++trajid){
     for(unsigned int i = 0; i < simple_path_container[trajid].size() - 1; ++i){

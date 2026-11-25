@@ -1,0 +1,160 @@
+Panels:
+  - Class: rviz_common/Displays
+    Name: Displays
+  - Class: rviz_common/Views
+    Name: Views
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Class: rviz_default_plugins/Grid
+      Name: World grid (1 m)
+      Enabled: true
+      Cell Size: 1
+      Plane Cell Count: 40
+      Color: 75; 80; 90
+    - Class: rviz_default_plugins/RobotModel
+      Name: Rangermini + xArm6
+      Enabled: true
+      Description Topic:
+        Value: /robot_description
+        Durability Policy: Transient Local
+      Visual Enabled: true
+      Collision Enabled: false
+    - Class: rviz_common/Group
+      Name: Maps - actual planner ESDF
+      Enabled: true
+      Displays:
+        - Class: rviz_default_plugins/Map
+          Name: Global distance cost (ESDF slice)
+          Enabled: true
+          Alpha: 0.45
+          Color Scheme: costmap
+          Draw Behind: false
+          Topic:
+            Value: /inspection/global_costmap
+            Durability Policy: Transient Local
+            Reliability Policy: Reliable
+        - Class: rviz_default_plugins/Map
+          Name: Local distance cost (6 m window)
+          Enabled: true
+          Alpha: 0.65
+          Color Scheme: costmap
+          Draw Behind: false
+          Topic:
+            Value: /inspection/local_costmap
+            Durability Policy: Transient Local
+            Reliability Policy: Reliable
+        - Class: rviz_default_plugins/MarkerArray
+          Name: Factory collision geometry
+          Enabled: true
+          Topic:
+            Value: /inspection/world_markers
+            Durability Policy: Transient Local
+    - Class: rviz_common/Group
+      Name: Paths - validated / active / measured
+      Enabled: true
+      Displays:
+        - Class: rviz_default_plugins/Path
+          Name: GREEN - full validated route
+          Enabled: true
+          Topic:
+            Value: /inspection/validated_route
+            Durability Policy: Transient Local
+          Color: 45; 230; 90
+          Line Style: Billboards
+          Line Width: 0.055
+          Pose Style: None
+        - Class: rviz_default_plugins/Path
+          Name: YELLOW - current active segment
+          Enabled: true
+          Topic:
+            Value: /inspection/active_path
+            Durability Policy: Transient Local
+          Color: 255; 230; 40
+          Line Style: Billboards
+          Line Width: 0.085
+          Pose Style: None
+        - Class: rviz_default_plugins/Path
+          Name: BLUE - measured robot trail
+          Enabled: true
+          Topic:
+            Value: /inspection/measured_path
+            Durability Policy: Transient Local
+          Color: 40; 160; 255
+          Line Style: Billboards
+          Line Width: 0.04
+          Pose Style: None
+        - Class: rviz_default_plugins/Path
+          Name: ORANGE - latest candidate (debug)
+          Enabled: false
+          Topic:
+            Value: /coupled/candidate_path
+            Durability Policy: Transient Local
+          Color: 255; 145; 30
+          Line Style: Billboards
+          Line Width: 0.03
+          Offset:
+            X: 0
+            Y: 0
+            Z: 0.08
+          Pose Style: None
+    - Class: rviz_default_plugins/MarkerArray
+      Name: Inspection points / start / status
+      Enabled: true
+      Topic:
+        Value: /inspection/task_markers
+        Durability Policy: Transient Local
+    - Class: rviz_default_plugins/Axes
+      Name: Camera optical axis (blue Z forward)
+      Enabled: true
+      Reference Frame: head_camera_optical_frame
+      Length: 0.25
+      Radius: 0.008
+    - Class: rviz_default_plugins/TF
+      Name: TF frames (debug)
+      Enabled: false
+      Show Names: true
+      Marker Scale: 0.25
+  Global Options:
+    Background Color: 32; 36; 43
+    Fixed Frame: world
+    Frame Rate: 30
+  Name: root
+  Tools:
+    - Class: rviz_default_plugins/MoveCamera
+    - Class: rviz_default_plugins/Select
+    - Class: rviz_default_plugins/Measure
+  Views:
+    Current:
+      Class: rviz_default_plugins/Orbit
+      Name: Inspection route overview
+      Distance: 12
+      Focal Point:
+        X: -5.5
+        Y: 0
+        Z: 0.3
+      Pitch: 1.1
+      Yaw: 4.7
+    Saved:
+      - Class: rviz_default_plugins/Orbit
+        Name: Whole factory
+        Distance: 28
+        Focal Point:
+          X: 0
+          Y: 0
+          Z: 0.3
+        Pitch: 1.3
+        Yaw: 4.7
+      - Class: rviz_default_plugins/Orbit
+        Name: Follow robot and local map
+        Target Frame: base_link
+        Distance: 5.5
+        Focal Point:
+          X: 0
+          Y: 0
+          Z: 0.5
+        Pitch: 0.8
+        Yaw: 3.7
+Window Geometry:
+  Width: 1280
+  Height: 850

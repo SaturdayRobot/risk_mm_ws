@@ -48,7 +48,7 @@ std::shared_ptr<const Plan> scaleCandidateTime(const Plan &source,const Validati
   const int count=static_cast<int>(std::ceil(duration/.002));
   for(int k=0;k<=count;++k)times.insert(duration*k/count);
   for(double boundary:source.trajectory->boundaries())times.insert(boundary);
-  auto previous_steer=source.task.start_steer;
+  auto previous_steer=initialSteeringAlignment(source,limits).target;
   std::array<double,4> previous_speed{};
   double previous_time=0.,required=1.;bool first=true;
   for(double time:times) {
@@ -197,14 +197,15 @@ std::shared_ptr<const Plan> adaptCandidateTime(const Plan &source,const Validati
     std::vector<TrajectoryState> samples; samples.reserve(count+1);
     for(int k=0;k<=count;++k)samples.push_back(source.trajectory->evaluate(duration*k/count));
     const auto initial=source.trajectory->evaluate(0.),terminal=source.trajectory->evaluate(duration);
-    const double boundary_speed=std::max(std::hypot(initial.velocity[0],initial.velocity[1]),
-        std::hypot(terminal.velocity[0],terminal.velocity[1]));
     // Tie the C2 boundary transition to physical acceleration, rather than a
     // large fraction of the whole mission segment. Endpoint p/v/a stays exact;
     // the same dense four-wheel checks below decide whether this map is valid.
-    const double transition=std::min(duration*.25,std::max(.2,
-        2.*boundary_speed/(limits.wheel_acceleration*limits.wheel_radius)));
-    const std::vector<double> knots{0.,transition,duration-transition,duration};
+    const auto transition=[&](const TrajectoryState &endpoint) {
+      return std::min(duration*.25,std::max(.2,
+          2.*std::hypot(endpoint.velocity[0],endpoint.velocity[1])/
+          (limits.wheel_acceleration*limits.wheel_radius)));
+    };
+    const std::vector<double> knots{0.,transition(initial),duration-transition(terminal),duration};
     double best_ratio=std::numeric_limits<double>::infinity(),best_scale=1.,best_time=0.;
     double first_time=-1.,first_ratio=0.;std::string best_constraint,first_constraint;
     for(double scale=1.;scale<=maximum+1e-9;scale+=.05) {

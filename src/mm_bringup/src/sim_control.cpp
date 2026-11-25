@@ -254,13 +254,18 @@ public:
     for(int i=3;i<9;++i)if(std::abs(state.velocity[i])>.03){reason="measured arm stop required";return false;}
     owner_plan_=id;owner_map_revision_=revision;owner_fault_.clear();coupled_received_=false;
     base_.reset();target_.reset();pending_base_.clear();pending_arm_.clear();wheel_applied_.fill(0.);
-    for(size_t i=0;i<6;++i)arm_hold_[i]=arm_applied_[i]=state.position[i+3];
+    // Keep the published position target continuous across ownership changes.
+    // Gravity deflection in measured joints is not a new position command.
+    arm_hold_=arm_applied_;
     reason.clear();return true;
   }
   bool apply(const ActuatorCommand &command,std::string &reason) override {
     std::lock_guard<std::mutex> lock(mutex_);
     if(command.plan_id!=owner_plan_ || owner_plan_.empty() || command.model_signature!=model_signature_ ||
-       command.map_revision!=owner_map_revision_ || !owner_fault_.empty() || !snapshot().valid) {reason="invalid/stale coupled actuator ownership";return false;}
+       command.map_revision!=owner_map_revision_) {reason="coupled actuator owner/model/map mismatch";return false;}
+    if(!owner_fault_.empty()) {reason="coupled actuator fault: "+owner_fault_+"; command age_s="+std::to_string(rosTime()-coupled_command_ros_s_);return false;}
+    const auto state=snapshot();
+    if(!state.valid) {reason="coupled command feedback invalid: "+state.reason;return false;}
     for(size_t i=0;i<6;++i)if(!std::isfinite(command.arm[i]) || command.arm[i]<bounds_[i].first || command.arm[i]>bounds_[i].second){reason="invalid coupled arm command";return false;}
     for(size_t i=0;i<4;++i)if(!std::isfinite(command.steer[i]) || std::abs(command.steer[i])>M_PI_2+1e-6 || !std::isfinite(command.wheel_velocity[i]) || std::abs(command.wheel_velocity[i])>auto_wheel_rate_+1e-6){reason="invalid coupled wheel command";return false;}
     coupled_command_=command;coupled_command_ros_s_=rosTime();coupled_received_=true;reason.clear();return true;

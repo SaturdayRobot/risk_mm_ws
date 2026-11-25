@@ -41,7 +41,7 @@
 | --- | --- |
 | `/coupled/plan`，PlanCoupled | 九维目标＋任务/模型/地图身份＋三项速度；接受请求后仍需生成和验证候选 |
 | `/coupled/execute`，ExecutePlan | 执行同编号的有效已验证单目标，重新检查环境、实测起态和执行所有权 |
-| `/coupled/start_patrol`，StartPatrol | 从实测起态启动配置的巡检任务，后续自动规划/验证/执行；闭环当前未验收 |
+| `/coupled/start_patrol`，StartPatrol | 从实测起态启动配置的巡检任务，后续自动规划/验证/执行；实际验收范围见进度 |
 | `/simulation/stop`，Trigger | 保持运动、作废待执行代号；不等同退出进程 |
 | `/coupled/status`，CoupledStatus | 版本、阶段、候选/验证/实测开始/完成、位姿和原因 |
 | `/coupled/patrol_status`，String JSON | 巡检编号、阶段、planned/visited、耗时、停车次数及返航完成字段 |
@@ -62,3 +62,7 @@
 只读/文档任务不启动 ROS 或 Gazebo。需要实施时通过 `scripts/in_env` 构建和运行，具体复现/启动/停止命令见 [README](../../README.md) 和验收脚本；遵守用户最新服务状态要求。
 
 修改坐标、模型或安装关系更新模型知识；修改参数、覆盖关系或代码常量更新配置知识；修改接口/责任更新结构设计；修改上游衍生代码更新来源与 patch。所有逻辑修改同时记录到当前进度，包含未测试或失败的效果。
+
+RViz显示接口：Gazebo的独立C++ `inspection_visualization` 将实际规划ESDF、世界、已验证Path和实测里程计展示为 `/inspection/global_costmap`、`local_costmap`、`validated_route`、`active_path`、`measured_path` 及marker话题。它是只读显示层；地图归一化与话题含义见[配置知识](configuration.md#rviz巡检显示层)。
+
+静态链接构建事实（DEV-32）：REMANI/运行库默认.a，修改库必须串行重建并安装包括mm_bringup在内的消费者；仅重建coupled_probe不更新simulation_runtime。start_gazebo --check-build只检查、不启动/停止服务；正常启动也检查CMake实际.a依赖与ELF Build ID/时间关系，将库SHA记入code_identity。缺少build证据或库更新但前端未重链拒绝启动。配置一致和源/ELF各自快照不能替代链接一致。

@@ -1,0 +1,8 @@
+inspection_visualization:
+  ros__parameters:
+    # Read-only ESDF distance normalization and rolling display window.
+    # These parameters never enter the planner, validator or actuator.
+    local_window_m: 6.0
+    distance_range_m: 1.0
+    publish_hz: 2.0
+    max_trace_points: 10000

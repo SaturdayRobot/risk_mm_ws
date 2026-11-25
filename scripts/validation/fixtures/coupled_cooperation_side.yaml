@@ -1,0 +1,39 @@
+scope: 'Predeclared side-protrusion evaluation fixtures; fixed-arm necessity and finite coverage only, not arbitrary-environment generalization.'
+map_bounds: [-11, 11, -7, 7, 0, 3]
+cases:
+  - id: side_south
+    split: evaluation
+    center: [0.0, 0.0]
+    passage_width_m: 1.8
+    obstacle_box:
+      center_offset: [0.0, -0.55, 1.55]
+      size: [0.8, 0.7, 0.9]
+    start_offset: [-1.6, 0.0]
+    goal_offset: [1.6, 0.0]
+    start_control_yaw: 0.0
+    goal_control_yaw: 0.0
+    initial_joint1_rad: -0.8
+  - id: side_north
+    split: evaluation
+    center: [0.0, 0.0]
+    passage_width_m: 1.8
+    obstacle_box:
+      center_offset: [0.0, 0.55, 1.55]
+      size: [0.8, 0.7, 0.9]
+    start_offset: [-1.6, 0.0]
+    goal_offset: [1.6, 0.0]
+    start_control_yaw: 0.0
+    goal_control_yaw: 0.0
+    initial_joint1_rad: 0.8
+  - id: side_shifted_approach
+    split: evaluation
+    center: [0.5, -0.3]
+    passage_width_m: 1.7
+    obstacle_box:
+      center_offset: [0.0, -0.5, 1.55]
+      size: [0.9, 0.7, 0.9]
+    start_offset: [-1.7, -0.1]
+    goal_offset: [1.7, 0.1]
+    start_control_yaw: 0.04
+    goal_control_yaw: -0.03
+    initial_joint1_rad: -0.65

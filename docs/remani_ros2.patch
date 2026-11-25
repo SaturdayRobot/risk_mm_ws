@@ -157,8 +157,9 @@
 -}  //namespace remani_planner+}  //namespace remani_planner
 --- remani_planner/path_searching/src/kino_astar.cpp
 +++ src/planning/path_searching/src/kino_astar.cpp
-@@ -1,13 +1,23 @@
+@@ -1,13 +1,24 @@
  #include "path_searching/kino_astar.h"
++#include <chrono>
  #include <sstream>
  #include <plan_env/grid_map.h>
 +#include <ompl/base/spaces/SO2StateSpace.h>
@@ -183,7 +184,7 @@
    sdf_map_ = env;
    Eigen::Vector3i map_size;
    sdf_map_->getVoxelNum(map_size);
-@@ -20,40 +30,39 @@
+@@ -20,40 +31,39 @@
    mobile_base_wheel_base_ = mm_config_->getBaseWheelBase();
  
    double yaw_resolution;
@@ -247,7 +248,7 @@
  
    use_node_num_ = 0;
    iter_num_ = 0;
-@@ -133,16 +142,16 @@
+@@ -133,20 +143,21 @@
    end_state(3) = 0.0;
    end_state.tail(manipulator_dof_) = end_pos.tail(manipulator_dof_);
  
@@ -268,7 +269,13 @@
      has_path_ = false;
    }
    sdf_map_->resetAstarBuffer();
-@@ -205,8 +214,8 @@
+-  bool sample_succ;
++    bool sample_succ;
++    const auto arm_search_begin=std::chrono::steady_clock::now();
+   
+   if(has_path_){
+     getKinoNode();
+@@ -205,8 +216,8 @@
  
      car_statept_disp.push_back(car_statelist);
      car_statelist_disp.push_back(car_statelist_check);
@@ -279,7 +286,18 @@
  
      std::vector<Eigen::VectorXd> final_state;
      std::vector<double> final_yaw_list, final_t_list;
-@@ -272,111 +281,22 @@
+@@ -241,7 +252,9 @@
+         yaw_list_container, t_list_container);
+   }
+ 
+-  double path_length = 0.0, length_temp;
++    RCLCPP_INFO(rclcpp::get_logger("remani"),"coupled_search base_found=%d arm_found=%d arm_stage_ms=%.3f arm_tree_nodes=%d",
++        has_path_,sample_succ,std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-arm_search_begin).count(),mani_sample_->getTreeNum());
++    double path_length = 0.0, length_temp;
+   bool achieve_hori = false;
+   for(unsigned int trajid = 0; trajid < simple_path_container.size(); ++trajid){
+     for(unsigned int i = 0; i < simple_path_container[trajid].size() - 1; ++i){
+@@ -272,111 +285,22 @@
    }
  }
  
@@ -397,7 +415,7 @@
      return GOAL_COLLISION;
    }
  
-@@ -403,7 +323,7 @@
+@@ -403,7 +327,7 @@
      if((cur_node->state.head(2) - end_state_.head(2)).norm() < oneshot_range_ && initsearch){
        int last_dir;
        if(cur_node->parent != NULL){
@@ -406,7 +424,7 @@
          last_dir = is_forward ? 1 : -1;
        }else{
          last_dir = 0;
-@@ -417,8 +337,8 @@
+@@ -417,8 +341,8 @@
        }
      }
      
@@ -417,7 +435,7 @@
        has_path_ = false;
        return NO_PATH;
      }
-@@ -454,6 +374,7 @@
+@@ -454,6 +378,7 @@
        initsearch = true;
      }else{
        for (double arc = -max_arc_; arc <= max_arc_ + 1e-3; arc += res_arc * max_arc_){
@@ -425,7 +443,7 @@
          if(fabs(arc) < 1.0e-2){
            continue;
          }
-@@ -576,6 +497,12 @@
+@@ -576,6 +501,12 @@
    return singul;
  }
  
@@ -438,7 +456,7 @@
  inline double KinoAstar::getHeu(const Eigen::Vector3d &x1, const Eigen::Vector3d &x2){
    return (x1 - x2).head(2).norm();
  }
-@@ -593,6 +520,8 @@
+@@ -593,6 +524,8 @@
      from[0] = state1[0]; from[1] = state1[1]; from[2] = state1[2];
      to[0]   = state2[0]; to[1]   = state2[1]; to[2]   = state2[2];
      std::vector<double> reals;
@@ -447,7 +465,7 @@
      len = shotptr->distance(from(), to());
  
      for (double l = 0.0; l <= len; l += oneshot_check_len_ / 2.0){
-@@ -605,13 +534,13 @@
+@@ -605,13 +538,13 @@
      double min_dist;
      int traj_pieces = 0;
      double traj_len = 0;
@@ -463,7 +481,7 @@
          int dir_now = is_forward ? 1 : -1;
          if(dir_last != dir_now){
            traj_len = 0.0;
-@@ -648,6 +577,8 @@
+@@ -648,6 +581,8 @@
    from[0] = state1[0]; from[1] = state1[1]; from[2] = state1[2];
    to[0]   = state2[0]; to[1]   = state2[1]; to[2]   = state2[2];
    std::vector<double> reals;
@@ -472,7 +490,7 @@
    len = shotptr->distance(from(), to());
    double sum_T = len / max_vel_;
  
-@@ -700,7 +631,7 @@
+@@ -700,7 +635,7 @@
    }
    Eigen::Vector3d end_state = node_path.back();
    std::vector<Eigen::Vector3d> SampleList_temp;
@@ -481,7 +499,7 @@
    for(unsigned int i = 0; i < node_path.size() - 1; ++i){ // from
      SampleList.push_back(node_path[i]);
      bool shot_succ = false;
-@@ -713,6 +644,8 @@
+@@ -713,6 +648,8 @@
      for(j = node_path.size() - 1; j > i + 1; --j){
        if(i == 0) break;
        to[0] = node_path[j][0]; to[1] = node_path[j][1]; to[2] = node_path[j][2];
@@ -490,7 +508,7 @@
        double shotLength = shotptr->distance(from(), to());//oneshot的距离
        std::vector<double> reals;
        piece_num_temp = std::max(ceil(shotLength / oneshot_check_len_), 2.0);
-@@ -778,6 +711,8 @@
+@@ -778,6 +715,8 @@
      state2 = end_state_.head(3);
      from[0] = state1[0]; from[1] = state1[1]; from[2] = state1[2];
      to[0] = state2[0]; to[1] = state2[1]; to[2] = state2[2];
@@ -499,7 +517,7 @@
      double shotLength = shotptr->distance(from(), to());
      shotptr->validSegmentCount(from(), to());
      std::vector<double> reals;
-@@ -957,7 +892,7 @@
+@@ -957,7 +896,7 @@
  double KinoAstar::evaluateDuration(const double &length, const double &startV, const double &endV){
    double critical_len; 
    if(startV > max_vel_ || endV > max_vel_){
@@ -508,7 +526,7 @@
    }
    double temp_max_acc = max_acc_ * 0.7;
    double temp_max_vel = max_vel_ * 1.0;
-@@ -978,7 +913,7 @@
+@@ -978,7 +917,7 @@
    double critical_len; 
    if(startV > max_vel_ || endV > max_vel_){
      // std::cout << startV << ", " << endV << ", " << max_vel_ << std::endl;
@@ -517,7 +535,7 @@
    }
    double startv2 = pow(startV, 2);
    double endv2 = pow(endV, 2);
-@@ -1031,7 +966,7 @@
+@@ -1031,7 +970,7 @@
  Eigen::Vector3d KinoAstar::evaluatePos(const double &input_t){
    double t = input_t;
    if(t < 0 || t > totalTrajTime){
@@ -528,7 +546,13 @@
    }
 --- remani_planner/path_searching/src/sample_mani_RRT.cpp
 +++ src/planning/path_searching/src/sample_mani_RRT.cpp
-@@ -20,16 +20,16 @@
+@@ -1,4 +1,5 @@
+ #include "path_searching/sample_mani_RRT.h"
++#include <stdexcept>
+ 
+ namespace mani_sample{
+   bool SampleMani::sampleManiSearch(const bool astar_succ, const Eigen::VectorXd &start_state, const Eigen::VectorXd &end_state,
+@@ -20,16 +21,16 @@
      init(car_state_list, car_state_list_check, t_list);
      bool mani_status = search(start_state, end_state);
  
@@ -548,7 +572,7 @@
        // for(int i = 0; i < singul_container.size(); ++i){
        //   std::cout << "singul" << i << ": " << singul_container[i] << std::endl;
        // }
-@@ -37,7 +37,7 @@
+@@ -37,7 +38,7 @@
          if(singul_now != singul_container[i - 1]){
            singul_container_new.push_back(singul_now);
            singul_now = singul_container[i - 1];
@@ -557,7 +581,7 @@
            // rrt_plan_->smoothTraj(simple_path, yaw_list, t_list_temp);
            simple_path_container.push_back(simple_path);
            yaw_list_container.push_back(yaw_list);
-@@ -53,7 +53,7 @@
+@@ -53,7 +54,7 @@
            simple_path.push_back(state_full);
            yaw_list.push_back(car_state_list[i - 1](2));
          }
@@ -566,7 +590,7 @@
          state_full.head(mobile_base_dof_) = car_state_list[i].head(mobile_base_dof_);
          state_full.tail(manipulator_dof_) = mani_path[i];
          simple_path.push_back(state_full);
-@@ -95,7 +95,7 @@
+@@ -95,7 +96,7 @@
      // for(auto it = node_pool_.begin(); it != node_pool_.end(); ++it){
      //   std::cout << it->second->state.transpose() << std::endl;
      // }
@@ -575,7 +599,7 @@
      // std::cout << "test 1" << std::endl; 
      // 出意外了，需要补上中间的
      std::vector<Eigen::VectorXd> start_list, end_list;
-@@ -214,9 +214,11 @@
+@@ -214,9 +215,11 @@
                                                        path_fill, yaw_list_fill, t_list_fill);
      // std::cout << "test 4" << std::endl; 
      if(!status){
@@ -590,7 +614,7 @@
        return false;
      }
        
-@@ -256,20 +258,24 @@
+@@ -256,20 +259,24 @@
      if(it != node_pool_.end()){
        q_t = it->second;
      }else{
@@ -623,16 +647,20 @@
        return false;
      }
      // std::cout << "test 7" << std::endl; 
-@@ -390,7 +396,7 @@
+@@ -389,8 +396,11 @@
+   }
  
    bool SampleMani::search(const Eigen::VectorXd &start_state, const Eigen::VectorXd &end_state){
++    task_start_=start_state;task_goal_=end_state;
++    layer_time_.assign(max_index_,0.);
++    for(int i=1;i<max_index_;++i)layer_time_[i]=layer_time_[i-1]+t_list_[i-1];
      // std::cout << "[sample mani]: Search begin. start: " << start_state.transpose() << " end: " << end_state.transpose() << std::endl;
 -    ros::Time time_1 = ros::Time::now();
 +    rclcpp::Time time_1 = rclcpp::Clock(RCL_STEADY_TIME).now();
      std::uniform_real_distribution<double> goal_dis(0.0, 1.0);
      // std::uniform_int_distribution<int> node_dis(1, max_index_-1);
      ManiPathNodePtr start_node, end_node;
-@@ -415,15 +421,15 @@
+@@ -415,15 +425,15 @@
      // std::cout << "++++++++++++++++++++++++2.1" << std::endl;
      
      organizeTree(start_node);
@@ -651,7 +679,7 @@
        return true;
      }
      end_node->node_state = ManiPathNode::NODE_STATE::IN_ANTI_TREE;
-@@ -468,10 +474,10 @@
+@@ -468,10 +478,10 @@
      double c_min = 1.0e6;
  
      bool dir = false;
@@ -664,7 +692,7 @@
          break;
        }
  
-@@ -517,7 +523,7 @@
+@@ -517,7 +527,7 @@
            // std::cout << "min: " << c_min << std::endl;
          } 
          // mergeTrees(q_new, q_near);
@@ -673,7 +701,7 @@
          // return true;
          continue;
        }
-@@ -541,7 +547,7 @@
+@@ -541,7 +551,7 @@
        // {
        //   this->end_node_ = q_new;
        //   have_path_ = true;
@@ -682,7 +710,7 @@
        //   return true;
        // }
  
-@@ -561,7 +567,7 @@
+@@ -561,7 +571,7 @@
            // std::cout << "min: " << c_min << std::endl;
          } 
          // mergeTrees(q_new_1, q_near_1);
@@ -691,7 +719,7 @@
          // return true;
          continue;
        }
-@@ -595,7 +601,7 @@
+@@ -595,7 +605,7 @@
                // std::cout << "min: " << c_min << std::endl;
              } 
              // mergeTrees(q_new_2, q_new_1);
@@ -700,7 +728,7 @@
              // return true;
              break;
            }
-@@ -624,7 +630,7 @@
+@@ -624,7 +634,7 @@
          }
        }
      }
@@ -709,7 +737,7 @@
      // std::cout << "tree: " << tree_count_ << " max: " << tree_max_index_ <<std::endl;
      // for(auto &node : node_pool_)
      //   if(node.second->node_state == ManiPathNode::NODE_STATE::IN_TREE)
-@@ -639,9 +645,9 @@
+@@ -639,9 +649,9 @@
      
      if(have_path_){
        mergeTrees(path_node_1, path_node_2);
@@ -721,7 +749,58 @@
      }
        
      return have_path_;
-@@ -1047,7 +1053,7 @@
+@@ -668,12 +678,6 @@
+ 
+   ManiPathNodePtr SampleMani::getSampleNode(){
+     std::uniform_int_distribution<int> node_dis(1, max_index_-2);
+-    std::vector<std::uniform_real_distribution<double>> state_dis_vec;
+-    state_dis_vec.reserve(manipulator_dof_);
+-    for(int i = 0; i < manipulator_dof_; ++i){
+-      std::uniform_real_distribution<double> state_dis(min_joint_pos_[i], max_joint_pos_[i]);
+-      state_dis_vec.push_back(state_dis);
+-    }
+     Eigen::VectorXd sample_state(manipulator_dof_);
+     ManiPathNodePtr sample_node = nullptr;
+     int sample_idx;
+@@ -689,7 +693,17 @@
+       sample_idx = node_dis(node_gen_);
+       for(int i = 0; i < manipulator_dof_; ++i)
+       {
+-        sample_state(i) = state_dis_vec[i](state_gen_);
++        double low=min_joint_pos_[i],high=max_joint_pos_[i];
++        if(reachable_sampling_) {
++          // Necessary velocity reachability from both exact task boundaries.
++          // This changes proposal efficiency, not the joint or edge limits.
++          const double before=max_joint_vel_*layer_time_[sample_idx];
++          const double after=max_joint_vel_*(layer_time_.back()-layer_time_[sample_idx]);
++          low=std::max(low,std::max(task_start_[i]-before,task_goal_[i]-after));
++          high=std::min(high,std::min(task_start_[i]+before,task_goal_[i]+after));
++          if(low>high)return nullptr;
++        }
++        sample_state(i)=std::uniform_real_distribution<double>(low,high)(state_gen_);
+       }
+       sample_node = initNode(sample_idx, sample_state);
+       if(sample_node->node_state == ManiPathNode::NODE_STATE::COLLISION)
+@@ -751,13 +765,13 @@
+     Eigen::VectorXd vel_dir = dir / (double)t_total;
+     for(int i = 0; i < manipulator_dof_; ++i)
+     {
+-      if(vel_dir(i) > max_joint_vel_ * 0.3)
++      if(vel_dir(i) > max_joint_vel_ * extension_fraction_)
+       {
+-        vel_dir(i) = max_joint_vel_ * 0.3;
+-      }
+-      else if(vel_dir(i) < -max_joint_vel_ *0.3)
++        vel_dir(i) = max_joint_vel_ * extension_fraction_;
++      }
++      else if(vel_dir(i) < -max_joint_vel_ *extension_fraction_)
+       {
+-        vel_dir(i) = -max_joint_vel_ * 0.3;
++        vel_dir(i) = -max_joint_vel_ * extension_fraction_;
+       }
+     }
+ 
+@@ -1047,7 +1061,7 @@
  
    void SampleMani::linkNode(ManiPathNodePtr &parent, ManiPathNodePtr &child){
      // if(parent->index != child->index - 1){
@@ -730,7 +809,7 @@
      //   return;
      // }
      ManiPathNodePtr pre_parent = child->parent;
-@@ -1228,42 +1234,42 @@
+@@ -1228,42 +1242,46 @@
      node_pool_.clear();
    }
  
@@ -778,6 +857,10 @@
 +    nh->get_parameter_or("search.goal_rate", goal_rate_, 0.4);
 +    nh->get_parameter_or("search.max_loop_num", max_loop_num_, 500);
 +    nh->get_parameter_or("search.max_mani_search_time", max_mani_search_time_, 0.1);
++    nh->get_parameter_or("search.manipulator_reachable_sampling",reachable_sampling_,false);
++    nh->get_parameter_or("search.manipulator_extension_fraction",extension_fraction_,0.3);
++    if(!std::isfinite(extension_fraction_) || extension_fraction_<=0. || extension_fraction_>1.)
++      throw std::invalid_argument("manipulator extension fraction must be in (0,1]");
 +    nh->get_parameter_or("optimization.self_safe_margin", self_safe_margin_, 0.1);
 +    nh->get_parameter_or("optimization.safe_margin_mani", safe_margin_mani_, 0.1);
 +    nh->get_parameter_or("mm.mobile_base_check_radius", mobile_base_check_radius_, 0.1);
@@ -870,15 +953,19 @@
  #include <Eigen/Eigen>
  #include <iostream>
  #include <map>
-@@ -82,6 +82,7 @@
+@@ -82,6 +82,11 @@
      std::mt19937 goal_gen_;
      std::mt19937 state_gen_;
      std::mt19937 node_gen_;
 +    bool fixed_random_seed_{false};
++    bool reachable_sampling_{false};
++    double extension_fraction_{0.3};
++    Eigen::VectorXd task_start_,task_goal_;
++    std::vector<double> layer_time_;
  
      bool checkcollision(const ManiPathNodePtr& cur_state, const ManiPathNodePtr& next_state);
      int doubleIdx2int(double idx);
-@@ -124,7 +125,14 @@
+@@ -124,7 +129,14 @@
      }
  
      bool search(const Eigen::VectorXd &start_state, const Eigen::VectorXd &end_state);
@@ -1072,7 +1159,7 @@
          return false;
        }
        piece_num = initInnerPts_container[i].cols() + 1;
-@@ -178,10 +202,34 @@
+@@ -178,10 +202,37 @@
      double final_cost;
      
      iter_num_ = 0;
@@ -1086,17 +1173,20 @@
 +      const auto check_begin=std::chrono::steady_clock::now();
 +      Eigen::VectorXd analytic(variable_num_),scratch(variable_num_);
 +      const double value=costFunctionCallback(this,x,analytic);
-+      double maximum_error=0.;
++      const std::array<double,4> epsilon_scales{1e-6,1e-7,1e-8,1e-9};
++      std::array<double,4> maximum_errors{};
 +      for(int i=0;i<variable_num_;++i) {
-+        const double epsilon=1e-6*std::max(1.,std::abs(x[i]));
-+        Eigen::VectorXd plus=x,minus=x;plus[i]+=epsilon;minus[i]-=epsilon;
-+        const double numeric=(costFunctionCallback(this,plus,scratch)-costFunctionCallback(this,minus,scratch))/(2.*epsilon);
-+        const double error=std::abs(numeric-analytic[i])/(1.+std::abs(numeric)+std::abs(analytic[i]));
-+        maximum_error=std::max(maximum_error,error);
-+        RCLCPP_INFO(rclcpp::get_logger("remani_gradient"),"variable=%d x=%.9g analytic=%.9g numeric=%.9g relative_error=%.9g",i,x[i],analytic[i],numeric,error);
++        for(size_t scale=0;scale<epsilon_scales.size();++scale) {
++          const double epsilon=epsilon_scales[scale]*std::max(1.,std::abs(x[i]));
++          Eigen::VectorXd plus=x,minus=x;plus[i]+=epsilon;minus[i]-=epsilon;
++          const double numeric=(costFunctionCallback(this,plus,scratch)-costFunctionCallback(this,minus,scratch))/(2.*epsilon);
++          const double error=std::abs(numeric-analytic[i])/(1.+std::abs(numeric)+std::abs(analytic[i]));
++          maximum_errors[scale]=std::max(maximum_errors[scale],error);
++          RCLCPP_INFO(rclcpp::get_logger("remani_gradient"),"variable=%d epsilon_scale=%.1e x=%.9g analytic=%.9g numeric=%.9g relative_error=%.9g",i,epsilon_scales[scale],x[i],analytic[i],numeric,error);
++        }
 +      }
 +      costFunctionCallback(this,x,scratch);iter_num_=0;
-+      RCLCPP_INFO(rclcpp::get_logger("remani_gradient"),"initial_cost=%.9g max_relative_error=%.9g diagnostic_wall_s=%.6f",value,maximum_error,
++      RCLCPP_INFO(rclcpp::get_logger("remani_gradient"),"initial_cost=%.9g max_relative_error=%.9g epsilon_1e7_max=%.9g epsilon_1e8_max=%.9g epsilon_1e9_max=%.9g diagnostic_wall_s=%.6f",value,maximum_errors[0],maximum_errors[1],maximum_errors[2],maximum_errors[3],
 +        std::chrono::duration<double>(std::chrono::steady_clock::now()-check_begin).count());
 +    }
 +
@@ -1108,7 +1198,7 @@
      int result = lbfgs::lbfgs_optimize(
          x,
          final_cost,
-@@ -190,14 +238,21 @@
+@@ -190,14 +241,21 @@
          PolyTrajOptimizer::earlyExitCallback,
          this,
          lbfgs_params);
@@ -1136,7 +1226,7 @@
      }
  
      // test collision
-@@ -209,7 +264,9 @@
+@@ -209,7 +267,9 @@
        traj_start_time = singul_traj_data.singul_traj.back().end_time;
      }
      bool good_traj = true;
@@ -1146,7 +1236,7 @@
      if(result == lbfgs::LBFGSERR_INVALID_FUNCVAL){
        return false;
      }
-@@ -227,35 +284,7 @@
+@@ -227,35 +287,7 @@
      return good_traj;
    }
  
@@ -1183,7 +1273,7 @@
  
    bool PolyTrajOptimizer::smoothedL1(const double &x, const double &mu, double &f, double &df){
      if (x < 0.0)
-@@ -341,7 +370,7 @@
+@@ -341,7 +373,7 @@
      // Check minimum speed
      // pen =  non_singul_v_ *  non_singul_v_ * (1.0 - feas_tol_percent_) * (1.0 - feas_tol_percent_) - vel.squaredNorm();
      // if(pen > 0.0){
@@ -1192,7 +1282,7 @@
      //   return true;
      // }
  
-@@ -350,7 +379,7 @@
+@@ -350,7 +382,7 @@
      double wheel_omega_left = (2.0 * singul * v_norm - mobile_base_wheel_base_ * omega) / (2 * mobile_base_wheel_radius_);
      pen =  wheel_omega_left * wheel_omega_left - max_wheel_omega_ * max_wheel_omega_ * (1.0 + feas_tol_percent_) * (1.0 + feas_tol_percent_);
      if(pen > 0.0){
@@ -1201,7 +1291,7 @@
        return true;
      }
  
-@@ -358,7 +387,7 @@
+@@ -358,7 +390,7 @@
      double wheel_omega_right = (2.0 * singul * v_norm + mobile_base_wheel_base_ * omega) / (2 * mobile_base_wheel_radius_);
      pen =  wheel_omega_right * wheel_omega_right - max_wheel_omega_ * max_wheel_omega_ * (1.0 + feas_tol_percent_) * (1.0 + feas_tol_percent_);
      if(pen > 0.0){
@@ -1210,7 +1300,7 @@
        return true;
      }
  
-@@ -367,7 +396,7 @@
+@@ -367,7 +399,7 @@
      double wheel_alpha_left = (2.0 * singul * aTv / v_norm - mobile_base_wheel_base_ * alpha) / (2 * mobile_base_wheel_radius_);
      pen =  wheel_alpha_left * wheel_alpha_left - max_wheel_alpha_ * max_wheel_alpha_ * (1.0 + feas_tol_percent_) * (1.0 + feas_tol_percent_);
      if(pen > 0.0){
@@ -1219,7 +1309,7 @@
        return true;
      }
  
-@@ -375,7 +404,7 @@
+@@ -375,7 +407,7 @@
      double wheel_alpha_right = (2.0 * singul * aTv / v_norm + mobile_base_wheel_base_ * alpha) / (2 * mobile_base_wheel_radius_);
      pen =  wheel_alpha_right * wheel_alpha_right - max_wheel_alpha_ * max_wheel_alpha_ * (1.0 + feas_tol_percent_) * (1.0 + feas_tol_percent_);
      if(pen > 0.0){
@@ -1228,7 +1318,7 @@
        return true;
      }
  
-@@ -383,12 +412,12 @@
+@@ -383,12 +415,12 @@
      vel = traj_data.getVel(t).tail(manipulator_dof_);
      acc = traj_data.getAcc(t).tail(manipulator_dof_);
      if(vel.lpNorm<Eigen::Infinity>() - max_joint_vel_ * (1.0 + feas_tol_percent_) > 0){
@@ -1243,7 +1333,7 @@
        return true;
      }
  
-@@ -405,21 +434,19 @@
+@@ -405,21 +437,19 @@
      for (int i = 5; i < i_end; i++){
        if(checkCollision(traj_data, t, coll_type)){
          if(coll_type == 0){
@@ -1272,7 +1362,21 @@
        
        t += dt;
      }
-@@ -560,7 +587,9 @@
+@@ -546,6 +576,13 @@
+       total_time_cost += time_cost;
+     }
+     double costall = total_smoo_cost + total_obs_feas_costs.sum() + total_time_cost;
++    if(opt->iter_num_==0 || opt->solve_budget_hit_) {
++      RCLCPP_DEBUG(rclcpp::get_logger("remani_objective"),
++        "evaluation=%d smooth=%.9g base_obstacle=%.9g arm_obstacle=%.9g self=%.9g base_feasibility=%.9g arm_feasibility=%.9g variance=%.9g time=%.9g total=%.9g",
++        opt->iter_num_,total_smoo_cost,total_obs_feas_costs[0],total_obs_feas_costs[1],
++        total_obs_feas_costs[2],total_obs_feas_costs[3],total_obs_feas_costs[4],
++        total_obs_feas_costs[5],total_time_cost,costall);
++    }
+     opt->iter_num_ += 1;
+ 
+     return costall;
+@@ -560,7 +597,9 @@
    {
      PolyTrajOptimizer *opt = reinterpret_cast<PolyTrajOptimizer *>(func_data);
  
@@ -1283,7 +1387,7 @@
    }
  
    /* mappings between real world time and unconstrained virtual time */
-@@ -856,12 +885,19 @@
+@@ -856,12 +895,19 @@
      Eigen::Vector4d dist_grad4 = Eigen::Vector4d::Zero();
      Eigen::VectorXd curr_grad(traj_dim_);
      curr_grad.setZero();
@@ -1304,7 +1408,7 @@
      mm_config_->getCarPtsGradNew(pos.head(2), vel.head(2), singul_container_[trajid], Eigen::Vector3d(0, 0, 0), car_pts, car_dPtsdYaw_list);
      for(unsigned int i = 0; i < car_pts.size(); ++i){
        Eigen::Vector3d dist_grad;
-@@ -876,12 +912,9 @@
+@@ -876,12 +922,9 @@
          gradv.head(mobile_base_dof_) -= wei_obs_ * 3.0 * dist_err_2 * dist_grad.head(2).transpose() * car_dPtsdYaw_list[i] * dYawdV;
        }
      }
@@ -1318,7 +1422,7 @@
      T_w_q_grad_x.setZero();
      T_w_q_grad_x(0, 3) = 1;
      T_w_q_grad_y.setZero();
-@@ -920,6 +953,9 @@
+@@ -920,6 +963,9 @@
        T_grad_list[i + 2] = T_now * T_joint_grad[i];
        T_now = T_now * T_joint[i];
        dTdYaw = dTdYaw * T_joint[i];
@@ -1328,7 +1432,7 @@
        
        // get ESDF value & grad
        int pts_size = manipulator_link_pts_[i].cols();
-@@ -985,7 +1021,11 @@
+@@ -985,7 +1031,11 @@
        for(int j = 0; j < pts_size; ++j){
          // with car
          pt_on_link = (T_now * manipulator_link_pts_[i].col(j)).head(3);
@@ -1341,7 +1445,7 @@
            dist = (car_pts[m] - pt_on_link).norm(); // coarse distance
            dist_err = manipulator_thickness_ + mobile_base_check_radius_ + self_safe_margin_ - dist; //refine distance
            if(dist_err > 0){
-@@ -1019,7 +1059,11 @@
+@@ -1019,7 +1069,11 @@
            pt_on_link_m = (T_now_self_mani * manipulator_link_pts_[i].col(j)).head(3);
            int pts_size_temp = manipulator_link_pts_[m].cols();
            double factor = 1.0 / (double)pts_size_temp;
@@ -1354,7 +1458,7 @@
              pt_on_link_to_check_m = (manipulator_link_pts_[m].col(n)).head(3);
              dist = (pt_on_link_m - pt_on_link_to_check_m).norm(); // coarse distance
              dist_err = 2 * manipulator_thickness_ + self_safe_margin_ - dist; //refine distance
-@@ -1044,6 +1088,25 @@
+@@ -1044,6 +1098,25 @@
      return ret;
    }
  
@@ -1380,7 +1484,7 @@
    bool PolyTrajOptimizer::feasibilityGradCostCar(const Eigen::Vector2d &vel, const Eigen::Vector2d &acc, const Eigen::Vector2d &jer, const int trajid,
                                                   Eigen::Vector2d &gradv_2d, Eigen::Vector2d &grada_2d, Eigen::Vector2d &gradj_2d,
                                                   double &cost_mm_feasible, bool dense_sample){
-@@ -1058,6 +1121,19 @@
+@@ -1058,6 +1131,19 @@
      const double v_norm = vel.norm();
      const double vTv_inv = 1.0 / vTv; // avoid siguality vel = 0
      const double vTv_inv2 = vTv_inv * vTv_inv;
@@ -1400,7 +1504,7 @@
  
      
      // Check minimum speed
-@@ -1078,6 +1154,24 @@
+@@ -1078,6 +1164,24 @@
        cost_mm_feasible += wei_feas_ * f;
        gradv_2d += wei_feas_ * df * 2.0 * vel;
        ret = true;
@@ -1425,7 +1529,7 @@
      }
  
      double omega = aTBv * vTv_inv;
-@@ -1232,26 +1326,42 @@
+@@ -1232,58 +1336,102 @@
      tailState.resize(traj_dim_, 4);
      frontendMJ_container.resize(simple_path_container.size());
      for(unsigned int i = 0; i < simple_path_container.size(); ++i){
@@ -1433,18 +1537,61 @@
 -      int piece_num = simple_path_container[i].size() - 1;
 +      auto seed_path=simple_path_container[i];
 +      Eigen::VectorXd seed_times=t_list_container[i];
++      std::vector<int> seed_splits(seed_times.size(),1);
 +      const bool final_end=i+1==simple_path_container.size() && status!=KinoAstar::REACH_HORIZON;
 +      const bool moving_end=final_end && end_vel.head(2).norm()>non_singul_v_+1e-6;
++      bool coupled_progress=external_kinematics_ && final_end && simple_path_container.size()==1 &&
++          start_vel.head(2).norm()>1e-6 && end_vel.head(2).norm()>1e-6 &&
++          iniState.block(0,2,2,2).norm()<1e-9 && finState.block(0,2,2,2).norm()<1e-9;
++      double arm_detour=0.;
++      for(const auto &point:seed_path) {
++        for(int joint=mobile_base_dof_;joint<traj_dim_;++joint) {
++          const double low=std::min(iniState(joint,0),finState(joint,0));
++          const double high=std::max(iniState(joint,0),finState(joint,0));
++          arm_detour=std::max(arm_detour,std::max(low-point[joint],point[joint]-high));
++        }
++      }
++      coupled_progress=coupled_progress && arm_detour>.15;
++      const double t_acc=max_joint_vel_/max_joint_acc_,dist_acc=max_joint_acc_*t_acc*t_acc;
++      auto jointTime=[&](const Eigen::VectorXd &first,const Eigen::VectorXd &last,bool boundary) {
++        double time=0.;
++        for(int joint=mobile_base_dof_;joint<traj_dim_;++joint) {
++          const double distance=std::abs(last[joint]-first[joint]);
++          const double required=boundary?(distance<=dist_acc?std::sqrt(distance/max_joint_acc_):
++              (distance-dist_acc)/max_joint_vel_+2.*t_acc):distance/max_joint_vel_;
++          time=std::max(time,required);
++        }
++        return time;
++      };
 +      bool merged_terminal=false;
-+      if(final_end && external_kinematics_ && four_wheel_min_turning_radius_>0. && seed_path.size()>2 &&
-+          std::abs(std::remainder(yaw_list_container[i][seed_path.size()-2]-end_yaw,2.*M_PI))>1e-3) {
-+        // A tiny final interpolation interval cannot smoothly remove steering
-+        // curvature while retaining nonzero endpoint speed. Prepare one seed
++      bool merged_initial=false;
++      // Moving four-wheel boundaries also need room to introduce curvature.
++      // Retain the established active-arm rule; ordinary arm interpolation
++      // can use the same spatial preparation without discarding an arm detour.
++      const bool moving_base_opening=external_kinematics_ && arm_detour<=.15 &&
++          start_vel.head(2).norm()>non_singul_v_+1e-6;
++      if((coupled_progress || moving_base_opening) && four_wheel_min_turning_radius_>0.) {
++        while(seed_path.size()>3 &&
++            (seed_path[1].head(2)-iniState.col(0).head(2)).norm()<std::max(four_wheel_min_turning_radius_,
++              1.5*start_vel.head(2).norm()*jointTime(iniState.col(0),seed_path[1],true))) {
++          seed_times[1]+=seed_times[0];seed_times=seed_times.tail(seed_times.size()-1).eval();
++          seed_splits[1]+=seed_splits[0];seed_splits.erase(seed_splits.begin());
++          seed_path.erase(seed_path.begin()+1);merged_initial=true;
++        }
++      }
++      const bool terminal_span=coupled_progress || !moving_end || (external_kinematics_ &&
++          seed_path.size()>2 && std::abs(std::remainder(yaw_list_container[i][yaw_list_container[i].size()-2]-end_yaw,2.*M_PI))>1e-3);
++      if(final_end && four_wheel_min_turning_radius_>0. && seed_path.size()>2 && terminal_span) {
++        // A tiny final interval can reverse while braking or removing steering
++        // curvature with nonzero endpoint speed. Prepare one seed
 +        // with a full turning-radius span; the original search path is kept.
 +        while(seed_path.size()>3 &&
-+            (finState.col(0).head(2)-seed_path[seed_path.size()-2].head(2)).norm()<four_wheel_min_turning_radius_) {
++            (finState.col(0).head(2)-seed_path[seed_path.size()-2].head(2)).norm()<
++              std::max(four_wheel_min_turning_radius_,coupled_progress?
++                1.5*end_vel.head(2).norm()*jointTime(seed_path[seed_path.size()-2],finState.col(0),true):0.)) {
 +          const int last=seed_times.size()-1;
 +          seed_times[last-1]+=seed_times[last];seed_times.conservativeResize(last);
++          seed_splits[last-1]+=seed_splits[last];seed_splits.pop_back();
 +          seed_path.erase(seed_path.end()-2);merged_terminal=true;
 +        }
 +      }
@@ -1470,38 +1617,50 @@
 -      }
 -
 -      t_list = t_list_container[i];
+-      // t_list = t_list * 1.2;
+-      Eigen::VectorXd angle1, angle2;
+-      double err;
+-      // double max_t = t_list[0];
+-      double t_acc = max_joint_vel_ / max_joint_acc_;
+-      double dist_acc = max_joint_acc_ * t_acc * t_acc;
+-      // std::cout << "astarWithMinTraj 8 " << i << "\n";
 +        innerPts.col(0) = (seed_path[0] + seed_path[1]) / 2;
 +        seed_path.insert(seed_path.begin() + 1, innerPts.col(0));
 +        const double total=seed_times[0];seed_times.resize(2);seed_times.setConstant(total/2.);
 +      }
 +
 +      t_list = seed_times;
++      Eigen::VectorXd joint_times=Eigen::VectorXd::Zero(piece_num);
 +      double terminal_joint_time=0.;
-       // t_list = t_list * 1.2;
-       Eigen::VectorXd angle1, angle2;
-       double err;
-@@ -1260,8 +1370,8 @@
-       double dist_acc = max_joint_acc_ * t_acc * t_acc;
-       // std::cout << "astarWithMinTraj 8 " << i << "\n";
        for (int j = 0; j < piece_num; ++j){
 -        angle1 = (simple_path_container[i])[j].tail(manipulator_dof_);
 -        angle2 = (simple_path_container[i])[j + 1].tail(manipulator_dof_);
-+        angle1 = seed_path[j].tail(manipulator_dof_);
-+        angle2 = seed_path[j + 1].tail(manipulator_dof_);
-         double max_t = t_list[j];
-         for(int k = 0; k < manipulator_dof_; ++k){
-           if(angle1(k) - angle2(k) >= 0)
-@@ -1278,12 +1388,21 @@
-           }else{
-             t_acc_vel = err / max_joint_vel_;
-           }
-+          if(j==piece_num-1)terminal_joint_time=std::max(terminal_joint_time,t_acc_vel);
-           max_t = max(t_acc_vel, max_t);
-         }
-         t_list[j] = max_t;
+-        double max_t = t_list[j];
+-        for(int k = 0; k < manipulator_dof_; ++k){
+-          if(angle1(k) - angle2(k) >= 0)
+-            err = angle1(k) - angle2(k);
+-          else
+-            err = angle2(k) - angle1(k);
+-          double t_acc_vel = 0;
+-          if(j == 0 || j == piece_num - 1){
+-            if(err <= dist_acc){
+-              t_acc_vel = sqrt(err / max_joint_acc_);
+-            }else{
+-              t_acc_vel = (err - dist_acc) / max_joint_vel_ + 2 * t_acc;
+-            }
+-          }else{
+-            t_acc_vel = err / max_joint_vel_;
+-          }
+-          max_t = max(t_acc_vel, max_t);
+-        }
+-        t_list[j] = max_t;
++        joint_times[j]=jointTime(seed_path[j],seed_path[j+1],j==0 || j==piece_num-1);
++        if(j==piece_num-1)terminal_joint_time=joint_times[j];
++        t_list[j]=std::max(t_list[j],joint_times[j]);
        }
        t_list[0] *= 1.5;
        t_list[piece_num - 1] *= 1.5;
++      joint_times[0]*=1.5;joint_times[piece_num-1]*=1.5;
 +
 +      // The search time profile ends nearly stopped. A moving through endpoint
 +      // must instead seed its final piece with the requested tangent speed;
@@ -1513,22 +1672,77 @@
  
        if(i > 0){
          headState.setZero();
-@@ -1305,33 +1424,32 @@
+@@ -1305,33 +1453,87 @@
          tailState.col(2).head(2) = singul_container[i] * tailState.col(2).head(2);
          tailState.col(3).head(2) = singul_container[i] * tailState.col(3).head(2);
        }
-+      if(merged_terminal) {
++      if(coupled_progress) {
++        // Use common progress along accumulated search chords. A straight base
++        // reproduces the scalar curve exactly; curved MINCO geometry still
++        // requires all the normal source and public checks.
++        std::vector<double> length(piece_num+1,0.);
++        bool positive_path=true;
++        for(int j=0;j<piece_num;++j) {
++          const double span=(seed_path[j+1].head(2)-seed_path[j].head(2)).norm();
++          positive_path=positive_path && std::isfinite(span) && span>1e-9;
++          length[j+1]=length[j]+span;
++        }
++        const double distance=length.back();
++        const double initial_speed=headState.col(1).head(2).norm();
++        const double terminal_speed=tailState.col(1).head(2).norm();
++        const double minimum_speed=std::min(non_singul_v_,std::min(initial_speed,terminal_speed));
++        const double maximum_total=7.*distance/(3.*(initial_speed+terminal_speed)+minimum_speed);
++        double total=std::min(t_list.sum(),maximum_total*(1.-1e-6));bool prepared=false;
++        for(int iteration=0;positive_path && iteration<32;++iteration) {
++          if(!std::isfinite(total) || total<=0. || distance<1e-6)break;
++          const double k0=initial_speed*total/distance,k1=terminal_speed*total/distance;
++          // Derivative Bernstein coefficients: k0,k0,k0,middle,k1,k1,k1.
++          const double middle=7.-3.*k0-3.*k1;
++          if(middle<minimum_speed*total/distance)break;
++          const double a=35.-20.*k0-15.*k1,b=-84.+45.*k0+39.*k1;
++          const double c=70.-36.*k0-34.*k1,d=-20.+10.*k0+10.*k1;
++          auto progress=[&](double u){return k0*u+std::pow(u,4)*(a+u*(b+u*(c+u*d)));};
++          double previous=0.,ratio=1.;
++          for(int j=0;j<piece_num;++j) {
++            const double fraction=length[j+1]/distance;
++            double low=previous,high=1.;
++            for(int root=0;root<60;++root) {
++              const double mid=.5*(low+high);
++              if(progress(mid)<fraction)low=mid;else high=mid;
++            }
++            const double next=j+1==piece_num?1.:.5*(low+high);
++            t_list[j]=(next-previous)*total;previous=next;
++            if(!std::isfinite(t_list[j]) || t_list[j]<=0.) {ratio=std::numeric_limits<double>::infinity();break;}
++            ratio=std::max(ratio,joint_times[j]/t_list[j]);
++          }
++          for(int sample=0;sample<=100;++sample) {
++            const double u=sample/100.;
++            const double speed=distance/total*(k0+u*u*u*(4.*a+u*(5.*b+u*(6.*c+u*7.*d))));
++            ratio=std::max(ratio,speed/max_vel_);
++          }
++          if(ratio<=1.+1e-8){prepared=true;break;}
++          const double extended=std::min(total*ratio*1.01,maximum_total*(1.-1e-6));
++          if(extended<=total*(1.+1e-10))break;
++          total=extended;
++        }
++        if(!prepared) {
++          RCLCPP_WARN(rclcpp::get_logger("remani"),"coupled seed common-progress preparation failed");
++          frontendMJ_container.clear();return KinoAstar::NO_PATH;
++        }
++        RCLCPP_INFO(rclcpp::get_logger("remani"),"coupled seed common_time_s=%.6f coarse_pieces=%d",total,piece_num);
++      }
++      if(merged_terminal || merged_initial) {
 +        // Keep the original number of optimization pieces and constraint
-+        // samples. Refine the same coarse MINCO curve over the wider closing
-+        // interval, rather than leaving one long, sparsely sampled piece.
++        // samples. Refine the same coarse curve over each merged interval,
++        // rather than leaving a long, sparsely sampled opening/closing piece.
 +        poly_traj::MinSnapOpt<8> coarse;
 +        coarse.reset(headState,tailState,piece_num);coarse.generate(innerPts,t_list);
 +        const auto curve=coarse.getTraj(singul_container[i]);
 +        const int restored=static_cast<int>(simple_path_container[i].size())-1;
-+        const int split=restored-piece_num+1;
 +        Eigen::VectorXd refined_times(restored);
-+        refined_times.head(piece_num-1)=t_list.head(piece_num-1);
-+        refined_times.tail(split).setConstant(t_list[piece_num-1]/split);
++        int restored_index=0;
++        for(int k=0;k<piece_num;++k)for(int split=0;split<seed_splits[k];++split)
++          refined_times[restored_index++]=t_list[k]/seed_splits[k];
 +        Eigen::MatrixXd refined_points(traj_dim_,restored-1);
 +        double time=0.;
 +        for(int k=0;k<restored-1;++k) {
@@ -1568,7 +1782,7 @@
  
    void PolyTrajOptimizer::clear_resize_Cps_container(int container_size){
      cps_container_.clear();
-@@ -1343,4 +1461,4 @@
+@@ -1343,4 +1545,4 @@
      cps_container_[trajid].points = points;
    }
  

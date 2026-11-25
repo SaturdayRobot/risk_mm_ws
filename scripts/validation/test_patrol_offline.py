@@ -30,8 +30,17 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--start-file', type=Path,
         default=Path('reports/patrol_offline_repro_20261124_01/start.json'))
-    parser.add_argument('--first-goal-file', type=Path,
-        default=Path('reports/patrol_offline_repro_20261124_01/goal.json'))
+    parser.add_argument('--first-goal-file', type=Path)
+    parser.add_argument('--patrol-file', type=Path, help='explicit route; default is the installed factory route')
+    parser.add_argument('--world-file', type=Path)
+    parser.add_argument('--world-metadata-file', type=Path)
+    parser.add_argument('--search-seed', type=int)
+    parser.add_argument('--arm-sampling', choices=['global','reachable'])
+    parser.add_argument('--arm-extension-fraction', type=float)
+    parser.add_argument('--arm-soft-margin-m', type=float)
+    parser.add_argument('--arm-search-budget-ms', type=float)
+    parser.add_argument('--mesh-workers', type=int, choices=range(1,5))
+    parser.add_argument('--optimizer-budget-ms', type=float)
     parser.add_argument('--report-dir', type=Path)
     parser.add_argument('--speeds', type=float, nargs=3, default=[.4,.6,.5],
         metavar=('BASE','YAW','ARM'))
@@ -52,13 +61,25 @@ def main():
         raise RuntimeError('source/install patrol.yaml mismatch; rebuild before offline route validation')
     if sha256(source_remani) != sha256(installed_remani):
         raise RuntimeError('source/install remani.yaml mismatch; rebuild before offline route validation')
-    patrol = yaml.safe_load(source_patrol.read_text())
+    selected_patrol = (args.patrol_file or installed_patrol).resolve()
+    patrol = yaml.safe_load(selected_patrol.read_text())
     remani = yaml.safe_load(source_remani.read_text())['/**']['ros__parameters']
+    optimizer_budget=float(patrol['optimizer_budget_ms']) if args.optimizer_budget_ms is None else args.optimizer_budget_ms
+    if not math.isfinite(optimizer_budget) or optimizer_budget<=0.:
+        raise ValueError('optimizer budget must be finite positive milliseconds')
     if sha256(source_world) != sha256(installed_world):
         raise RuntimeError('source/install world mismatch; rebuild before offline route validation')
-    world_hash = sha256(source_world)
+    if bool(args.world_file) != bool(args.world_metadata_file):
+        raise ValueError('world and metadata must be explicitly supplied together')
+    selected_world = (args.world_file or installed_world).resolve()
+    selected_metadata = (args.world_metadata_file or installed_world.with_suffix('.json')).resolve()
+    world_hash = sha256(selected_world)
+    if json.loads(selected_metadata.read_text())['world_sha256'] != world_hash:
+        raise RuntimeError('world metadata SHA256 mismatch')
     if patrol['world_sha256'] != world_hash:
         raise RuntimeError('patrol world identity does not match the selected world')
+    if patrol['world'] != selected_world.stem or patrol['position_frame'] != 'world' or patrol['heading_frame'] != 'base_control' or patrol['angle_unit'] != 'rad':
+        raise RuntimeError('route world/frame convention mismatch')
     if not args.speeds or len(args.speeds) != 3 or any(not math.isfinite(x) or x <= 0. for x in args.speeds):
         raise ValueError('three finite positive speed limits are required')
     if not math.isfinite(args.max_time_scale) or args.max_time_scale < 1.:
@@ -68,16 +89,20 @@ def main():
     start['state'] = finite_vector(start['state'],9,'measured origin')
     start['steer'] = finite_vector(start['steer'],4,'origin steering')
     start['wheel_position'] = finite_vector(start['wheel_position'],4,'origin wheel position')
-    first = json.loads(args.first_goal_file.read_text())
-    first_goal = first['goal'] if isinstance(first,dict) else first
-    goals = [finite_vector(first_goal,9,'first goal')]
+    first_file = args.first_goal_file
+    if first_file is None and args.patrol_file is None:
+        first_file = ws/'reports/patrol_offline_repro_20261124_01/goal.json'
+    goals = []
     manual = yaml.safe_load((installed_share/'config/manual_control.yaml').read_text())
     yaw_offset = float(manual['control_frame_yaw_in_base_rad'])
-    for item in patrol['goals'][1:]:
+    for item in patrol['goals']:
         base = [float(value) for value in item['base']]
         arm = finite_vector(item['arm'],6,item['id']+' arm')
         base[2] = math.remainder(base[2]-yaw_offset,2.*math.pi)
         goals.append(base+arm)
+    if first_file:
+        first = json.loads(first_file.read_text())
+        goals[0] = finite_vector(first['goal'] if isinstance(first,dict) else first,9,'first goal')
     goals.append(list(start['state']))
     names = [item['id'] for item in patrol['goals'][1:]]
     names.insert(0,patrol['goals'][0]['id'])
@@ -90,14 +115,23 @@ def main():
     run_script = Path(__file__).with_name('test_coupled_planning.py')
     report = {
         'status':'failed',
-        'scope':'offline original REMANI planning for each patrol segment with full sampled mesh/four-wheel validation; no actuator execution',
+        'scope':'offline current REMANI port with robot-model/numerical adaptations and full sampled mesh/four-wheel validation; no actuator execution',
         'source_patrol_sha256':sha256(source_patrol),
         'installed_patrol_sha256':sha256(installed_patrol),
         'source_remani_sha256':sha256(source_remani),
         'installed_remani_sha256':sha256(installed_remani),
-        'search_random_seed':remani.get('search.random_seed'),
+        'search_random_seed':args.search_seed if args.search_seed is not None else remani.get('search.random_seed'),
+        'arm_sampling':args.arm_sampling or 'configured_default',
+        'arm_extension_fraction':args.arm_extension_fraction if args.arm_extension_fraction is not None else remani.get('search.manipulator_extension_fraction',.3),
+        'arm_soft_margin_m':args.arm_soft_margin_m if args.arm_soft_margin_m is not None else remani['optimization.safe_margin_mani'],
+        'arm_search_budget_ms':args.arm_search_budget_ms if args.arm_search_budget_ms is not None else 1000.*remani['search.max_mani_search_time'],
         'world_sha256':world_hash,
-        'optimizer_budget_ms':float(patrol['optimizer_budget_ms']),
+        'selected_world_file':str(selected_world),
+        'selected_world_metadata_file':str(selected_metadata),
+        'selected_patrol_file':str(selected_patrol),
+        'selected_patrol_sha256':sha256(selected_patrol),
+        'optimizer_budget_ms':optimizer_budget,
+        'optimizer_budget_override_ms':args.optimizer_budget_ms,
         'through_speed_m_s':float(patrol['through_speed_m_s']),
         'forward_only':bool(patrol['forward_only']),
         'minimum_turning_radius_m':float(patrol['min_turning_radius_m']),
@@ -112,7 +146,7 @@ def main():
     }
     (output/'frozen_route_input.yaml').write_text(yaml.safe_dump({
         'reference_start_file':str(args.start_file),
-        'reference_first_goal_file':str(args.first_goal_file),
+        'reference_first_goal_file':str(first_file) if first_file else None,
         'goals_in_base_link_heading':goals,
         'goal_order':names,
         **{key:value for key,value in report.items() if key not in ('segments','origin')},
@@ -140,16 +174,23 @@ def main():
         start_path.write_text(json.dumps(boundary,indent=2)+'\n')
         goal_path.write_text(json.dumps({'goal':goal,'source':name},indent=2)+'\n')
         command=[sys.executable,str(run_script),
+            '--world-file',str(selected_world),'--world-metadata-file',str(selected_metadata),
             '--start-file',str(start_path),'--goal-file',str(goal_path),
             '--report-dir',str(segment_dir/'run'),'--no-update-latest',
             '--domain',str(args.domain_base+index),'--timeout-s',str(args.timeout_s),
             '--speeds',*[str(value) for value in args.speeds],
-            '--optimizer-budget-ms',str(patrol['optimizer_budget_ms']),
+            '--optimizer-budget-ms',str(optimizer_budget),
             '--through-speed',str(patrol['through_speed_m_s']),
             '--time-profile','through','--max-time-scale',str(args.max_time_scale),
             '--capture-diagnostics','--forward-only',
             '--minimum-turning-radius',str(patrol['min_turning_radius_m']),
             '--external-four-wheel-validation']
+        if args.search_seed is not None: command += ['--search-seed',str(args.search_seed)]
+        if args.arm_sampling: command += ['--arm-sampling',args.arm_sampling]
+        if args.arm_extension_fraction is not None: command += ['--arm-extension-fraction',str(args.arm_extension_fraction)]
+        if args.arm_soft_margin_m is not None: command += ['--arm-soft-margin-m',str(args.arm_soft_margin_m)]
+        if args.arm_search_budget_ms is not None: command += ['--arm-search-budget-ms',str(args.arm_search_budget_ms)]
+        if args.mesh_workers is not None: command += ['--mesh-workers',str(args.mesh_workers)]
         if moving: command.append('--moving-start')
         if index==len(goals)-1: command.append('--stop-at-goal')
         begin=time.monotonic()
@@ -166,13 +207,15 @@ def main():
             stage.update({key:result.get(key) for key in (
                 'status','reason','planning_wall_s','search_wall_s','optimization_wall_s',
                 'source_check_wall_s','raw_validation_passed','raw_validation_reason',
+                'planning_validation_wall_s','planning_validation_timing_scope',
                 'startup_ramp_duration_s','startup_ramp_distance_m',
                 'search_random_seed',
                 'time_scale','maximum_local_time_scale','time_adaptation_wall_s',
                 'first_violation_constraint','first_violation_time_s','first_violation_ratio',
                 'best_scale_max_constraint','best_scale_max_time_s','best_scale_max_ratio',
                 'validation_passed','validation_reason','validation_wall_s','validation_samples',
-                'max_wheel_acceleration','max_steer_rate','terminal_position','terminal_velocity',
+                'max_wheel_acceleration','max_steer_rate','initial_alignment_s','initial_steer',
+                'terminal_position','terminal_velocity',
                 'terminal_acceleration','end_steer','end_wheel_position')})
             if result.get('validation_passed') and result.get('terminal_position'):
                 actual=result['points'][0]

@@ -10,12 +10,83 @@
 #include <fstream>
 #include <iostream>
 #include <thread>
+#include <random>
+#include <limits>
+
+// Explicit offline replay of recorded states; no search, optimization or execution.
+static YAML::Node sourceGeometryReplay(const YAML::Node &input,
+    const std::shared_ptr<remani_planner::MMConfig> &model,
+    const std::shared_ptr<GridMap> &map,const rclcpp::Node::SharedPtr &node) {
+  YAML::Node output;
+  double yaw,thickness,ground,margin,weight;
+  node->get_parameter("mm.planning_frame_yaw_in_base_rad",yaw);
+  node->get_parameter("mm.manipulator_thickness",thickness);
+  node->get_parameter("optimization.ground_safe_dis",ground);
+  node->get_parameter("optimization.safe_margin_mani",margin);
+  node->get_parameter("optimization.weight_obstacle",weight);
+  const auto links=model->getLinkPoint();
+  for(const std::string key:{"search_path","minco_seed_points","optimized_candidate_points"}) {
+    if(!input[key].IsSequence() || input[key].size()==0)
+      throw std::runtime_error("missing recorded states: "+key);
+    YAML::Node result;size_t invalid=0;
+    double minimum=std::numeric_limits<double>::infinity();
+    for(size_t sample=0;sample<input[key].size();++sample) {
+      const auto recorded=input[key][sample];
+      const auto values=(key=="search_path"?recorded:recorded["position"]).as<std::vector<double>>();
+      if(values.size()!=9)throw std::runtime_error("recorded position must have nine values");
+      for(double value:values)if(!std::isfinite(value))throw std::runtime_error("nonfinite recorded position");
+      Eigen::Vector3d base(values[0],values[1],values[2]+yaw);
+      Eigen::VectorXd q=Eigen::Map<const Eigen::VectorXd>(values.data()+3,6);
+      Eigen::Matrix4d transform;model->CarState2T(base,transform);
+      transform=transform*model->getTq0();
+      std::vector<Eigen::Matrix4d> joints,gradients;model->getJointTrans(q,joints,gradients);
+      bool collision=false;YAML::Node first;
+      for(size_t link=0;link<links.size();++link) {
+        transform=transform*joints[link];
+        for(int point=0;point<links[link].cols();++point) {
+          const Eigen::Vector3d world=(transform*links[link].col(point)).head<3>();
+          const double distance=map->getPreciseDistance(world);
+          minimum=std::min(minimum,distance);
+          if(!collision && (world.z()<ground || distance<thickness)) {
+            collision=true;first["link_index"]=link;first["point_index"]=point;
+            first["kind"]=world.z()<ground?"ground":"environment";
+            first["distance_m"]=distance;first["height_m"]=world.z();
+            first["hard_threshold_m"]=world.z()<ground?ground:thickness;
+            for(int axis=0;axis<3;++axis)first["world_point"].push_back(world[axis]);
+            double soft_distance;Eigen::Vector3d gradient;
+            map->evaluateEDTWithGrad(world,soft_distance,gradient);
+            const double residual=std::max(0.,thickness+margin-soft_distance);
+            first["environment_soft_distance_m"]=soft_distance;
+            first["environment_soft_cost_unweighted_in_time"]=weight/5.*residual*residual*residual;
+            for(int axis=0;axis<3;++axis)first["environment_distance_gradient"].push_back(gradient[axis]);
+          }
+        }
+      }
+      double reference_distance;
+      if(collision!=model->checkManiObsCollision(base,q,false,reference_distance,false))
+        throw std::runtime_error("source environment replay disagrees with existing checker");
+      int type=-1;const bool self=model->planningSelfCollision(q,&type);
+      if(collision || self) {
+        ++invalid;
+        if(!result["first_invalid"]) {
+          first["sample_index"]=sample;first["position"]=values;
+          if(key!="search_path")first["time_s"]=recorded["time_s"];
+          first["self_collision_type"]=self?type:-1;result["first_invalid"]=first;
+        }
+      }
+    }
+    result["states"]=input[key].size();result["invalid_arm_states"]=invalid;
+    result["minimum_environment_distance_m"]=minimum;
+    result["source_environment_parity_passed"]=true;output[key]=result;
+  }
+  return output;
+}
 
 int main(int argc,char **argv) {
   rclcpp::init(argc,argv);
   auto node=std::make_shared<rclcpp::Node>("coupled_probe",rclcpp::NodeOptions().automatically_declare_parameters_from_overrides(true));
   YAML::Node report;
-  report["scope"]="real original REMANI planning in the complete selected static world; no execution";
+  report["scope"]="current REMANI port with robot-model/numerical adaptations in the complete selected static world; no execution";
   report["status"]="failed";
   std::string output;
   node->get_parameter("report_file",output);
@@ -47,6 +118,56 @@ int main(int argc,char **argv) {
     auto cloud=scene.cloud(map->getResolution(),header);
     if(!map->replaceCompleteSnapshot(cloud))throw std::runtime_error("complete world snapshot rejected");
     auto model=std::make_shared<remani_planner::MMConfig>();model->setParam(node,map);
+    std::string source_replay;node->get_parameter_or("probe.source_geometry_input_file",source_replay,std::string{});
+    if(!source_replay.empty()) {
+      const auto input=YAML::LoadFile(source_replay);
+      std::string signature;node->get_parameter("model_signature",signature);
+      if(input["world_signature"].as<std::string>()!=scene.signature() ||
+         input["model_signature"].as<std::string>()!=signature)
+        throw std::runtime_error("frozen source replay world/model identity mismatch");
+      const auto begin=std::chrono::steady_clock::now();
+      report["source_geometry"]=sourceGeometryReplay(input,model,map,node);
+      report["diagnostic_wall_s"]=std::chrono::duration<double>(std::chrono::steady_clock::now()-begin).count();
+      report["scope"]="frozen recorded-state source geometry diagnostic; no planning or execution";
+      report["input_file"]=source_replay;report["world_signature"]=scene.signature();
+      report["model_signature"]=signature;report["status"]="passed";
+      std::ofstream file(output);file<<report<<'\n';file.close();
+      rclcpp::shutdown();return 0;
+    }
+    bool compare_self=false;node->get_parameter_or("probe.compare_self_collision",compare_self,false);
+    if(compare_self) {
+      std::vector<double> lower,upper,origin,goal;
+      node->get_parameter("mm.manipulator_min_pos",lower);node->get_parameter("mm.manipulator_max_pos",upper);
+      node->get_parameter("task_start",origin);node->get_parameter("task_goal",goal);
+      std::mt19937 engine(20261125U);std::vector<Eigen::VectorXd> states;
+      states.push_back(Eigen::Map<Eigen::VectorXd>(origin.data()+3,6));
+      states.push_back(Eigen::Map<Eigen::VectorXd>(goal.data()+3,6));
+      for(int sample=0;sample<4000;++sample) {
+        Eigen::VectorXd q(6);
+        for(int j=0;j<6;++j)q[j]=sample%2?
+          std::uniform_real_distribution<double>(lower[j],upper[j])(engine):
+          std::clamp(origin[j+3]+std::uniform_real_distribution<double>(-1.5,1.5)(engine),lower[j],upper[j]);
+        states.push_back(q);
+      }
+      std::vector<int> reference;const auto reference_begin=std::chrono::steady_clock::now();
+      for(const auto &q:states) {
+        double distance;
+        reference.push_back(model->checkCarManiCollision(q,false,distance)?2:
+          (model->checkManiManiCollision(q,false,distance)?3:-1));
+      }
+      report["self_collision_comparison"]["reference_wall_s"]=std::chrono::duration<double>(std::chrono::steady_clock::now()-reference_begin).count();
+      const auto indexed_begin=std::chrono::steady_clock::now();size_t mismatches=0,collisions=0;
+      for(size_t i=0;i<states.size();++i) {
+        int type=-1;const bool collision=model->planningSelfCollision(states[i],&type);collisions+=collision;
+        if(collision!=(reference[i]>=0) || type!=reference[i])++mismatches;
+      }
+      report["self_collision_comparison"]["indexed_wall_s"]=std::chrono::duration<double>(std::chrono::steady_clock::now()-indexed_begin).count();
+      report["self_collision_comparison"]["samples"]=states.size();
+      report["self_collision_comparison"]["collisions"]=collisions;
+      report["self_collision_comparison"]["mismatches"]=mismatches;
+      report["self_collision_comparison"]["seed"]=20261125;
+      if(mismatches)throw std::runtime_error("indexed self-collision differs from reference point queries");
+    }
     double heading_gradient_error=0.,rotation_gradient_error=0.;
     for(int direction:{-1,1})for(const auto &v:std::vector<Eigen::Vector2d>{
         {.005,.002},{-.01,.003},{.02,0.},{.1,.03},{1e-8,2e-8}}) {
@@ -139,7 +260,10 @@ int main(int argc,char **argv) {
     std::vector<double> wheel_positions;node->get_parameter("controller.wheel_positions",wheel_positions);
     if(wheel_positions.size()!=8)throw std::runtime_error("Missing current wheel geometry");
     std::copy(wheel_positions.begin(),wheel_positions.end(),limits.wheel_positions.begin());
-    auto mesh=std::make_shared<risk_mm::MeshScene>(scene,urdf,srdf,limits.collision_padding);
+    int mesh_workers=4;node->get_parameter_or("validation.mesh_workers",mesh_workers,4);
+    if(mesh_workers<1 || mesh_workers>4)throw std::runtime_error("mesh workers must be in 1..4");
+    auto mesh=std::make_shared<risk_mm::MeshScene>(scene,urdf,srdf,limits.collision_padding,mesh_workers);
+    report["mesh_workers"]=mesh_workers;
     std::string reason;
     if(!mesh->valid(task.start,task.start_steer,task.start_wheel_position,reason))throw std::runtime_error("start: "+reason);
     report["start_geometry_valid"]=true;
@@ -223,6 +347,7 @@ int main(int argc,char **argv) {
     }
     report["collision_cost_index_relative_error"]=cost_error;
     if(cost_error>1e-10)throw std::runtime_error("collision cost/gradient index parity failed");
+    const auto response_begin=std::chrono::steady_clock::now();
     auto plan=planner.plan(task);
     report["source_validation"]=plan.source_validation;
     for(const auto &point:plan.diagnostic_search_path) {
@@ -317,6 +442,7 @@ int main(int argc,char **argv) {
       report["best_scale_max_ratio"]=timing.best_ratio;
       report["source_time_knots"]=timing.source_knots;report["execution_time_knots"]=timing.time_knots;report["local_time_scale_knots"]=timing.scale_knots;
       if(adjusted){plan=*adjusted;valid=validator.validate(plan,reason);}else valid=false;
+      report["planning_validation_wall_s"]=std::chrono::duration<double>(std::chrono::steady_clock::now()-response_begin).count();
       if(adjusted && profile=="local") {
         double geometry_error=0.,velocity_error=0.,acceleration_error=0.;
         for(size_t i=0;i<timing.source_knots.size();++i) {
@@ -343,6 +469,9 @@ int main(int argc,char **argv) {
     }
     if(report["time_adaptation_wall_s"].IsNull())
       report["time_adaptation_wall_s"]=std::chrono::duration<double>(std::chrono::steady_clock::now()-timing_begin).count();
+    if(report["planning_validation_wall_s"].IsNull())
+      report["planning_validation_wall_s"]=std::chrono::duration<double>(std::chrono::steady_clock::now()-response_begin).count();
+    report["planning_validation_timing_scope"]="steady wall clock from planner invocation to final public validation; includes diagnostic point construction and raw validation; excludes process/model/map initialization and standalone regression fixtures";
     report["points"]=YAML::Node(YAML::NodeType::Sequence);
     report["duration_s"]=plan.trajectory->duration();
     for(const auto &point:plan.points) {
@@ -358,6 +487,8 @@ int main(int argc,char **argv) {
     report["max_arm_velocity"]=checked.max_arm_velocity;report["max_arm_acceleration"]=checked.max_arm_acceleration;
     report["max_wheel_velocity"]=checked.max_wheel_velocity;report["max_wheel_acceleration"]=checked.max_wheel_acceleration;
     report["max_steer_rate"]=checked.max_steer_rate;
+    report["initial_alignment_s"]=checked.initial_alignment_s;
+    report["initial_steer"]=checked.initial_steer;
     for(double value:checked.end_steer)report["end_steer"].push_back(value);
     for(double value:checked.end_wheel_position)report["end_wheel_position"].push_back(value);
     if(!valid)throw std::runtime_error(reason);

@@ -1,4 +1,5 @@
 #include "path_searching/sample_mani_RRT.h"
+#include <stdexcept>
 
 namespace mani_sample{
   bool SampleMani::sampleManiSearch(const bool astar_succ, const Eigen::VectorXd &start_state, const Eigen::VectorXd &end_state,
@@ -395,6 +396,9 @@ namespace mani_sample{
   }
 
   bool SampleMani::search(const Eigen::VectorXd &start_state, const Eigen::VectorXd &end_state){
+    task_start_=start_state;task_goal_=end_state;
+    layer_time_.assign(max_index_,0.);
+    for(int i=1;i<max_index_;++i)layer_time_[i]=layer_time_[i-1]+t_list_[i-1];
     // std::cout << "[sample mani]: Search begin. start: " << start_state.transpose() << " end: " << end_state.transpose() << std::endl;
     rclcpp::Time time_1 = rclcpp::Clock(RCL_STEADY_TIME).now();
     std::uniform_real_distribution<double> goal_dis(0.0, 1.0);
@@ -674,12 +678,6 @@ namespace mani_sample{
 
   ManiPathNodePtr SampleMani::getSampleNode(){
     std::uniform_int_distribution<int> node_dis(1, max_index_-2);
-    std::vector<std::uniform_real_distribution<double>> state_dis_vec;
-    state_dis_vec.reserve(manipulator_dof_);
-    for(int i = 0; i < manipulator_dof_; ++i){
-      std::uniform_real_distribution<double> state_dis(min_joint_pos_[i], max_joint_pos_[i]);
-      state_dis_vec.push_back(state_dis);
-    }
     Eigen::VectorXd sample_state(manipulator_dof_);
     ManiPathNodePtr sample_node = nullptr;
     int sample_idx;
@@ -695,7 +693,17 @@ namespace mani_sample{
       sample_idx = node_dis(node_gen_);
       for(int i = 0; i < manipulator_dof_; ++i)
       {
-        sample_state(i) = state_dis_vec[i](state_gen_);
+        double low=min_joint_pos_[i],high=max_joint_pos_[i];
+        if(reachable_sampling_) {
+          // Necessary velocity reachability from both exact task boundaries.
+          // This changes proposal efficiency, not the joint or edge limits.
+          const double before=max_joint_vel_*layer_time_[sample_idx];
+          const double after=max_joint_vel_*(layer_time_.back()-layer_time_[sample_idx]);
+          low=std::max(low,std::max(task_start_[i]-before,task_goal_[i]-after));
+          high=std::min(high,std::min(task_start_[i]+before,task_goal_[i]+after));
+          if(low>high)return nullptr;
+        }
+        sample_state(i)=std::uniform_real_distribution<double>(low,high)(state_gen_);
       }
       sample_node = initNode(sample_idx, sample_state);
       if(sample_node->node_state == ManiPathNode::NODE_STATE::COLLISION)
@@ -757,13 +765,13 @@ namespace mani_sample{
     Eigen::VectorXd vel_dir = dir / (double)t_total;
     for(int i = 0; i < manipulator_dof_; ++i)
     {
-      if(vel_dir(i) > max_joint_vel_ * 0.3)
+      if(vel_dir(i) > max_joint_vel_ * extension_fraction_)
       {
-        vel_dir(i) = max_joint_vel_ * 0.3;
+        vel_dir(i) = max_joint_vel_ * extension_fraction_;
       }
-      else if(vel_dir(i) < -max_joint_vel_ *0.3)
+      else if(vel_dir(i) < -max_joint_vel_ *extension_fraction_)
       {
-        vel_dir(i) = -max_joint_vel_ * 0.3;
+        vel_dir(i) = -max_joint_vel_ * extension_fraction_;
       }
     }
 
@@ -1263,6 +1271,10 @@ namespace mani_sample{
     nh->get_parameter_or("search.goal_rate", goal_rate_, 0.4);
     nh->get_parameter_or("search.max_loop_num", max_loop_num_, 500);
     nh->get_parameter_or("search.max_mani_search_time", max_mani_search_time_, 0.1);
+    nh->get_parameter_or("search.manipulator_reachable_sampling",reachable_sampling_,false);
+    nh->get_parameter_or("search.manipulator_extension_fraction",extension_fraction_,0.3);
+    if(!std::isfinite(extension_fraction_) || extension_fraction_<=0. || extension_fraction_>1.)
+      throw std::invalid_argument("manipulator extension fraction must be in (0,1]");
     nh->get_parameter_or("optimization.self_safe_margin", self_safe_margin_, 0.1);
     nh->get_parameter_or("optimization.safe_margin_mani", safe_margin_mani_, 0.1);
     nh->get_parameter_or("mm.mobile_base_check_radius", mobile_base_check_radius_, 0.1);

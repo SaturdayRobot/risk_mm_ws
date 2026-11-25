@@ -64,23 +64,6 @@ struct MMConfig::BodyIndex {
     if(!nodes.empty())queryRadiusNode(0,point,radius*radius,result);
     return result;
   }
-  bool obstacleHit(int id,const Eigen::Matrix4d &transform,GridMap &map,
-                   double threshold,double floor) const {
-    const auto &node=nodes[id];
-    const auto rotation=transform.topLeftCorner<3,3>();
-    const auto translation=transform.topRightCorner<3,1>();
-    const Eigen::Vector3d center=rotation*((node.minimum+node.maximum)*.5)+translation;
-    const Eigen::Vector3d extent=rotation.cwiseAbs()*((node.maximum-node.minimum)*.5);
-    if(center.z()-extent.z()>floor+1e-9 &&
-       map.interpolationBoxClear(center-extent,center+extent,threshold))return false;
-    if(node.left>=0)return obstacleHit(node.left,transform,map,threshold,floor)||
-                           obstacleHit(node.right,transform,map,threshold,floor);
-    for(int i=node.begin;i<node.end;++i) {
-      const Eigen::Vector3d p=rotation*exact_points[order[i]]+translation;
-      if(p.z()<floor || map.getPreciseDistance(p)<threshold)return true;
-    }
-    return false;
-  }
   template<typename Allowed>
   bool anyWithin(int id,const Eigen::Vector3d &point,double squared,const Allowed &allowed) const {
     const auto &node=nodes[id];
@@ -570,22 +553,8 @@ bool MMConfig::checkManiObsCollision(Eigen::Vector3d car_state,
   return false;
 }
 
-bool MMConfig::planningEnvironmentCollision(const Eigen::Vector3d &base,const Eigen::VectorXd &q) {
-  Eigen::Matrix4d transform;
-  CarState2T(base,transform);
-  if(body_index_->obstacleHit(0,transform,*grid_map_,mobile_base_check_radius_+map_resolution_,
-                              -std::numeric_limits<double>::infinity()))return true;
-  transform*=T_q_0_;
-  for(int i=0;i<manipulator_dof_;++i) {
-    Eigen::Matrix4d joint,unused;
-    getAJointTran(i,q[i],joint,unused);
-    transform*=joint;
-    if(arm_indices_[i]->obstacleHit(0,transform,*grid_map_,manipulator_thickness_,ground_safe_dis_))return true;
-  }
-  return false;
-}
-
-bool MMConfig::planningSelfCollision(const Eigen::VectorXd &q) const {
+bool MMConfig::planningSelfCollision(const Eigen::VectorXd &q,int *collision_type) const {
+  if(collision_type)*collision_type=3;
   if(q.size()!=manipulator_dof_||!q.allFinite())return true;
   std::array<Eigen::Matrix4d,6> poses;
   // The joint model is immutable after loading.
@@ -606,13 +575,19 @@ bool MMConfig::planningSelfCollision(const Eigen::VectorXd &q) const {
       for(const auto &local:source.exact_points) {
         const Eigen::Vector3d point=current.topLeftCorner<3,3>()*local+current.topRightCorner<3,1>();
         if(body_index_->anyWithin(0,point,body_limit*body_limit,
-             [&](int b){return a>1||body_index_->owners[b]!=1.;}))return true;
+             [&](int b){return a>1||body_index_->owners[b]!=1.;})) {
+          if(collision_type)*collision_type=2;
+          return true;
+        }
       }
     }
+  }
+  for(int a=0;a<manipulator_dof_;++a) {
+    const auto &source=*arm_indices_[a];
     for(int b=0;b<a;++b) {
       if(!hasSelfCollisionPair(a,b))continue;
       const auto &target=*arm_indices_[b];
-      const Eigen::Matrix4d relative=poses[b].inverse()*current;
+      const Eigen::Matrix4d relative=poses[b].inverse()*poses[a];
       if(separated(transformedBox(source.minimum,source.maximum,relative),target,arm_limit))continue;
       for(int i=0;i<static_cast<int>(source.exact_points.size());++i) {
         if(!hasSelfCollisionPointPair(a,i,b))continue;
@@ -622,6 +597,7 @@ bool MMConfig::planningSelfCollision(const Eigen::VectorXd &q) const {
       }
     }
   }
+  if(collision_type)*collision_type=-1;
   return false;
 }
 
@@ -695,6 +671,7 @@ bool MMConfig::checkManicollision(Eigen::Vector3d car_state,
   if (checkManiObsCollision(car_state, mani_state, safe, min_dist)) {
     return true;
   }
+  if(!safe)return planningSelfCollision(mani_state);
   if (checkCarManiCollision(mani_state, safe, min_dist)) {
     return true;
   }
@@ -716,6 +693,7 @@ bool MMConfig::checkcollision(
     coll_type = 1;
     return true;
   }
+  if(!safe)return planningSelfCollision(mani_state,&coll_type);
   if (checkCarManiCollision(mani_state, safe, min_dist)) {
     coll_type = 2;
     return true;
@@ -737,6 +715,7 @@ bool MMConfig::checkcollision(Eigen::Vector3d car_state,
   if (checkManiObsCollision(car_state, mani_state, safe, min_dist)) {
     return true;
   }
+  if(!safe)return planningSelfCollision(mani_state);
   if (checkCarManiCollision(mani_state, safe, min_dist)) {
     return true;
   }

@@ -15,6 +15,8 @@
 #include <set>
 #include <sstream>
 #include <mutex>
+#include <thread>
+#include <atomic>
 
 namespace risk_mm {
 namespace {
@@ -33,6 +35,8 @@ class MeshScene::Implementation {
   std::unique_ptr<moveit::core::RobotState> state;
   std::array<double,6> bounds;
   std::mutex mutex;
+  bool valid(const std::array<double,9> &,const std::array<double,4> &,const std::array<double,4> &,
+             std::string &,double z=0.,double roll=0.,double pitch=0.);
   Implementation(const WorldScene &world,const std::string &urdf_file,const std::string &srdf_file,double padding) {
     bounds=world.bounds();
     const auto urdf=urdf::parseURDF(read(urdf_file));
@@ -63,40 +67,62 @@ class MeshScene::Implementation {
   }
 };
 
-MeshScene::MeshScene(const WorldScene &world,const std::string &urdf,const std::string &srdf,double padding)
-  :impl_(std::make_unique<Implementation>(world,urdf,srdf,padding)) {}
+MeshScene::MeshScene(const WorldScene &world,const std::string &urdf,const std::string &srdf,double padding,size_t workers) {
+  if(workers<1 || workers>4)throw std::invalid_argument("mesh batch workers must be in 1..4");
+  for(size_t i=0;i<workers;++i)workers_.push_back(std::make_unique<Implementation>(world,urdf,srdf,padding));
+}
 MeshScene::~MeshScene()=default;
 
 bool MeshScene::valid(const std::array<double,9> &position,const std::array<double,4> &steer,
                       const std::array<double,4> &wheels,std::string &reason,double z,double roll,double pitch) {
-  std::lock_guard<std::mutex> lock(impl_->mutex);
+  return workers_.front()->valid(position,steer,wheels,reason,z,roll,pitch);
+}
+std::vector<std::string> MeshScene::checkBatch(const std::vector<MeshState> &states) {
+  std::vector<std::string> results(states.size());std::atomic<size_t> next{0};
+  auto run=[&](size_t worker) {
+    for(size_t index=next.fetch_add(1);index<states.size();index=next.fetch_add(1)) {
+      const auto &state=states[index];
+      try {workers_[worker]->valid(state.position,state.steer,state.wheels,results[index]);}
+      catch(const std::exception &error){results[index]="mesh exception: "+std::string(error.what());}
+      catch(...){results[index]="unknown mesh exception";}
+    }
+  };
+  std::vector<std::thread> threads;
+  try {for(size_t worker=1;worker<workers_.size();++worker)threads.emplace_back(run,worker);}
+  catch(...) {for(auto &thread:threads)thread.join();throw;}
+  run(0);for(auto &thread:threads)thread.join();
+  return results;
+}
+bool MeshScene::Implementation::valid(const std::array<double,9> &position,const std::array<double,4> &steer,
+                      const std::array<double,4> &wheels,std::string &reason,double z,double roll,double pitch) {
+  std::lock_guard<std::mutex> lock(mutex);
   for(double value:position)if(!std::isfinite(value)){reason="nonfinite collision state";return false;}
   Eigen::Isometry3d root=Eigen::Isometry3d::Identity();root.translation()=Eigen::Vector3d(position[0],position[1],z);
   root.linear()=(Eigen::AngleAxisd(position[2],Eigen::Vector3d::UnitZ())*
                  Eigen::AngleAxisd(pitch,Eigen::Vector3d::UnitY())*
                  Eigen::AngleAxisd(roll,Eigen::Vector3d::UnitX())).toRotationMatrix();
-  impl_->state->setJointPositions("validation_world_joint",root);
-  for(int i=0;i<6;++i)impl_->state->setVariablePosition("xarm6_joint"+std::to_string(i+1),position[i+3]);
+  state->setJointPositions("validation_world_joint",root);
+  for(int i=0;i<6;++i)state->setVariablePosition("xarm6_joint"+std::to_string(i+1),position[i+3]);
   const std::array<std::string,4> names{"fl","fr","rl","rr"};
   for(size_t i=0;i<4;++i) {
     if(!std::isfinite(steer[i]) || !std::isfinite(wheels[i])){reason="nonfinite wheel state";return false;}
-    impl_->state->setVariablePosition("joint_steer_"+names[i],steer[i]);
-    impl_->state->setVariablePosition("joint_wheel_"+names[i],wheels[i]);
+    state->setVariablePosition("joint_steer_"+names[i],steer[i]);
+    state->setVariablePosition("joint_wheel_"+names[i],wheels[i]);
   }
-  impl_->state->update();
-  std::vector<double> bounds;
-  impl_->state->computeAABB(bounds);
-  if(bounds.size()!=6 || bounds[0]<impl_->bounds[0] || bounds[1]>impl_->bounds[1] ||
-     bounds[2]<impl_->bounds[2] || bounds[3]>impl_->bounds[3] || bounds[5]>impl_->bounds[5]) {
+  state->update();
+  std::vector<double> extent;
+  state->computeAABB(extent);
+  if(extent.size()!=6 || extent[0]<bounds[0] || extent[1]>bounds[1] ||
+     extent[2]<bounds[2] || extent[3]>bounds[3] || extent[5]>bounds[5]) {
     reason="robot geometry outside complete world bounds";return false;
   }
-  if(!impl_->state->satisfiesBounds()){reason="URDF joint bound violation";return false;}
+  if(!state->satisfiesBounds()){reason="URDF joint bound violation";return false;}
   collision_detection::CollisionRequest request;request.contacts=true;request.max_contacts=1;
   // Ground clearance is checked by the actual support plane below. A rotated
   // tire's local mesh bounding box extends below its circular tread and is not
   // a valid lower-height bound. Only the four support tires may touch the floor.
   collision_detection::CollisionResult result;
-  impl_->scene->checkCollision(request,result,*impl_->state);
+  scene->checkCollision(request,result,*state);
   if(result.collision) {
     reason="full-mesh collision";
     if(!result.contacts.empty())reason+=" between "+result.contacts.begin()->first.first+" and "+result.contacts.begin()->first.second;
@@ -107,6 +133,23 @@ bool MeshScene::valid(const std::array<double,9> &position,const std::array<doub
 
 SampledValidator::SampledValidator(std::shared_ptr<MeshScene> scene,ValidationLimits limits,std::string signature,unsigned long revision)
   :scene_(std::move(scene)),limits_(limits),model_signature_(std::move(signature)),map_revision_(revision) {}
+
+SteeringAlignment initialSteeringAlignment(const Plan &plan,const ValidationLimits &limits) {
+  SteeringAlignment alignment;alignment.target=plan.task.start_steer;
+  if(plan.task.moving_start)return alignment;
+  const double duration=plan.trajectory->duration();
+  const int count=std::max(1,static_cast<int>(std::ceil(duration/limits.sample_s)));
+  for(int k=0;k<=count;++k) {
+    const auto value=plan.trajectory->evaluate(duration*k/count);
+    if(std::abs(value.forward_velocity)+std::abs(value.velocity[2])<=1e-6)continue;
+    alignment.target=mm_model::inverse(value.forward_velocity,0.,value.velocity[2],limits.wheel_positions,
+        limits.wheel_radius,std::numeric_limits<double>::infinity(),plan.task.start_steer).steer;
+    break;
+  }
+  for(size_t j=0;j<4;++j)
+    alignment.duration_s=std::max(alignment.duration_s,std::abs(alignment.target[j]-plan.task.start_steer[j])/limits.steer_rate);
+  return alignment;
+}
 
 bool SampledValidator::validate(const Plan &plan,std::string &reason) const {
   const auto started=std::chrono::steady_clock::now();report_={};
@@ -136,6 +179,25 @@ bool SampledValidator::validate(const Plan &plan,std::string &reason) const {
   const double terminal_speed=std::hypot(end.velocity[0],end.velocity[1]);
   if((plan.task.stop_at_goal && terminal_speed>.020001) || std::abs(end.velocity[2])>1e-5)
     return finish(false,"unsupported terminal braking state");
+  for(double steer:plan.task.start_steer)
+    if(!std::isfinite(steer) || std::abs(steer)>M_PI_2+1e-6)return finish(false,"invalid initial steering state");
+  const auto alignment=initialSteeringAlignment(plan,limits_);
+  report_.initial_alignment_s=alignment.duration_s;report_.initial_steer=alignment.target;
+  if(alignment.duration_s>0.) {
+    const int steps=std::max(1,static_cast<int>(std::ceil(alignment.duration_s/limits_.sample_s)));
+    for(int k=0;k<=steps;++k) {
+      auto steer=plan.task.start_steer;
+      for(size_t j=0;j<4;++j) {
+        const double delta=alignment.target[j]-steer[j];
+        steer[j]+=delta*double(k)/steps;
+        report_.max_steer_rate=std::max(report_.max_steer_rate,std::abs(delta)/alignment.duration_s);
+      }
+      std::string collision;
+      if(!scene_->valid(plan.task.start,steer,plan.task.start_wheel_position,collision))
+        return finish(false,"stationary steering alignment: "+collision);
+      ++report_.samples;
+    }
+  }
   std::set<double> times;
   const int count=static_cast<int>(std::ceil(duration/limits_.sample_s));
   for(int k=0;k<=count;++k)times.insert(duration*k/count);
@@ -151,9 +213,10 @@ bool SampledValidator::validate(const Plan &plan,std::string &reason) const {
       }
     }
   }
-  auto previous_steer=plan.task.start_steer;
+  auto previous_steer=alignment.target;
   std::array<double,4> previous_speed{},wheels=plan.task.start_wheel_position;
   double previous_time=0.;bool first=true;
+  std::vector<MeshState> mesh_states;std::vector<double> mesh_times;
   for(double time:times) {
     const auto value=plan.trajectory->evaluate(time);
     for(double x:value.position)if(!std::isfinite(x))return finish(false,"nonfinite position");
@@ -187,10 +250,12 @@ bool SampledValidator::validate(const Plan &plan,std::string &reason) const {
         wheels[j]+=.5*(solution.speed[j]+previous_speed[j])*dt;
       }
     }
-    std::string collision;
-    if(!scene_->valid(value.position,solution.steer,wheels,collision))return finish(false,collision+" at t="+std::to_string(time));
-    previous_steer=solution.steer;previous_speed=solution.speed;previous_time=time;first=false;++report_.samples;
+    mesh_states.push_back({value.position,solution.steer,wheels});mesh_times.push_back(time);
+    previous_steer=solution.steer;previous_speed=solution.speed;previous_time=time;first=false;
   }
+  const auto collisions=scene_->checkBatch(mesh_states);report_.samples+=mesh_states.size();
+  for(size_t i=0;i<collisions.size();++i)if(!collisions[i].empty())
+    return finish(false,collisions[i]+" at t="+std::to_string(mesh_times[i]));
   if(plan.task.stop_at_goal && terminal_speed>1e-8) {
     const double deceleration=limits_.wheel_acceleration*limits_.wheel_radius;
     const double braking_time=terminal_speed/deceleration;

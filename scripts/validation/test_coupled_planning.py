@@ -2,6 +2,7 @@
 """Run the original C++ coupled backend against the actual selected world."""
 import argparse
 from datetime import datetime
+import hashlib
 import json
 import math
 import os
@@ -42,7 +43,17 @@ def main():
     parser.add_argument('--external-four-wheel-validation', action='store_true',
                          help='match patrol mode: source geometry gate plus public four-wheel hard checks')
     parser.add_argument('--warm-replans', type=int, default=0)
+    parser.add_argument('--world-file',type=Path,help='explicit complete local SDF validation world')
+    parser.add_argument('--world-metadata-file',type=Path,help='matching world metadata including SHA256 and bounded-space semantics')
+    parser.add_argument('--arm-sampling',choices=['global','reachable'],help='explicit proposal policy comparison within the original manipulator sampler')
+    parser.add_argument('--arm-extension-fraction',type=float,help='sampler expansion speed fraction in (0,1]; joint limits stay unchanged')
+    parser.add_argument('--arm-search-budget-ms',type=float,help='explicit manipulator search wall budget; all physical limits remain unchanged')
+    parser.add_argument('--arm-soft-margin-m',type=float,help='explicit arm obstacle cost margin; source/public hard geometry unchanged')
+    parser.add_argument('--mesh-workers',type=int,choices=range(1,5),help='bounded full-mesh batch workers; every sample remains checked')
+    parser.add_argument('--compare-self-collision',action='store_true',help='compare exact indexed boolean queries against original neighbour-list reference before planning')
     args = parser.parse_args()
+    if bool(args.world_file)!=bool(args.world_metadata_file):
+        raise ValueError('--world-file and --world-metadata-file must be provided together')
     if args.search_seed is not None and args.search_seed < 0:
         raise ValueError('--search-seed must be nonnegative')
     ws = Path(__file__).resolve().parents[2]
@@ -50,6 +61,11 @@ def main():
     folder.mkdir(parents=True)
     model = Path(share('rangermini_description')) / 'urdf/rangermini_xarm6.urdf'
     bringup = Path(share('mm_bringup'))
+    world_file=(args.world_file or bringup/'worlds/s6_factory_inspection_v1.world').resolve()
+    world_metadata=(args.world_metadata_file or bringup/'worlds/s6_factory_inspection_v1.json').resolve()
+    world_identity=json.loads(world_metadata.read_text())['world_sha256']
+    if hashlib.sha256(world_file.read_bytes()).hexdigest()!=world_identity:
+        raise ValueError('selected world/metadata SHA256 mismatch')
     config = yaml.safe_load((bringup / 'config/robot.yaml').read_text())
     params = yaml.safe_load((bringup / 'config/remani.yaml').read_text())['/**']['ros__parameters']
     params.update(yaml.safe_load((bringup / 'config/coupled_execution.yaml').read_text())['/**']['ros__parameters'])
@@ -57,6 +73,22 @@ def main():
     derived['mm.planning_frame_yaw_in_base_rad'] = yaml.safe_load(
         (bringup / 'config/manual_control.yaml').read_text())['control_frame_yaw_in_base_rad']
     params.update(derived)
+    params['probe.compare_self_collision']=bool(args.compare_self_collision)
+    if args.mesh_workers is not None: params['validation.mesh_workers']=args.mesh_workers
+    if args.arm_soft_margin_m is not None:
+        if not math.isfinite(args.arm_soft_margin_m) or args.arm_soft_margin_m<0.:
+            raise ValueError('arm soft margin must be finite and nonnegative')
+        params['optimization.safe_margin_mani']=args.arm_soft_margin_m
+    if args.arm_search_budget_ms is not None:
+        if not math.isfinite(args.arm_search_budget_ms) or args.arm_search_budget_ms<=0.:
+            raise ValueError('arm search budget must be positive finite milliseconds')
+        params['search.max_mani_search_time']=args.arm_search_budget_ms/1000.
+    if args.arm_sampling is not None:
+        params['search.manipulator_reachable_sampling']=args.arm_sampling=='reachable'
+    if args.arm_extension_fraction is not None:
+        if not math.isfinite(args.arm_extension_fraction) or not 0.<args.arm_extension_fraction<=1.:
+            raise ValueError('arm extension fraction must be in (0,1]')
+        params['search.manipulator_extension_fraction']=args.arm_extension_fraction
     if args.speeds:
         params['task_speed_limits'] = args.speeds
     if args.optimizer_budget_ms is not None:
@@ -82,14 +114,20 @@ def main():
     reference = json.loads(args.start_file.read_text()) if args.start_file else None
     if reference:
         start = reference['state']
-        params['task_start_steer'] = reference['steer']
-        params['task_start_wheel_position'] = reference['wheel_position']
+        for field,parameter_name in [('steer','task_start_steer'),('wheel_position','task_start_wheel_position')]:
+            values=reference[field]
+            if len(values)!=4 or not all(math.isfinite(float(value)) for value in values):
+                raise ValueError(f'--start-file requires finite {field}[4]')
+            params[parameter_name]=[float(value) for value in values]
         if args.moving_start:
             for name in ('velocity','acceleration','jerk'):
                 values=reference.get('start_'+name,reference.get(name))
                 if values is None or len(values)!=9 or not all(math.isfinite(float(value)) for value in values):
                     raise ValueError(f'--moving-start requires finite start_{name}[9] in --start-file')
                 params['probe.start_'+name]=[float(value) for value in values]
+    if len(start)!=9 or not all(math.isfinite(float(value)) for value in start):
+        raise ValueError('--start-file requires finite state[9]')
+    start=[float(value) for value in start]
     params['probe.moving_start']=bool(args.moving_start)
     params['probe.stop_at_goal']=bool(args.stop_at_goal or args.through_speed is None)
     goal = list(start)
@@ -102,7 +140,7 @@ def main():
     if args.preset:
         presets = yaml.safe_load((args.presets_file or bringup/'config/goal_presets.yaml').read_text())
         assert presets['position_frame'] == 'world' and presets['heading_frame'] == 'base_control' and presets['angle_unit'] == 'rad'
-        assert presets['world_sha256'] == json.loads((bringup/'worlds/s6_factory_inspection_v1.json').read_text())['world_sha256']
+        assert presets['world_sha256'] == world_identity
         preset = next(item for item in presets['goals'] if item['id'] == args.preset)
         goal = list(preset['base']) + list(preset['arm'])
         goal[2] = math.remainder(goal[2]-derived['mm.planning_frame_yaw_in_base_rad'], 2*math.pi)
@@ -116,15 +154,15 @@ def main():
             raise ValueError('--goal-file must contain a finite nine-dimensional goal')
         goal = [float(value) for value in goal]
     params.update({'grid_map.external_snapshots': True,
-        'world_file': str(bringup / 'worlds/s6_factory_inspection_v1.world'),
-        'world_metadata_file': str(bringup / 'worlds/s6_factory_inspection_v1.json'),
+        'world_file': str(world_file),
+        'world_metadata_file': str(world_metadata),
         'robot_urdf_file': str(model),
         'robot_srdf_file': str(Path(share('rangermini_moveit_config')) / 'config/rangermini_xarm6.srdf'),
         'task_start': start, 'task_goal': goal,
         'model_signature': robot_signature(model, [bringup / ('config/' + name) for name in ('robot.yaml', 'remani.yaml', 'simulation_collision.yaml', 'coupled_execution.yaml', 'manual_control.yaml')] + [Path(share('rangermini_moveit_config')) / 'config/rangermini_xarm6.srdf'], model_data=derived),
         'report_file': str(folder / 'candidate.yaml')})
     executable = Path(get_package_prefix('risk_mm_runtime')) / 'lib/risk_mm_runtime/coupled_probe'
-    report = {'status': 'failed', 'scope': 'original backend, complete static world fixture; no execution',
+    report = {'status': 'failed', 'scope': 'current REMANI port with robot-model/numerical adaptations, complete static world fixture; no execution',
               'preset_id': args.preset, 'reference_start_file': str(args.start_file) if args.start_file else None,
               'fixed_goal_file': str(args.goal_file) if args.goal_file else None,
               'task_start': start, 'task_goal': goal,
@@ -142,7 +180,13 @@ def main():
               'minimum_turning_radius_m': args.minimum_turning_radius,
               'external_four_wheel_validation': bool(args.external_four_wheel_validation),
               'model_signature': params['model_signature'],
-              'world_sha256': json.loads((bringup/'worlds/s6_factory_inspection_v1.json').read_text())['world_sha256']}
+              'world_file':str(world_file),'world_metadata_file':str(world_metadata),
+              'arm_sampling':args.arm_sampling or 'configured_default',
+              'arm_extension_fraction':params.get('search.manipulator_extension_fraction',.3),
+              'arm_search_budget_ms':1000.*params['search.max_mani_search_time'],
+              'arm_soft_margin_m':params['optimization.safe_margin_mani'],
+              'mesh_workers':params.get('validation.mesh_workers',4),
+              'world_sha256':world_identity}
     try:
         with tempfile.TemporaryDirectory(prefix='risk_mm_coupled_') as temporary:
             path = Path(temporary) / 'params.yaml'

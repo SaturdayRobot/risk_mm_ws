@@ -34,6 +34,7 @@ bool CoupledExecutor::prepare(std::shared_ptr<const Plan> plan,std::string id,st
   }
   if(!actuator_->reserve(id,plan->task.model_signature,plan->task.map_revision,reason))return false;
   plan_=std::move(plan);plan_id_=std::move(id);report_={};report_.phase="ALIGNING";
+  alignment_steer_=initialSteeringAlignment(*plan_,model_limits_).target;
   queued_.clear();
   prepared_ros_s_=actuator_->rosTime();origin_ros_s_=-1.;settled_=0;
   reason.clear();return true;
@@ -81,14 +82,11 @@ void CoupledExecutor::tick(bool environment_current) {
     command.map_revision=plan_->task.map_revision;
     if(origin_ros_s_<0.) {
       if(now-prepared_ros_s_>limits_.alignment_timeout_s){cancel("steering alignment timed out");return;}
-      const auto first=plan_->trajectory->evaluate(0.);
-      const auto wheels=mm_model::inverse(first.forward_velocity,0.,first.velocity[2],model_limits_.wheel_positions,
-                                          model_limits_.wheel_radius,model_limits_.wheel_velocity,state.steer);
-      command.steer=wheels.steer;command.wheel_velocity.fill(0.);
+      command.steer=alignment_steer_;command.wheel_velocity.fill(0.);
       for(int i=0;i<6;++i)command.arm[i]=plan_->task.start[i+3];
       if(!actuator_->apply(command,collision)){cancel(collision);return;}
       bool aligned=stopped(state);
-      for(size_t i=0;i<4;++i)aligned=aligned && std::abs(state.steer[i]-wheels.steer[i])<.025;
+      for(size_t i=0;i<4;++i)aligned=aligned && std::abs(state.steer[i]-alignment_steer_[i])<.025;
       if(!aligned)return;
       origin_ros_s_=now;report_.phase="EXECUTING";
     }

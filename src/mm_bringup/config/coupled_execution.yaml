@@ -9,6 +9,8 @@
     validation.wheel_acceleration: 5.0
     validation.steer_rate: 1.5707963267948966
     validation.collision_padding: 0.01
+    # Independent frozen mesh scenes; every original sample is still checked.
+    validation.mesh_workers: 4
     # Explicit physical timing after REMANI. Keep the original candidate and
     # the C2 local time map; validate the exact mapped derivatives and geometry.
     coupled_time_scaling.enabled: true

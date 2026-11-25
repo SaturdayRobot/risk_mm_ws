@@ -83,6 +83,10 @@ namespace mani_sample {
     std::mt19937 state_gen_;
     std::mt19937 node_gen_;
     bool fixed_random_seed_{false};
+    bool reachable_sampling_{false};
+    double extension_fraction_{0.3};
+    Eigen::VectorXd task_start_,task_goal_;
+    std::vector<double> layer_time_;
 
     bool checkcollision(const ManiPathNodePtr& cur_state, const ManiPathNodePtr& next_state);
     int doubleIdx2int(double idx);

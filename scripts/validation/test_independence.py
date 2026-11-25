@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
 """Audit local resources and sourced prefixes without consulting the old workspace."""
+import argparse
 from pathlib import Path
 import difflib,hashlib,json,os,re,xml.etree.ElementTree as ET
 from ament_index_python.packages import get_package_prefix, get_package_share_directory as share
 
 def main():
     ws=Path(__file__).resolve().parents[2]
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--report',type=Path,default=ws/'reports/independence.json')
+    args=parser.parse_args()
     packages={ET.parse(p).getroot().find('name').text for p in (ws/'src').rglob('package.xml')}
     try:
         for key in ['AMENT_PREFIX_PATH','COLCON_PREFIX_PATH','CMAKE_PREFIX_PATH','PYTHONPATH','LD_LIBRARY_PATH']:
@@ -37,7 +41,7 @@ def main():
             for path in (local,installed):
                 assert hashlib.sha256(path.read_bytes()).hexdigest()==asset['sha256'],str(path)
         native=Path(get_package_prefix('mm_bringup'))/'lib/mm_bringup'
-        for name in ('prepare_sim','sim_control','sim_control_gui','simulation_runtime'):
+        for name in ('prepare_sim','sim_control','sim_control_gui','simulation_runtime','inspection_visualization'):
             assert (native/name).read_bytes()[:4]==b'\x7fELF',name
         probe=Path(get_package_prefix('risk_mm_runtime'))/'lib/risk_mm_runtime/coupled_probe'
         assert probe.read_bytes()[:4]==b'\x7fELF','coupled_probe'
@@ -45,11 +49,12 @@ def main():
         report={'status':'passed','packages':len(packages),'local_mesh_references':len(meshes),
                 'verified_upstream_files':len(manifest['git_blob_sha']),
                 'remani_patch_matches_sources':True,
-                'local_world_assets':len(world_manifest['files']),'native_sim_executables':4,
+                'local_world_assets':len(world_manifest['files']),'native_sim_executables':5,
                 'ament_prefix_path':os.environ.get('AMENT_PREFIX_PATH','')}
     except Exception as error:
         report={'status':'failed','reason':str(error)}
-    (ws/'reports/independence.json').write_text(json.dumps(report,indent=2)+'\n')
+    args.report.parent.mkdir(parents=True,exist_ok=True)
+    args.report.write_text(json.dumps(report,indent=2)+'\n')
     print(json.dumps(report,indent=2))
     return 0 if report['status']=='passed' else 1
 

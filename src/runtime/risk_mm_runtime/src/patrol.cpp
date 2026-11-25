@@ -40,22 +40,27 @@ void Patrol::schedule() {
   const Task task=next_;const auto measured=actuator_->feedback();
   const bool moving=std::hypot(measured.velocity[0],measured.velocity[1])>.01;
   work_=std::async(std::launch::async,[this,task,moving]{
+    const auto requested=std::chrono::steady_clock::now();
     Result result;result.requested_while_moving=moving;
+    auto finish=[&] {
+      result.response_ms=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-requested).count();
+      return std::move(result);
+    };
     auto candidate=std::make_shared<Plan>();result.plan=candidate;
     try {*candidate=planner_.plan(task);}catch(const std::exception &error){candidate->failure=error.what();}
-    if(!result.plan->failure.empty()){result.reason=result.plan->failure;return result;}
+    if(!result.plan->failure.empty()){result.reason=result.plan->failure;return finish();}
     const auto start=std::chrono::steady_clock::now();
     result.plan=adaptCandidateTime(*candidate,limits_,3.,"through",result.timing,result.reason);
     if(!result.plan) {
       result.plan=candidate;
       result.validation_ms=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-start).count();
-      return result;
+      return finish();
     }
     SampledValidator validator(scene_,limits_,task.model_signature,task.map_revision);
     result.public_validation_run=true;
     result.valid=validator.validate(*result.plan,result.reason);result.validation=validator.report();
     result.validation_ms=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-start).count();
-    return result;
+    return finish();
   });
 }
 void Patrol::tick(bool environment_current) {
@@ -130,6 +135,7 @@ void Patrol::save() {
     const auto &result=results_[i];const auto &plan=*result.plan;YAML::Node stage;
     stage["index"]=i;stage["name"]=i<goals_.size()?goals_[i].id:"return_origin";
     stage["planning_ms"]=plan.planning_wall_s*1000.;stage["validation_ms"]=result.validation_ms;
+    stage["planning_validation_ms"]=result.response_ms;
     stage["search_ms"]=plan.search_wall_s*1000.;stage["optimization_ms"]=plan.optimization_wall_s*1000.;
     stage["source_check_ms"]=plan.source_check_wall_s*1000.;stage["budget_hit"]=plan.optimization_budget_hit;
     stage["cost_evaluations"]=plan.cost_evaluations;
@@ -138,6 +144,9 @@ void Patrol::save() {
     stage["candidate_generated"]=plan.failure.empty();stage["validation_passed"]=result.valid;
     stage["timing_profile"]=result.timing.profile;stage["time_ratio"]=result.timing.duration_ratio;
     stage["public_validation_run"]=result.public_validation_run;
+    stage["initial_alignment_s"]=result.validation.initial_alignment_s;
+    stage["initial_steer"]=result.validation.initial_steer;
+    stage["measured_start_steer"]=plan.task.start_steer;
     stage["first_violation_constraint"]=result.timing.first_violation_constraint;
     stage["first_violation_time_s"]=result.timing.first_violation_time_s;
     stage["first_violation_ratio"]=result.timing.first_violation_ratio;
@@ -147,6 +156,17 @@ void Patrol::save() {
     stage["best_scale_max_ratio"]=result.timing.best_ratio;
     stage["source_time_knots"]=result.timing.source_knots;stage["execution_time_knots"]=result.timing.time_knots;
     stage["time_scale_knots"]=result.timing.scale_knots;
+    stage["task_start"]=plan.task.start;
+    stage["task_start_velocity"]=plan.task.start_velocity;
+    stage["task_start_acceleration"]=plan.task.start_acceleration;
+    stage["task_start_jerk"]=plan.task.start_jerk;
+    stage["task_start_steer"]=plan.task.start_steer;
+    stage["task_start_wheel_position"]=plan.task.start_wheel_position;
+    stage["task_speed_limits"]=plan.task.speed_limits;
+    stage["task_model_signature"]=plan.task.model_signature;
+    stage["task_map_revision"]=plan.task.map_revision;
+    stage["task_moving_start"]=plan.task.moving_start;
+    stage["task_stop_at_goal"]=plan.task.stop_at_goal;
     for(double value:plan.task.goal)stage["planned_goal"].push_back(value);
     stage["requested_while_moving"]=result.requested_while_moving;stage["reason"]=result.reason;
     if(plan.trajectory)stage["duration_s"]=plan.trajectory->duration();

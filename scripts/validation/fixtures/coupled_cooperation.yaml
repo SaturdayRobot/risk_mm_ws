@@ -1,0 +1,59 @@
+schema_version: 1
+scope: Predeclared static overhead cooperation fixtures; development and limited perturbation evaluation, not arbitrary-environment generalization.
+map_bounds: [-11, 11, -7, 7, 0, 3]
+cases:
+  - id: overhead_dev
+    split: development
+    center: [0.0, 0.0]
+    clearance_m: 1.30
+    beam_length_m: 0.60
+    passage_width_m: 1.80
+    start_offset: [-1.60, 0.0]
+    goal_offset: [1.60, 0.0]
+    start_control_yaw: 0.0
+    goal_control_yaw: 0.0
+    initial_joint1_rad: 0.0
+  - id: overhead_shifted
+    split: evaluation
+    center: [0.40, -0.30]
+    clearance_m: 1.30
+    beam_length_m: 0.60
+    passage_width_m: 1.80
+    start_offset: [-1.60, 0.0]
+    goal_offset: [1.60, 0.0]
+    start_control_yaw: 0.0
+    goal_control_yaw: 0.0
+    initial_joint1_rad: 0.0
+  - id: overhead_lower
+    split: evaluation
+    center: [0.0, 0.0]
+    clearance_m: 1.25
+    beam_length_m: 0.70
+    passage_width_m: 1.80
+    start_offset: [-1.70, 0.0]
+    goal_offset: [1.70, 0.0]
+    start_control_yaw: 0.0
+    goal_control_yaw: 0.0
+    initial_joint1_rad: 0.0
+  - id: overhead_changed_arm
+    split: evaluation
+    center: [-0.30, 0.20]
+    clearance_m: 1.30
+    beam_length_m: 0.60
+    passage_width_m: 1.80
+    start_offset: [-1.70, 0.0]
+    goal_offset: [1.70, 0.0]
+    start_control_yaw: 0.0
+    goal_control_yaw: 0.0
+    initial_joint1_rad: 0.30
+  - id: overhead_approach_turn
+    split: evaluation
+    center: [0.0, 0.0]
+    clearance_m: 1.30
+    beam_length_m: 0.60
+    passage_width_m: 1.80
+    start_offset: [-1.70, -0.15]
+    goal_offset: [1.70, 0.15]
+    start_control_yaw: 0.12
+    goal_control_yaw: -0.08
+    initial_joint1_rad: 0.0

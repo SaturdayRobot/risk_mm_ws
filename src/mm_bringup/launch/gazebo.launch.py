@@ -24,14 +24,25 @@ from mm_model.identity import robot_signature
 def assemble(context):
     get = lambda name: LaunchConfiguration(name).perform(context)
     bringup = Path(share('mm_bringup'))
-    world = bringup / 'worlds' / (get('world') + '.world')
+    world = Path(get('world_file')).resolve() if get('world_file') else bringup / 'worlds' / (get('world') + '.world')
     if not world.is_file():
         raise ValueError('Unknown local world: ' + str(world))
+    metadata = Path(get('world_metadata_file')).resolve() if get('world_metadata_file') else world.with_suffix('.json')
+    if bool(get('world_file')) != bool(get('world_metadata_file')):
+        raise ValueError('Explicit world and metadata must be supplied together')
+    world_hash = hashlib.sha256(world.read_bytes()).hexdigest()
+    if json.loads(metadata.read_text())['world_sha256'] != world_hash:
+        raise ValueError('World/metadata SHA256 mismatch')
+    patrol = Path(get('patrol_file')).resolve() if get('patrol_file') else bringup / 'config/patrol.yaml'
+    patrol_input = yaml.safe_load(patrol.read_text())
+    if patrol_input['world'] != world.stem or patrol_input['world_sha256'] != world_hash:
+        raise ValueError('Patrol/world identity mismatch')
     if not os.environ.get('GAZEBO_MASTER_URI', '').startswith('http://127.0.0.1:'):
         raise ValueError('Use scripts/in_env with an isolated GAZEBO_MASTER_URI')
     env = {'GAZEBO_MODEL_DATABASE_URI': '', 'GAZEBO_MODEL_PATH': '/usr/share/gazebo-11/models'}
     sim = {'use_sim_time': True}
-    gui_parameters = dict(sim, world_name=get('world'))
+    gui_parameters = dict(sim, world_name=world.stem,world_metadata_file=str(metadata),
+                          task_goals_file=str(patrol if get('patrol_file') else bringup / 'config/goal_presets.yaml'))
     gui_goal = json.loads(get('gui_initial_goal'))
     if gui_goal:
         if len(gui_goal) != 9 or not all(isinstance(v, (int, float)) and math.isfinite(v) for v in gui_goal):
@@ -54,13 +65,34 @@ def assemble(context):
     derived['mm.planning_frame_yaw_in_base_rad'] = yaml.safe_load(
         (bringup / 'config/manual_control.yaml').read_text())['control_frame_yaw_in_base_rad']
     coupled = dict(derived, **sim)
+    planning_overrides = {}
+    if get('arm_sampling') != 'configured':
+        if get('arm_sampling') not in ('global','reachable'):
+            raise ValueError('Invalid arm sampling policy')
+        planning_overrides['search.manipulator_reachable_sampling'] = get('arm_sampling') == 'reachable'
+    if get('arm_extension_fraction'):
+        fraction = float(get('arm_extension_fraction'))
+        if not math.isfinite(fraction) or not 0. < fraction <= 1.:
+            raise ValueError('Arm extension fraction must be in (0,1]')
+        planning_overrides['search.manipulator_extension_fraction'] = fraction
+    if get('arm_soft_margin_m'):
+        margin=float(get('arm_soft_margin_m'))
+        if not math.isfinite(margin) or margin<0.:
+            raise ValueError('Arm soft cost margin must be finite and nonnegative')
+        planning_overrides['optimization.safe_margin_mani']=margin
+    if get('arm_search_budget_ms'):
+        budget=float(get('arm_search_budget_ms'))
+        if not math.isfinite(budget) or budget<=0.:
+            raise ValueError('Arm search budget must be finite positive milliseconds')
+        planning_overrides['search.max_mani_search_time']=budget/1000.
+    coupled.update(planning_overrides)
     coupled.update({
-        'model_signature': robot_signature(urdf, [bringup / ('config/' + name) for name in ('robot.yaml', 'remani.yaml', 'simulation_collision.yaml', 'coupled_execution.yaml', 'manual_control.yaml')] + [Path(share('rangermini_moveit_config')) / 'config/rangermini_xarm6.srdf'], model_data=derived),
+        'model_signature': robot_signature(urdf, [bringup / ('config/' + name) for name in ('robot.yaml', 'remani.yaml', 'simulation_collision.yaml', 'coupled_execution.yaml', 'manual_control.yaml')] + [Path(share('rangermini_moveit_config')) / 'config/rangermini_xarm6.srdf'], model_data=dict(derived,**planning_overrides)),
         'robot_urdf_file': str(urdf), 'robot_urdf_sha256': hashlib.sha256(urdf.read_bytes()).hexdigest(),
         'robot_srdf_file': str(Path(share('rangermini_moveit_config')) / 'config/rangermini_xarm6.srdf'),
-        'world_file': str(world), 'world_metadata_file': str(world.with_suffix('.json')),
+        'world_file': str(world), 'world_metadata_file': str(metadata),
         'report_directory': get('report_directory'), 'grid_map.external_snapshots': True})
-    coupled['patrol_file'] = str(bringup / 'config/patrol.yaml')
+    coupled['patrol_file'] = str(patrol)
     runtime = Node(package='mm_bringup', executable='simulation_runtime',
                    parameters=[str(bringup / 'config/remani.yaml'), str(bringup / 'config/coupled_execution.yaml'), coupled], output='screen')
     server = ExecuteProcess(cmd=['gzserver', '--verbose', temporary_world, '-s', 'libgazebo_ros_init.so',
@@ -100,8 +132,14 @@ def assemble(context):
             RegisterEventHandler(OnProcessExit(target_action=server, on_exit=[
                 EmitEvent(event=Shutdown(reason='Gazebo server exited'))])),
             Node(package='rviz2', executable='rviz2', parameters=[sim],
-                 arguments=['-d', str(Path(share('rangermini_description')) / 'rviz/display.rviz')],
-                 condition=IfCondition(LaunchConfiguration('rviz')))]
+                 arguments=['-d', str(bringup / 'rviz/inspection.rviz')],
+                 condition=IfCondition(LaunchConfiguration('rviz'))),
+            Node(package='mm_bringup', executable='inspection_visualization',
+                 parameters=[str(bringup / 'config/visualization.yaml'),dict(sim,
+                   world_file=str(world),world_metadata_file=str(metadata),
+                   patrol_file=str(patrol),
+                   map_resolution=float(yaml.safe_load((bringup / 'config/remani.yaml').read_text())['/**']['ros__parameters']['grid_map.resolution']))],
+                 output='screen',condition=IfCondition(LaunchConfiguration('rviz')))]
 
 
 def generate_launch_description():
@@ -109,6 +147,13 @@ def generate_launch_description():
         DeclareLaunchArgument('report_directory', default_value=str(Path(os.environ.get('RISK_MM_ROOT', str(Path.cwd()))) / 'reports/runtime')),
         DeclareLaunchArgument('gui_initial_goal', default_value='[]'),
         DeclareLaunchArgument('world', default_value='s6_factory_inspection_v1'),
+        DeclareLaunchArgument('world_file', default_value=''),
+        DeclareLaunchArgument('world_metadata_file', default_value=''),
+        DeclareLaunchArgument('patrol_file', default_value=''),
+        DeclareLaunchArgument('arm_sampling', default_value='configured'),
+        DeclareLaunchArgument('arm_extension_fraction', default_value=''),
+        DeclareLaunchArgument('arm_soft_margin_m', default_value=''),
+        DeclareLaunchArgument('arm_search_budget_ms', default_value=''),
         DeclareLaunchArgument('gui', default_value='true'),
         DeclareLaunchArgument('controls', default_value='true'),
         DeclareLaunchArgument('rviz', default_value='true'),

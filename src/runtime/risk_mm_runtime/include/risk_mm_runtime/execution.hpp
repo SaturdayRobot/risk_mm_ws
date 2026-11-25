@@ -58,6 +58,7 @@ class CoupledExecutor final : public Executor {
   std::deque<std::shared_ptr<const Plan>> queued_;
   std::string plan_id_;
   ExecutionReport report_;
+  std::array<double,4> alignment_steer_{};
   double prepared_ros_s_{0},origin_ros_s_{-1};
   int settled_{0};
  public:

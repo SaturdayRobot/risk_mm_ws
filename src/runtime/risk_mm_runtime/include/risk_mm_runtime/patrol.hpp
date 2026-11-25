@@ -19,7 +19,7 @@ class Patrol {
     ValidationReport validation;
     TimeAdaptation timing;
     bool valid{false},public_validation_run{false},requested_while_moving{false};
-    double validation_ms{0};
+    double validation_ms{0},response_ms{0};
     std::string reason;
   };
   Planner &planner_;

@@ -79,8 +79,7 @@ namespace remani_planner
         bool checkCarObsCollision(Eigen::Vector3d car_state, bool precise, bool safe, double &min_dist);
         bool checkManiObsCollision(Eigen::Vector3d car_state, Eigen::VectorXd mani_state, bool safe, double &min_dist, bool record=true);
         // Read-only collision checks for validators sharing a frozen map.
-        bool planningEnvironmentCollision(const Eigen::Vector3d &base, const Eigen::VectorXd &q);
-        bool planningSelfCollision(const Eigen::VectorXd &q) const;
+        bool planningSelfCollision(const Eigen::VectorXd &q,int *collision_type=nullptr) const;
         bool checkCarManiCollision(Eigen::VectorXd mani_state, bool safe, double &min_dist);
         bool checkManiManiCollision(Eigen::VectorXd mani_state, bool safe, double &min_dist);
         bool checkManicollision(Eigen::Vector3d car_state, Eigen::VectorXd mani_state, bool safe);

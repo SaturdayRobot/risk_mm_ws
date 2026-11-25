@@ -2,6 +2,7 @@
 """Drive actual Qt controls with native X11 events; observe ROS, never publish commands."""
 import argparse
 import ctypes as C
+import csv
 from datetime import datetime
 import json
 import math
@@ -126,11 +127,15 @@ class NativePanel:
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--session', type=Path)
-    parser.add_argument('--scenario', choices=['drive', 'rejection', 'plan', 'execute', 'presets', 'speed_invalidation', 'patrol'], default='drive')
+    parser.add_argument('--scenario', choices=['drive', 'rejection', 'plan', 'execute', 'stop', 'presets', 'speed_invalidation', 'patrol'], default='drive')
     parser.add_argument('--hold-s', type=float, default=1.8)
     parser.add_argument('--preset', help='plan the selected configured preset instead of the 0.6 m case')
     parser.add_argument('--speeds', type=float, nargs=3)
+    parser.add_argument('--patrol-timeout-s', type=float, default=120.,
+                        help='wall-clock observation timeout for the complete patrol')
     args = parser.parse_args()
+    if not math.isfinite(args.patrol_timeout_s) or args.patrol_timeout_s <= 0.:
+        parser.error('--patrol-timeout-s must be finite and positive')
     ws = Path(__file__).resolve().parents[2]
     session = json.loads((args.session or ws/'reports/gazebo_latest.json').read_text())
     assert int(os.environ['ROS_DOMAIN_ID']) == session['domain_id']
@@ -138,6 +143,7 @@ def main():
     folder.mkdir(parents=True)
     report = {'status': 'failed', 'scenario': args.scenario, 'input_method': 'native Qt mouse/key event path; no ROS command/service publisher', 'requests': [], 'phases': []}
     started = time.monotonic(); data = {}; commands = []; odom_samples = []; panel = None
+    measured_trace = []
     rclpy.init(); node = rclpy.create_node('real_gui_acceptance', parameter_overrides=[Parameter('use_sim_time', value=True)])
     subscriptions = []
 
@@ -148,6 +154,9 @@ def main():
 
     def coupled(message):
         data['coupled'] = message
+        if args.scenario == 'patrol' and message.plan_id.startswith('patrol_') and message.execution_started:
+            measured_trace.append([message.header.stamp.sec+message.header.stamp.nanosec*1e-9,
+                                   message.plan_id, message.phase, *[float(value) for value in message.state]])
         entry = {'phase': message.phase, 'plan_id': message.plan_id, 'reason': message.reason}
         if not report['phases'] or any(report['phases'][-1][k] != entry[k] for k in entry):
             report['phases'].append(dict(entry, wall_s=time.monotonic()-started))
@@ -251,7 +260,8 @@ def main():
             wait(lambda: data['coupled'].plan_id == mission and
                  (data['coupled'].execution_started or data['coupled'].phase == 'HOLD'), 20.)
             assert data['coupled'].execution_started, data['coupled'].reason
-            wait(lambda: data['coupled'].phase in ('COMPLETED', 'HOLD'), 120.)
+            report['patrol_timeout_s'] = args.patrol_timeout_s
+            wait(lambda: data['coupled'].phase in ('COMPLETED', 'HOLD'), args.patrol_timeout_s)
             result_file = Path(session['report_dir'])/'patrol'/mission/'mission.yaml'
             result = yaml.safe_load(result_file.read_text())
             report.update(mission=result, mission_report=str(result_file))
@@ -263,7 +273,8 @@ def main():
             assert result['return_error_m'] < .04 and result['planning_stops'] == 0
             assert all(v['measured_speed_m_s'] > .02 and v['arm_error_rad'] < .04 for v in result['visits'])
             assert all(v['requested_while_moving'] for v in result['segments'][1:])
-            assert max(v['planning_ms'] for v in result['segments']) < 500.
+            report['maximum_planning_validation_ms'] = max(v['planning_validation_ms'] for v in result['segments'])
+            assert report['maximum_planning_validation_ms'] < 1000.
             wait(lambda: data['gui']['buttons']['patrol']['enabled'])
         elif args.scenario == 'rejection':
             original = data['gui']['backend_goal'][0]
@@ -316,20 +327,38 @@ def main():
                 click('stop')
                 wait(lambda: json.loads(data['control'].data)['owner_plan']=='')
                 panel.edit(data['gui']['inputs']['base_speed'],previous_speed)
-            if args.scenario == 'execute':
+            if args.scenario in ('execute', 'stop'):
                 click('execute')
                 wait(lambda: data['coupled'].execution_started or data['coupled'].phase == 'HOLD', 15.)
                 assert data['coupled'].execution_started, data['coupled'].reason
-                wait(lambda: data['coupled'].phase in ('COMPLETED', 'HOLD'), state.duration_s+35.)
-                state = data['coupled']; report.update(execution_started=state.execution_started, execution_completed=state.execution_completed, execution_success=state.execution_success, execution_reason=state.reason)
-                assert state.execution_completed and state.execution_success, state.reason
-                report['endpoint_error_m'] = math.hypot(state.state[0]-requested_goal[0], state.state[1]-requested_goal[1])
-                report['arm_endpoint_error_rad'] = max(abs(state.state[j]-requested_goal[j]) for j in range(3, 9))
-                report['front_projection_m'] = ((state.state[0]-initial_pose[0])*math.cos(front_heading)+
-                                                (state.state[1]-initial_pose[1])*math.sin(front_heading))
-                assert report['endpoint_error_m'] < .04 and report['arm_endpoint_error_rad'] < .03
-                if not args.preset:
-                    assert report['front_projection_m'] > .55, 'execution did not advance toward the user-confirmed front'
+                if args.scenario == 'stop':
+                    def measured_speed():
+                        v=data['odom'].twist.twist.linear
+                        return math.hypot(v.x,v.y)
+                    wait(lambda: measured_speed()>.02 or data['coupled'].phase=='HOLD')
+                    assert data['coupled'].phase!='HOLD',data['coupled'].reason
+                    report['speed_before_stop_m_s']=measured_speed()
+                    report['execution_started']=True
+                    click('stop')
+                    wait(lambda: data['coupled'].phase=='HOLD' and
+                         json.loads(data['control'].data)['owner_plan']=='' and measured_speed()<.005)
+                    held=pose();spin(1.)
+                    report['stop_hold_drift_m']=math.dist(held[:2],pose()[:2])
+                    report['execution_completed']=data['coupled'].execution_completed
+                    report['stop_reason']=data['coupled'].reason
+                    assert report['stop_hold_drift_m']<.01
+                    assert not report['execution_completed']
+                else:
+                    wait(lambda: data['coupled'].phase in ('COMPLETED', 'HOLD'), state.duration_s+35.)
+                    state = data['coupled']; report.update(execution_started=state.execution_started, execution_completed=state.execution_completed, execution_success=state.execution_success, execution_reason=state.reason)
+                    assert state.execution_completed and state.execution_success, state.reason
+                    report['endpoint_error_m'] = math.hypot(state.state[0]-requested_goal[0], state.state[1]-requested_goal[1])
+                    report['arm_endpoint_error_rad'] = max(abs(state.state[j]-requested_goal[j]) for j in range(3, 9))
+                    report['front_projection_m'] = ((state.state[0]-initial_pose[0])*math.cos(front_heading)+
+                                                    (state.state[1]-initial_pose[1])*math.sin(front_heading))
+                    assert report['endpoint_error_m'] < .04 and report['arm_endpoint_error_rad'] < .03
+                    if not args.preset:
+                        assert report['front_projection_m'] > .55, 'execution did not advance toward the user-confirmed front'
         report['status'] = 'passed'
     except Exception as error:
         report['reason'] = str(error)
@@ -337,6 +366,25 @@ def main():
         if panel and panel.held is not None:
             panel.mouse(panel.held, False)
         report['wall_s'] = time.monotonic()-started
+        measured_trace = [row for row in measured_trace
+                          if row[1] == report.get('gui_service_accepted_plan_id')]
+        if measured_trace:
+            trace_file = folder/'measured_state_trace.csv'
+            with trace_file.open('w', newline='') as stream:
+                writer = csv.writer(stream)
+                writer.writerow(['ros_time_s', 'mission_id', 'phase', 'x', 'y', 'yaw',
+                                 'q1', 'q2', 'q3', 'q4', 'q5', 'q6'])
+                writer.writerows(measured_trace)
+            report['measured_state_trace'] = str(trace_file)
+            report['measured_state_samples'] = len(measured_trace)
+            report['measured_arm_range_rad'] = [max(row[j] for row in measured_trace)-min(row[j] for row in measured_trace)
+                                                for j in range(6, 12)]
+            pairs = [(a, b) for a, b in zip(measured_trace, measured_trace[1:])
+                     if a[1] == b[1] and 0. < b[0]-a[0] <= .5]
+            report['measured_simultaneous_motion_steps'] = int(sum(
+                math.dist(a[3:5], b[3:5]) > .001 and max(abs(b[j]-a[j]) for j in range(6, 12)) > .001
+                for a, b in pairs))
+            report['measured_motion_scope'] = 'actual feedback state; simultaneous steps use 1 mm / 1 mrad displacement thresholds, not a continuous safety or velocity-limit proof'
         (folder/'validation.json').write_text(json.dumps(report, ensure_ascii=False, indent=2)+'\n')
         print(json.dumps({k: v for k, v in report.items() if k != 'stages'}, ensure_ascii=False, indent=2))
         node.destroy_node(); rclpy.shutdown()

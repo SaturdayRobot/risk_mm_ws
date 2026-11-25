@@ -420,8 +420,11 @@ public:
     root->addLayout(goals);root->addWidget(ahead);
     const auto bringup=ament_index_cpp::get_package_share_directory("mm_bringup");
     std::string world_name;node_->get_parameter_or("world_name",world_name,std::string("s6_factory_inspection_v1"));
-    const auto metadata=YAML::LoadFile(bringup+"/worlds/"+world_name+".json");
-    task_goals_=risk_mm::loadTaskGoals(bringup+"/config/goal_presets.yaml",world_name,metadata["world_sha256"].as<std::string>());
+    std::string metadata_file,goals_file;
+    node_->get_parameter_or("world_metadata_file",metadata_file,bringup+"/worlds/"+world_name+".json");
+    node_->get_parameter_or("task_goals_file",goals_file,bringup+"/config/goal_presets.yaml");
+    const auto metadata=YAML::LoadFile(metadata_file);
+    task_goals_=risk_mm::loadTaskGoals(goals_file,world_name,metadata["world_sha256"].as<std::string>());
     for(const auto &preset:task_goals_)for(int i=0;i<9;++i) {
       const auto *box=i<3?goal_[i]:boxes_[i-3];
       if(preset.input[i]<box->minimum() || preset.input[i]>box->maximum())
