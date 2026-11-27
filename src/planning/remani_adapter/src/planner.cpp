@@ -164,6 +164,7 @@ Plan RemaniPlanner::solve(const Task& task,std::shared_ptr<const Trajectory> ref
   std::vector<int> directions;
   const int start_direction=planning_task.moving_start?
       (std::cos(start_yaw)*planning_task.start_velocity[0]+std::sin(start_yaw)*planning_task.start_velocity[1]>=0.?1:-1):0;
+  int search_status=remani_planner::KinoAstar::REACH_END;
   if(reference) {
     const double remaining=reference->duration()-reference_time;
     if(reference_time<0. || remaining<.1)return fail("warm reference exhausted");
@@ -189,9 +190,15 @@ Plan RemaniPlanner::solve(const Task& task,std::shared_ptr<const Trajectory> ref
     seeds.resize(1);auto &seed=seeds.front();seed.reset(head,tail,pieces);
     seed.generate(inner,durations);
     directions.push_back(direction);result.warm_started=true;
-  }else optimizer_.astarWithMinTraj(head,tail,start_yaw,start_direction,false,goal_yaw,false,
+  }else search_status=optimizer_.astarWithMinTraj(head,tail,start_yaw,start_direction,false,goal_yaw,false,
                             Eigen::Vector2d::Zero(),0,paths,yaws,seeds,directions);
   result.search_wall_s=std::chrono::duration<double>(std::chrono::steady_clock::now()-begin).count();
+  if(search_status==remani_planner::KinoAstar::START_COLLISION ||
+     search_status==remani_planner::KinoAstar::GOAL_COLLISION) {
+    const bool start=search_status==remani_planner::KinoAstar::START_COLLISION;
+    result.source_validation=start?"start_geometry_rejected":"goal_geometry_rejected";
+    return fail(start?"source start geometry rejected":"source goal geometry rejected");
+  }
   if(seeds.empty() || seeds.size()!=directions.size())return fail("original search failed");
   if(capture_diagnostics_ && !reference) {
     for(size_t i=0;i<paths.size() && i<yaws.size();++i) {

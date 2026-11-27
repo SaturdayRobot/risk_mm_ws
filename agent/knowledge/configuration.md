@@ -1,6 +1,6 @@
 # 当前配置与实际加载
 
-核对日期：2026-11-25。本页描述源码与安装事实，运行按冻结快照解释。当前 patrol.yaml 源/安装 SHA256 均为 `8efb9f54b41d4fe35efc5866f6b7cd3a97f1efe049775030ba842bec7f15174c`（优化预算100 ms），remani.yaml 均为 `0d32414a81b6585beb9e3921b5111bd72c4835b46fc7cdc737e523f720d7bfee`（seed42）。DEV-27数值/执行结果见[固定简单路线验收汇总](../../reports/patrol_numerics_20261124_01/numerical_model_acceptance_dev27.json)，DEV-29独立显示层的适用范围见本页末节；最新服务要求、已通过范围和未达总目标的差距统一见[当前进度](../current_work_progress.md)，不把固定路线成功解释为复杂环境或泛化完成。
+核对日期：2026-11-26。本页描述源码与安装事实，运行按冻结快照解释。当前 patrol.yaml 源/安装 SHA256 均为 `8efb9f54b41d4fe35efc5866f6b7cd3a97f1efe049775030ba842bec7f15174c`（优化预算100 ms），remani.yaml 均为 `0d32414a81b6585beb9e3921b5111bd72c4835b46fc7cdc737e523f720d7bfee`（seed42）。DEV-27数值/执行结果见[固定简单路线验收汇总](../../reports/patrol_numerics_20261124_01/numerical_model_acceptance_dev27.json)，DEV-29独立显示层的适用范围见本页末节；最新服务要求、已通过范围和未达总目标的差距统一见[当前进度](../current_work_progress.md)，不把固定路线成功解释为复杂环境或泛化完成。
 
 ## 配置责任
 
@@ -180,3 +180,9 @@ DEV-33巡检mission逐段task_*字段冻结原九维起态及v/a/jerk、实际�
 DEV-35 RViz动态验收可显式--mission-id指定本轮编号，避免重复任务观察误用旧完成状态；当前三轮明确id并保留原报告。原生RViz相机全景操作仅作用当前会话，未写回install或改变规划显示数据。
 
 单目标与巡检预算须区分：普通requestPlan恢复optimization.solve_budget_ms（未配置时0，即不以预算终止）；巡检从所选patrol文件设置预算。当前3轮594–848ms证据仅巡检完整规划/through/最终验证；随后操作者coupled_4/5单目标实际规划3.263/5.032s，均执行成功但未毫秒化，不混入巡检统计。
+
+DEV-20261126-01实现（有限离线结果以进度为准）：external四轮种子先尝试简化冗余关节往返，保留全部base节点及原搜索累计时间；按0.01m/0.01rad及至少4分段检查替代关节连接的源几何，只修改同一种子的臂内点。不是新增姿态库，MINCO后的源/公共/through门控不变。KinoAstar非法起终几何直接返回，source_validation分别记start_geometry_rejected/goal_geometry_rejected，不再浪费后续搜索预算。
+
+DEV-20261126-02：非法起终源几何覆盖近距调臂/不走base search入口；候选不生成时probe也保存planning_validation_wall_s，范围为planner调用至源/搜索拒绝（含诊断构造、不含初始化），公共验证未运行仍为null。成功任务的原完整计时范围不变。种子简化耗时计入既有search_wall_s，未新增配置。
+
+种子简化的0.05rad常量位于poly_traj_optimizer.cpp：只在原累计逐边关节L∞变化比拟用直连至少多0.05rad时进行该替代检查；它是冗余度判据，不是碰撞或执行容差。该步骤不改底盘节点和原搜索时间，之后仍执行既有首末片空间准备及原片数恢复规则。

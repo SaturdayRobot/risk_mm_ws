@@ -1338,6 +1338,53 @@ namespace remani_planner
     for(unsigned int i = 0; i < simple_path_container.size(); ++i){
       auto seed_path=simple_path_container[i];
       Eigen::VectorXd seed_times=t_list_container[i];
+      if(external_kinematics_ && seed_path.size()>2) {
+        // Remove redundant arm excursions on this same base path. Each
+        // replacement retains every base knot and is checked before MINCO;
+        // the resulting polynomial still requires all normal validation.
+        std::vector<double> times(seed_path.size(),0.);
+        for(size_t k=1;k<times.size();++k)times[k]=times[k-1]+seed_times[k-1];
+        size_t first=0;int shortcuts=0;
+        while(first+2<seed_path.size()) {
+          size_t accepted=first+1;
+          for(size_t last=seed_path.size()-1;last>first+1;--last) {
+            const Eigen::VectorXd initial=seed_path[first].tail(manipulator_dof_);
+            const Eigen::VectorXd delta=seed_path[last].tail(manipulator_dof_)-initial;
+            double variation=0.;
+            for(size_t k=first;k<last;++k)
+              variation+=(seed_path[k+1].tail(manipulator_dof_)-seed_path[k].tail(manipulator_dof_)).lpNorm<Eigen::Infinity>();
+            const double duration=times[last]-times[first];
+            if(duration<=0. || delta.lpNorm<Eigen::Infinity>()>max_joint_vel_*duration ||
+               variation<delta.lpNorm<Eigen::Infinity>()+.05)continue;
+            bool clear=true;
+            for(size_t k=first;k<last && clear;++k) {
+              const double yaw0=yaw_list_container[i][k];
+              const double dyaw=std::remainder(yaw_list_container[i][k+1]-yaw0,2.*M_PI);
+              const double fraction=(times[k+1]-times[k])/duration;
+              const int samples=std::max({4,
+                  static_cast<int>(std::ceil((seed_path[k+1].head(2)-seed_path[k].head(2)).norm()/.01)),
+                  static_cast<int>(std::ceil(std::abs(dyaw)/.01)),
+                  static_cast<int>(std::ceil(delta.lpNorm<Eigen::Infinity>()*fraction/.01))});
+              for(int sample=0;sample<=samples;++sample) {
+                const double u=double(sample)/samples;
+                const double t=times[k]+u*(times[k+1]-times[k]);
+                Eigen::Vector3d base;
+                base.head(2)=seed_path[k].head(2)+u*(seed_path[k+1].head(2)-seed_path[k].head(2));
+                base[2]=yaw0+u*dyaw;
+                if(mm_config_->checkManicollision(base,initial+delta*((t-times[first])/duration),false)) {
+                  clear=false;break;
+                }
+              }
+            }
+            if(!clear)continue;
+            for(size_t k=first+1;k<last;++k)
+              seed_path[k].tail(manipulator_dof_)=initial+delta*((times[k]-times[first])/duration);
+            accepted=last;++shortcuts;break;
+          }
+          first=accepted;
+        }
+        if(shortcuts)RCLCPP_INFO(rclcpp::get_logger("remani"),"arm seed shortcuts=%d; base knots retained",shortcuts);
+      }
       std::vector<int> seed_splits(seed_times.size(),1);
       const bool final_end=i+1==simple_path_container.size() && status!=KinoAstar::REACH_HORIZON;
       const bool moving_end=final_end && end_vel.head(2).norm()>non_singul_v_+1e-6;

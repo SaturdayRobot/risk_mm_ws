@@ -15,6 +15,9 @@
 | [结构设计](../../docs/architecture.md) | 模块边界、Task/Plan/Trajectory 契约及数据流 |
 | [碰撞配置](../../docs/robot_collision_configuration.md) | 三种碰撞表示、忽略对、接触参数和验证边界 |
 | [算法来源](../../docs/provenance.md) | 锁定 REMANI、原版与物理适配的差别、patch 与许可 |
+| [第三章研究设计](../../docs/chapter3_research_design.md) | 第三章拟用同一边界的两模式配对结果估计联合失效，并在任务失约约束下优化切换时机。含原始文献、算例、采样和消融设计，第四章负责连续运动。当前为研究设计 |
+| [论文 Word 修订稿](../../docs/references/基于环境风险的移动机械臂自适应协同避障研究_初稿.docx) · [全文实验与程序实施计划](../../docs/chapter3_program_plan.md) | 当前论文以风险估计、时机决策、事件监督和运动反馈形成闭环；Markdown 初稿为前一阶段理论稿 |
+| [第三章正文初稿](../../docs/chapter3_draft.md) | 论文理论与方案。由联合失效概率界推导两个决策边界下的切换条件，配套采样与消融计划见研究设计报告 |
 | [当前进度与方案](../current_work_progress.md) | 唯一动态进度账本；顶部快照、当前方案、每次改动及实际效果 |
 | [协作规则](../collaboration.md) | 分工、文件归属、共享资源、集成和交接格式 |
 

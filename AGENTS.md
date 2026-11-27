@@ -19,6 +19,7 @@ Agent 文档统一管理在 `agent/`，入口为 [agent/README.md](agent/README.
 
 ## Agent 维护要求
 
+- 论文写作、改稿与审阅遵守 [发布会原则](agent/agent.md#论文写作与审阅准则)，围绕优势和证据组织论证；用户要求审阅防御性写作时逐处给出原句及改写。
 - 最终目标、当前优先级与完成标准见 `agent/agent.md`；模型与参数的事实来源见 `agent/knowledge/robot_model.md` 和 `agent/knowledge/configuration.md`。
 - 新规划、控制、GUI 和调度逻辑优先使用 C++ / ament_cmake。Python 保留作现有工具、launch 与验证；不得再以 Python 控制包代替已确定的 C++ 运行层。
 - 每个逻辑改动开始时，在 [进度节点日志](agent/current_work_progress.md#节点日志) 追加目的、方案和验收方式。每完成一个可独立验收的节点，立即追加实际效果、命令/报告、遗留问题和下一步，再同步顶部快照。新记录使用北京时间秒级时间戳（`YYYY-MM-DDTHH:MM:SS+08:00`），保留所有已有条目。失败和未测试也须记录，普通文件保存合入同一节点。

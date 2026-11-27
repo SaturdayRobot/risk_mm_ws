@@ -150,8 +150,13 @@ int KinoAstar::KinoAstarSearchAndGetSimplePath(const Eigen::VectorXd &start_pos,
   bool start_goal_is_close = (start_pos - end_pos).head(2).norm() < 8e-2 && (start_pos - end_pos).tail(manipulator_dof_).norm() > 1e-1;
   if(continous_failures_count < try_astar_times_ && (!start_goal_is_close) /*&& false*/){
     // RCLCPP_WARN(rclcpp::get_logger("remani"), "ASTAR!");
-    search(start_state, end_state, init_ctrl);
+    const int base_status=search(start_state, end_state, init_ctrl);
+    // Invalid boundary geometry cannot be repaired by another search branch.
+    if(base_status==START_COLLISION || base_status==GOAL_COLLISION)return base_status;
   }else{
+    int collision_type=-1;
+    if(mm_config_->checkcollision(start_state.head(3),start_state.tail(manipulator_dof_),false,collision_type))return START_COLLISION;
+    if(mm_config_->checkcollision(end_state.head(3),end_state.tail(manipulator_dof_),false,collision_type))return GOAL_COLLISION;
     // RCLCPP_WARN(rclcpp::get_logger("remani"), "FAILED TOO MANY TIMES, use rrt!");
     has_path_ = false;
   }

@@ -375,7 +375,11 @@ int main(int argc,char **argv) {
     report["candidate_generated"]=plan.failure.empty() && !plan.points.empty();
     report["failure"]=plan.failure;report["candidate_samples"]=plan.points.size();
     report["validation_passed"]=YAML::Null;report["execution_started"]=false;report["execution_completed"]=false;
-    if(!plan.failure.empty())throw std::runtime_error(plan.failure);
+    if(!plan.failure.empty()) {
+      report["planning_validation_wall_s"]=std::chrono::duration<double>(std::chrono::steady_clock::now()-response_begin).count();
+      report["planning_validation_timing_scope"]="steady wall clock from planner invocation to search/source rejection, including diagnostic construction; public validation not run; excludes initialization";
+      throw std::runtime_error(plan.failure);
+    }
     if(!plan.trajectory || plan.points.size()<2)throw std::runtime_error("missing exact polynomial trajectory");
     int replans=0;node->get_parameter_or("probe.warm_replans",replans,0);
     auto previous=plan;

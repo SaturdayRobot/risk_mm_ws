@@ -128,7 +128,8 @@ def main():
                     'planning_validation_wall_s':data.get('planning_validation_wall_s'),'planning_wall_s':data.get('planning_wall_s')}
                 for field in ('search_wall_s','optimization_wall_s','source_check_wall_s',
                               'time_adaptation_wall_s','validation_wall_s','cost_evaluations',
-                              'max_wheel_acceleration','max_steer_rate','mesh_workers','validation_samples'):
+                              'max_wheel_acceleration','max_steer_rate','mesh_workers','validation_samples',
+                              'source_validation'):
                     attempt[field]=data.get(field)
                 if data.get('validation_passed'):
                     points=data['points'];movement=[max(abs(p['position'][j]-start[j]) for p in points) for j in range(3,9)]
